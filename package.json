@@ -1,0 +1,30 @@
+{
+  "name": "DictParser",
+  "version": "0.1.0",
+  "description": "a dictionary parsing library",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/searene/DictParser.git"
+  },
+  "keywords": [],
+  "author": "Searene <mycityofsky@gmail.com> (https://searene.github.io)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/searene/DictParser/issues"
+  },
+  "homepage": "https://github.com/searene/DictParser#readme",
+  "devDependencies": {
+    "@types/node": "^7.0.4",
+    "@types/sqlite3": "^2.2.32",
+    "sqlite3": "^3.1.8",
+    "typescript": "^2.1.5"
+  }
+}
