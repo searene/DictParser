@@ -1,6 +1,7 @@
-import {Dictionary} from "../dictionary";
-import {Reader} from "../reader";
-import {CharState, parsingStatus} from "../charState";
+import {Dictionary} from "./dictionary";
+import {Reader} from "./reader";
+import {CharState, parsingStatus} from "./charState";
+import {IndexBuilder} from "./indexBuilder";
 /**
  * Created by searene on 17-1-23.
  */
@@ -16,6 +17,8 @@ export abstract class TreeBuilder {
     // e.g. jpg, wmv, which are the actual resource files
     protected _resourceFileSuffixes: string[] = ['jpg', 'wmv', 'bmp', 'mp3'];
 
+    protected _indexBuilder: IndexBuilder;
+
     public abstract parse(contents: string): TreeBuilder.Tag;
 
     get dictionarySuffixes(): string[] {
@@ -27,6 +30,7 @@ export abstract class TreeBuilder {
     get resourceFileSuffixes(): string[] {
         return this._resourceFileSuffixes;
     }
+    public abstract getIndexBuilder(dictFile: string): IndexBuilder;
 }
 
 export module TreeBuilder {

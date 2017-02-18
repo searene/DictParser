@@ -26,5 +26,10 @@
     "@types/sqlite3": "^2.2.32",
     "sqlite3": "^3.1.8",
     "typescript": "^2.1.5"
+  },
+  "dependencies": {
+    "@types/fs-promise": "^1.0.1",
+    "fs-promise": "^1.0.0",
+    "sqlite3": "https://github.com/mapbox/node-sqlite3/tarball/master"
   }
 }

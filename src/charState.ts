@@ -1,6 +1,6 @@
 import {Reader} from "./reader";
 import {Dictionary} from "./dictionary";
-import {TreeBuilder} from "./tree_builders/treeBuilder";
+import {TreeBuilder} from "./treeBuilder";
 /**
  * Created by searene on 17-1-23.
  */
@@ -25,7 +25,8 @@ export abstract class CharState {
     get status(): parsingStatus {
         return this._status;
     }
+
     set status(value: parsingStatus) {
         this._status = value;
     }
-"vintage_start_in_command_mode": true}
+}

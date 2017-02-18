@@ -4,9 +4,11 @@
       "outDir": "lib/",
       "noImplicitAny": true,
       "noImplicitReturns": true,
-      "target": "es5"
+      "target": "es5",
+      "lib": ["es2015"]
     },
     "files": [
       "src/test.ts"
+      // "src/dictzip/dictzip.d.ts"
     ]
 }

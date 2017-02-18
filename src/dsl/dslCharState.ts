@@ -1,5 +1,4 @@
-///<reference path="tag.ts"/>
-import {CharState, parsingStatus} from "./charState";
+import {CharState, parsingStatus} from "../charState";
 import {Tag} from "./tag";
 /**
  * Created by searene on 17-1-22.

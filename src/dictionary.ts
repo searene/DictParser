@@ -1,36 +1,65 @@
-import {TreeBuilder} from "./tree_builders/treeBuilder";
-import fs = require("fs");
+import {TreeBuilder} from "./treeBuilder";
+import fsp = require("fs-promise");
 import path = require("path");
 import sqlite3 = require('sqlite3');
 import DictMap = Dictionary.DictMap;
-import {Constant, Option} from "./universal";
+import {Constant} from "./universal";
 import {Statement} from "sqlite3";
-import {WordIndexIterator} from "./wordIndexIterator";
+import {IndexBuilder} from "./indexBuilder";
+import {Walk} from "./util/os";
+import {DatabaseFactory} from './database';
 
 /**
  * Created by searene on 17-1-23.
  */
 
 export class Dictionary {
-    private treeBuilders: TreeBuilder[] = [];
+    private treeBuilders: TreeBuilder[];
+
+    // absolute path to db file
+    private dbFile: string;
+
+    private dictMap: DictMap[];
+
+    constructor(dbFile: string) {
+        this.dbFile = dbFile;
+    }
 
     public addTreeBuilder(treeBuilder: TreeBuilder): void {
         this.treeBuilders.push(treeBuilder);
     }
 
-    // get the tree_builders which can process the dictionary file
-    public getTreeBuilderForFile(dictFile: string,
-                                 treeBuilders: TreeBuilder[] = this.treeBuilders): Option<TreeBuilder> {
-
-        if(fs.existsSync(dictFile) && fs.lstatSync(dictFile).isFile()) {
-            let ext: string = path.extname(dictFile);
-            for(let treeBuilder of treeBuilders) {
-                if(ext in treeBuilder.dictionarySuffixes) {
-                    return new Option<TreeBuilder>(true, treeBuilder);
-                }
-            }
-        }
-        return new Option<TreeBuilder>(false);
+    /** Classify files to directories and normal files non-recursively.
+     * 
+     * @param baseDirectory baseDirectory of all the files in the parameter <i>files</i>
+     * @param files an array of files with relative paths to be classified
+     * @returns a Promise, whose type is a tuple, where the first item
+     *          is the array of directories, the second item is the array of normal files
+     */
+    private classifyFilesNonRecursively(baseDirectory: string, files: string[]): Promise<[string[], string[]]> {
+        let len = files.length;
+        let dirs: string[] = [];
+        let normalFiles: string[] = [];
+        return new Promise<[string[], string[]]>((resolve, reject) => {
+            files.forEach((file, index) => {
+                let fullPath = path.join(baseDirectory, file);
+                fsp.stat(fullPath)
+                    .then((stat) => {
+                        if(stat.isDirectory) {
+                            dirs.push(fullPath);
+                        } else if(stat.isFile) {
+                            normalFiles.push(fullPath);
+                        }
+                        if(index == len - 1) {
+                            // we have processed all files, resolve now
+                            resolve([dirs, normalFiles]);
+                        }
+                    })
+                    .catch((err) => {
+                        reject(err);
+                    });
+            });
+        });
     }
 
     /** <p>Look for resource file/directory in <i>baseDirectory</i>, the rules are as follows.</p>
@@ -49,64 +78,67 @@ export class Dictionary {
      *        (such as .dsl) lies
      * @param resourceHolderSuffixes extensions of the archived resource file(e.g. zip)
      * @param resourceFileSuffixes resource extensions(e.g. wmv)
-     * @return path to the resource archive/directory represented in string
+     * @returns path to the resource archive/directory represented in string
      */
     private getResource(definitionFileName: string,
                         baseDirectory: string,
                         resourceHolderSuffixes: string[],
-                        resourceFileSuffixes: string[]): Option<string> {
-        let resources = [];
-        let files: string[] = fs.readdirSync(baseDirectory);
-        files.forEach(file => {
-            let fullPath: string = path.join(baseDirectory, file);
-            if(fs.statSync(fullPath).isDirectory() &&
-               this.doesContainResources(fullPath, resourceFileSuffixes)) {
+                        resourceFileSuffixes: string[]): Promise<string> {
+        let candidate: string;
 
-                // we have a resource directory, I'm not sure
-                // whether this is the one we want, just add it
-                // to the list so we can check later
-                resources.push(fullPath);
-            } else if(fs.statSync(fullPath).isFile()) {
-                if(path.extname(file) in resourceHolderSuffixes) {
+        let dirs: string[] = [];
+        let normalFiles: string[] = [];
 
-                    if(definitionFileName.split('.')[0] == file.split('.')[0]) {
-                        // correct suffix, correct filename, this is exactly
-                        // the file we want, just return it
-                        return fullPath;
+        return new Promise<string>((resolve, reject) => {
+            fsp.readdir(baseDirectory)
+                .then((files) => {
+                    return this.classifyFilesNonRecursively(baseDirectory, files);
+                })
+                .then(([dirs, normalFiles]) => {
+                    normalFiles.forEach(file => {
+                        if(path.extname(file) in resourceHolderSuffixes) {
+                            if(definitionFileName.split('.')[0] == file.split('.')[0]) {
+                                // correct suffix, correct filename, this is exactly
+                                // the file we want, just return it
+                                resolve(file);
+                            } else {
+                                // correct suffix, incorrect filename, this may be
+                                // the file we want, add it to the list so we chan
+                                // check later
+                                candidate = file;
+                            }
+                        }
+                    });
+                    if(candidate != null) {
+                        resolve(candidate);
                     } else {
-                        // correct suffix, incorrect filename, this may be
-                        // the file we want, add it to the list so we chan
-                        // check later
-                        resources.push(fullPath);
+                        let resDir = this.getResourceDirectory(dirs, resourceFileSuffixes)
+                        resolve(resDir);
                     }
-                }
-            }
+                })
+                .catch(err => {reject(err);});
         });
-
-        // pick a file instead of directory from resources
-        for(let resource of resources) {
-            if(fs.statSync(resource).isFile()) {
-                return new Option<string>(true, resource);
-            }
-        }
-
-        // it seemed that we only found directory, let's return one
-        if(resources.length > 0) {
-            return new Option<string>(true, resources[0]);
-        } else {
-            // we found nothing
-            return new Option<string>(false);
-        }
     }
 
-    private doesContainResources(dir: string,
-                                 resourceFileSuffixes: string[]): boolean {
-        fs.readdirSync(dir).forEach(file => {
-            if(path.extname(file) in resourceFileSuffixes) {
-                return true;
-            }
+    private getResourceDirectory(dirs: string[],
+                                 resourceFileSuffixes: string[]): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            dirs.forEach((dir, index) => {
+                fsp.readdir(dir)
+                    .then(files => {
+                        files.forEach(file => {
+                            if(path.extname(file) in resourceFileSuffixes) {
+                                resolve(dir);
+                            }
+                        });
+                        if(index == dirs.length - 1) {
+                            // all dirs looped, resource not found
+                            resolve('');
+                        }
+                    })
+                    .catch(err => {reject(err);});
+            });
         });
-        return false;
     }
 
     /** Walk through all files in <i>dir</i> recursively, and look for
@@ -115,28 +147,52 @@ export class Dictionary {
      */
     private searchForDictionaryFiles(
                 dir: string,
-                treeBuilders: TreeBuilder[] = this.treeBuilders,
-                initialArray: Array<DictMap> = []): Array<DictMap> {
+                treeBuilders: TreeBuilder[] = this.treeBuilders): Promise<DictMap[]> {
 
         // DictMap without resource
-        let partialDictMaps: Array<DictMap> = [];
-
-        fs.readdirSync(dir).forEach(file => {
-            let fullPath: string = path.join(dir, file);
-            if(fs.statSync(fullPath).isFile()) {
-                let optionTreeBuilder = this.getTreeBuilderForFile(file);
-                if(optionTreeBuilder.isValid) {
-                    partialDictMaps.push(<DictMap> {
-                        dict: fullPath,
-                        treeBuilder: optionTreeBuilder.value,
-                        resource: ""
-                    })
+        let dictMap: DictMap[] = [];
+        return new Promise<DictMap[]>((resolve, reject) => {
+            let walk = new Walk(dir);
+            walk.on('error', (err) => {
+                reject(err);
+            });
+            walk.on('file', (file, stat) => {
+                let ext = path.extname(file);
+                for(let treeBuilder of treeBuilders) {
+                    if(ext in treeBuilder.dictionarySuffixes) {
+                        dictMap.push(<DictMap> {
+                            dict: file,
+                            treeBuilder: treeBuilder,
+                            resource: ''
+                        });
+                        break;
+                    }
                 }
-            } else if(fs.statSync(fullPath).isDirectory()) {
-                this.searchForDictionaryFiles(dir, treeBuilders, partialDictMaps);
-            }
+            });
+            walk.on('end', () => {
+                resolve(dictMap);
+            });
         });
-        return partialDictMaps;
+    }
+
+    private getResources(dictMap: DictMap[]): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            dictMap.forEach((map, index) => {
+                this.getResource(map.dict,
+                                path.dirname(map.dict),
+                                map.treeBuilder.resourceHolderSuffixes,
+                                map.treeBuilder.resourceFileSuffixes)
+                    .then((res) => {
+                        map.resource = res;
+                        if(index == dictMap.length - 1) {
+                            resolve();
+                        }
+                    })
+                    .catch((err) => {
+                        reject(err);
+                    });
+            });
+        })
     }
 
 
@@ -147,58 +203,90 @@ export class Dictionary {
      * @param buildIndex whether we should build index
      *        after scanning is completed, which may
      *        take a while
-     * @param sqlFile path to the sql file, which is used to store information of
-     *        dictionaries, it's only useful when <i>buildIndex</i> is set to true.
      */
     public scan(dir: string,
-                buildIndex: boolean = true,
-                sqlFile: string = "./dictParser.db"): void {
-        let dictMap: Array<DictMap> = this.searchForDictionaryFiles(dir);
-        dictMap.forEach(map => {
-            let resourceOption = this.getResource(map.dict,
-                                                  path.dirname(map.dict),
-                                                  map.treeBuilder.resourceHolderSuffixes,
-                                                  map.treeBuilder.resourceFileSuffixes);
-            if(resourceOption.isValid) {
-                map.resource = resourceOption.value;
-            }
-        });
-
-        this.prepareDictTable();
-        this.insertDictInfoIntoDb(dictMap);
-
-        if(buildIndex) {
-            let wordIndexIterator = WordIndexIterator();
-            wordIndexIterator.prepareIndexTable();
-        }
+                buildIndex: boolean = true): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            this.searchForDictionaryFiles(dir)
+                .then((dictMap) => {
+                    this.dictMap = dictMap;
+                    return this.getResources(dictMap);
+                })
+                .then(() => {
+                    return this.prepareDictTable();
+                })
+                .then(() => {
+                    return this.insertDictInfoIntoDb(this.dictMap);
+                })
+                .then(() => {
+                    if(buildIndex) {
+                        return this.buildIndexWithDictMap(this.dictMap);
+                    }
+                })
+                .catch((err) => {
+                    reject(err)
+                });
+            });
     }
 
-    private insertDictInfoIntoDb(dictMap: Array<DictMap>) {
-        let db = new sqlite3.Database(Constant.pathToDbFile);
-        let resource = Constant.resourceTableName;
-        db.parallelize(() => {
-            let insertSQL = `INSERT INTO ${resource} 
-                             (DICT_ID, DICT_FILE, RESOURCE)
-                             VALUES (NULL, ?, ?)`;
-            let stmt: Statement = db.prepare(insertSQL);
-            for(let map of dictMap) {
-                stmt.run(map.dict, map.resource)
-            }
+    private buildIndexWithDictMap(dictMap: DictMap[]): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            dictMap.forEach((map, index) => {
+                map.treeBuilder.getIndexBuilder(map.dict).buildIndex()
+                    .then(() => {
+                        if(index = dictMap.length - 1) {
+                            resolve();
+                        }
+                    })
+                    .catch((err) => {
+                        reject(err);
+                    });
+            })
         });
-        db.close();
     }
 
-    private prepareDictTable(): void {
-        let db = new sqlite3.Database(Constant.pathToDbFile);
-        let resource = Constant.resourceTableName;
-        db.parallelize(() => {
-            db.run(`CREATE TABLE IF NOT EXISTS ${resource} (
-                      DICT_ID INTEGER PRIMARY KEY,
-                      DICT_FILE TEXT,
-                      RESOURCE TEXT
-                      )`);
+    private insertDictInfoIntoDb(dictMap: DictMap[]): Promise<void> {
+        let db = DatabaseFactory.getDb();
+        let dictTable = Constant.dictTableName;
+        let insertSQL = `INSERT INTO ${dictTable} 
+                        (DICT_ID, DICT_FILE, RESOURCE)
+                        VALUES (NULL, , ?)`;
+        return new Promise<void>((resolve, reject) => {
+            db.parallelize(() => {
+                for(let [index, map] of dictMap.entries()) {
+                    db.run(insertSQL, {
+                        1: map.dict,
+                        2: map.resource
+                    }, (err) => {
+                        if(err != null) {
+                            reject(err);
+                        } else if(index == dictMap.length - 1) {
+                            resolve();
+                        }
+                    });
+                }
+            });
         });
-        db.close();
+    }
+
+    private prepareDictTable(): Promise<void> {
+        let db = DatabaseFactory.getDb();
+        let resource = Constant.dictTableName;
+        return new Promise<void>((resolve, reject) => {
+            db.parallelize(() => {
+                db.run(`CREATE TABLE IF NOT EXISTS ${resource} (
+                        DICT_ID INTEGER PRIMARY KEY,
+                        DICT_FILE TEXT,
+                        RESOURCE TEXT
+                        )`, (err) => {
+                            if(err != null) {
+                                reject(err);
+                            } else {
+                                resolve();
+                            }
+                        });
+            });
+        });
     }
 }
 
@@ -206,9 +294,7 @@ declare module Dictionary {
     interface DictMap {
         // absolute path to the main dictionary file
         dict: string;
-
         treeBuilder: TreeBuilder;
-
         resource: string;
     }
 }
