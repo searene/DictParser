@@ -1,10 +1,9 @@
 import {Reader} from "./reader";
-import {Dictionary} from "./dictionary";
 import {TreeBuilder} from "./treeBuilder";
+
 /**
  * Created by searene on 17-1-23.
  */
-
 export enum parsingStatus {
     parsing,
     completed

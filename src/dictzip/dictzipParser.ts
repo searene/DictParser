@@ -1,6 +1,6 @@
 /// <reference path="dictzip.d.ts"/>
 
-import fsp = require("fs-promise");
+import * as fsp from "fs-promise";
 import {jszlib_inflate_buffer} from "inflate";
 
 /**

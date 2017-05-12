@@ -1,4 +1,4 @@
-import {Dictionary} from "./dictionary";
+import {DictionaryManager} from "./dictionary";
 import {Reader} from "./reader";
 import {CharState, parsingStatus} from "./charState";
 import {IndexBuilder} from "./indexBuilder";
@@ -66,9 +66,9 @@ export module TreeBuilder {
         private _attr: string;
 
         reset(): void {
-            this._parent = null;
-            this.firstChild = null;
-            this.nextSibling = null;
+            this._parent = new Tag();
+            this.firstChild = new Tag();
+            this.nextSibling = new Tag();
             this._tagName = '';
             this._tagType = Tag.normalTag;
             this._attr = '';

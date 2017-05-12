@@ -1,10 +1,12 @@
 import {Constant} from "./universal";
-import {DatabaseFactory} from './database';
+import {DatabaseManager} from './database';
 /**
  * Created by searene on 17-1-31.
  */
 
 export abstract class IndexBuilder {
+
+    protected databaseManager = new DatabaseManager();
 
     protected dictFile: string = "";
     protected dictId: number = 0;
@@ -41,7 +43,7 @@ export abstract class IndexBuilder {
     public getDictIdFromFileName(dictFile: string): Promise<number> {
         let dictTable = Constant.dictTableName;
         let dictId;
-        let db = DatabaseFactory.getDb();
+        let db = this.databaseManager.getDb();
         return new Promise<number>((resolve, reject) => {
             db.serialize(() => {
                 db.all(`SELECT DICT_ID AS id ${dictTable} WHERE DICT_FILE = ${dictFile}`, (err, rows) => {
@@ -56,7 +58,7 @@ export abstract class IndexBuilder {
     }
 
     public prepareIndexTable(): Promise<void> {
-        let db = DatabaseFactory.getDb();
+        let db = this.databaseManager.getDb();
 
         let wordIndex = Constant.indexTableName;
 

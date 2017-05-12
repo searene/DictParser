@@ -1,17 +1,16 @@
-import fsp = require("fs-promise");
-import readline = require("readline");
+import * as fsp from "fs-promise";
+import * as readline from "readline";
 import {Constant} from "../universal";
-import sqlite3 = require('sqlite3');
+import * as sqlite3 from 'sqlite3';
 import {IndexBuilder} from "../indexBuilder";
-import {DatabaseFactory} from '../database';
+import {DatabaseManager} from '../database';
 /**
  * Created by searene on 17-1-29.
  */
 
 export class DSLIndexBuilder extends IndexBuilder {
 
-    // path to the db file
-    private _sqlFile: string;
+    private dbFile: string;
 
     /** For dsl files, there are some meta data at the beginning
      * of the dsl file, we are not interested in the meta part,
@@ -27,7 +26,7 @@ export class DSLIndexBuilder extends IndexBuilder {
      * if so, add the index to this.indexArray.
      */
     private storeIndexInMemory(line: string, startPosOfLine: number) {
-        if(this.hasReachedDefinitionSection && line.match('^[^\s].*$)')) {
+        if(this.hasReachedDefinitionSection && line.match('^\S.*$)')) {
             this.indexArray.push([line.trim(), startPosOfLine]);
         } else if(!this.hasReachedDefinitionSection && line.match('^[^#\s].*$')) {
             this.hasReachedDefinitionSection = true;
@@ -54,21 +53,29 @@ export class DSLIndexBuilder extends IndexBuilder {
                 if(remaining.length > 0) {
                     this.storeIndexInMemory(remaining, pos);
                 }
-                // persist indexes to db
-                this.addIndexToDb(this.dictId, this.dictFile, this.indexArray);
-                resolve();
+                this.addIndexToDb(this.dictId, this.dictFile, this.indexArray)
+                    .then(() => {resolve()})
+                    .catch((err) => {reject(err)})
             });
-        })
+        });
     }
 
-    private addIndexToDb(dictId: number, dbFile: string, indexArray: [string, number][]) {
-        let db = DatabaseFactory.getDb();
-        db.parallelize(() => {
-            for(let index of indexArray) {
-                db.run(`INSERT INTO ${Constant.indexTableName}
+    private addIndexToDb(dictId: number, dbFile: string, indexArray: [string, number][]): Promise<void> {
+        let db = this.databaseManager.getDb();
+        return new Promise<void>((resolve, reject) => {
+            db.parallelize(() => {
+                for(let index of indexArray) {
+                    db.run(`INSERT INTO ${Constant.indexTableName}
                         (DICT_ID, WORD, LINE)
-                        VALUES (${dictId}, ${index[0]}, ${index[1]})`);
-            }
+                        VALUES (${dictId}, ${index[0]}, ${index[1]})`, err => {
+                        if(err) {
+                            reject(err);
+                        } else {
+                            resolve();
+                        }
+                    });
+                }
+            });
         });
     }
 }

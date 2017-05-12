@@ -12,12 +12,12 @@ export class Reader {
     }
 
     /** return the current character,
-     *  return null if all characters are read
+     *  return empty string if all characters are read
      */
     current(): string {
         return this.pos < this.input.length ?
             this.input[this.pos]:
-            null;
+            "";
     }
 
     advanceOneCharacter(): string {

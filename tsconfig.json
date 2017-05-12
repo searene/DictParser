@@ -2,13 +2,20 @@
     "compilerOptions": {
       "strictNullChecks": true,
       "outDir": "lib/",
-      "noImplicitAny": true,
-      "noImplicitReturns": true,
       "target": "es5",
-      "lib": ["es2015"]
+      "lib": ["es2015", "dom"]
     },
     "files": [
-      "src/test.ts"
+      // "src/test.ts",
       // "src/dictzip/dictzip.d.ts"
+      "test/dictionaryTest.ts"
+    ],
+    "include": [
+      "src/**/*",
+      "test/**/*"
+    ],
+    "exclude": [
+      "src/dsl/dslCharState.ts",
+      "src/dsl/dslTreeBuilder.ts"
     ]
 }

@@ -1,28 +1,37 @@
+import { Log } from './util/log';
 import {TreeBuilder} from "./treeBuilder";
-import fsp = require("fs-promise");
-import path = require("path");
-import sqlite3 = require('sqlite3');
-import DictMap = Dictionary.DictMap;
+import * as fsp from "fs-promise";
+import * as path from "path";
+import * as sqlite3 from 'sqlite3';
+import DictMap = DictionaryManager.DictMap;
 import {Constant} from "./universal";
 import {Statement} from "sqlite3";
 import {IndexBuilder} from "./indexBuilder";
 import {Walk} from "./util/os";
-import {DatabaseFactory} from './database';
+import {DatabaseManager} from './database';
+import * as log4js from 'log4js';
 
 /**
  * Created by searene on 17-1-23.
  */
 
-export class Dictionary {
-    private treeBuilders: TreeBuilder[];
+export class DictionaryManager {
 
-    // absolute path to db file
-    private dbFile: string;
+    private databaseManager = new DatabaseManager();
+
+    private logger = Log.getLogger();
+
+    private treeBuilders: TreeBuilder[];
 
     private dictMap: DictMap[];
 
-    constructor(dbFile: string) {
-        this.dbFile = dbFile;
+    /** You have to call the method after you have done everything
+     * with DictionaryManager in order to release resources.
+     */
+    public close(): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            this.databaseManager.close();
+        });
     }
 
     public addTreeBuilder(treeBuilder: TreeBuilder): void {
@@ -153,10 +162,10 @@ export class Dictionary {
         let dictMap: DictMap[] = [];
         return new Promise<DictMap[]>((resolve, reject) => {
             let walk = new Walk(dir);
-            walk.on('error', (err) => {
+            walk.on('error', (err: Error) => {
                 reject(err);
             });
-            walk.on('file', (file, stat) => {
+            walk.on('file', (file: string, stat: fsp.Stats) => {
                 let ext = path.extname(file);
                 for(let treeBuilder of treeBuilders) {
                     if(ext in treeBuilder.dictionarySuffixes) {
@@ -175,6 +184,9 @@ export class Dictionary {
         });
     }
 
+    /** Get resource file for each dictionary in dictMap, and
+     * store the resource path back in dictMap.
+     */
     private getResources(dictMap: DictMap[]): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             dictMap.forEach((map, index) => {
@@ -200,12 +212,8 @@ export class Dictionary {
      * supported by one of treeBuilders in <i>this.treeBuilders</i> list
      *
      * @param dir directory to search in
-     * @param buildIndex whether we should build index
-     *        after scanning is completed, which may
-     *        take a while
      */
-    public scan(dir: string,
-                buildIndex: boolean = true): Promise<void> {
+    public scan(dir: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             this.searchForDictionaryFiles(dir)
                 .then((dictMap) => {
@@ -213,15 +221,10 @@ export class Dictionary {
                     return this.getResources(dictMap);
                 })
                 .then(() => {
-                    return this.prepareDictTable();
-                })
-                .then(() => {
                     return this.insertDictInfoIntoDb(this.dictMap);
                 })
                 .then(() => {
-                    if(buildIndex) {
-                        return this.buildIndexWithDictMap(this.dictMap);
-                    }
+                    return this.buildIndexWithDictMap(this.dictMap);
                 })
                 .catch((err) => {
                     reject(err)
@@ -245,15 +248,16 @@ export class Dictionary {
         });
     }
 
-    private insertDictInfoIntoDb(dictMap: DictMap[]): Promise<void> {
-        let db = DatabaseFactory.getDb();
+    // TODO change public back to private
+    public insertDictInfoIntoDb(dictMap: DictMap[]): Promise<void> {
+        let db = this.databaseManager.getDb();
         let dictTable = Constant.dictTableName;
-        let insertSQL = `INSERT INTO ${dictTable} 
+        let insertSQL = `INSERT OR REPLACE INTO ${dictTable} 
                         (DICT_ID, DICT_FILE, RESOURCE)
-                        VALUES (NULL, , ?)`;
+                        VALUES (NULL, ?, ?)`;
         return new Promise<void>((resolve, reject) => {
             db.parallelize(() => {
-                for(let [index, map] of dictMap.entries()) {
+                dictMap.forEach((map, index) => {
                     db.run(insertSQL, {
                         1: map.dict,
                         2: map.resource
@@ -264,36 +268,18 @@ export class Dictionary {
                             resolve();
                         }
                     });
-                }
-            });
-        });
-    }
-
-    private prepareDictTable(): Promise<void> {
-        let db = DatabaseFactory.getDb();
-        let resource = Constant.dictTableName;
-        return new Promise<void>((resolve, reject) => {
-            db.parallelize(() => {
-                db.run(`CREATE TABLE IF NOT EXISTS ${resource} (
-                        DICT_ID INTEGER PRIMARY KEY,
-                        DICT_FILE TEXT,
-                        RESOURCE TEXT
-                        )`, (err) => {
-                            if(err != null) {
-                                reject(err);
-                            } else {
-                                resolve();
-                            }
-                        });
+                });
             });
         });
     }
 }
 
-declare module Dictionary {
+export declare module DictionaryManager {
     interface DictMap {
+
         // absolute path to the main dictionary file
         dict: string;
+
         treeBuilder: TreeBuilder;
         resource: string;
     }
