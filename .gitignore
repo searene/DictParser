@@ -40,3 +40,6 @@ jspm_packages
 .alm/
 .idea/
 .vscode/
+
+# vim
+tags
