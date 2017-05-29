@@ -1,15 +1,15 @@
-import * as log4js from 'log4js';
-import assert from 'assert';
+import { Log } from './../../main/typescript/util/log';
 import {Reader} from "../../main/typescript/Reader";
 import {LOG_CONFIG_LOCATION} from "../../main/typescript/constant";
+import {assert} from "chai";
 
 describe('test Reader', () => {
 
-    log4js.configure(LOG_CONFIG_LOCATION);
+    let logger = Log.getLogger();
 
-    it("#consumeUntilFind", () => {
+    it("#consumeTo", () => {
         let reader = new Reader("ab[d");
-        let consumedString = reader.consumeUntilFind('[', true);
-        assert.equal(consumedString, {valid: true, value: "ab"});
+        let consumedString = reader.consumeTo('[', false, true);
+        assert.deepEqual(consumedString, {isFound: true, value: "ab"});
     })
 });

@@ -4,17 +4,36 @@
 
 export class Node {
 
-    // node name, for text node, it's "text"
-    private _name: string;
+    // root node, there's only one root node in a WordTree
+    public static ROOT_NODE: number = 0;
+
+    // pure text
+    public static TEXT_NODE: number = 1;
+
+    // tagNode is something like [m1]blah[/m1]
+    public static TAG_NODE: number = 2;
+
+    // <<ref to another word>>
+    public static REF_NODE: number = 3;
+
+    // node name, i.e. tag name, like m1, m2, etc.
+    // for text/root node, this field remains empty
+    private _name: string = "";
+
+    private _type: number;
 
     // contents of the node, it's mainly used in
     // text nodes to store their contents
-    private _contents: string;
+    private _contents: string = "";
+
+    constructor(nodeType: number) {
+        this._type = nodeType;
+    }
 
     private _parent: Node;
-    private _children: Node[];
+    private _children: Node[] = [];
 
-    private _properties: Map<string, string>;
+    private _properties: Map<string, string> = new Map<string, string>();
 
     /** append a node to the end of the list of children of the peakNextChar node
      *
@@ -43,6 +62,15 @@ export class Node {
     set children(value: Node[]) {
         this._children = value;
     }
+
+    get type(): number {
+        return this._type;
+    }
+
+    set type(value: number) {
+        this._type = value;
+    }
+
     get parent(): Node {
         return this._parent;
     }
@@ -68,7 +96,7 @@ export class Node {
 export class WordTree {
 
     // word entry
-    private _entry: string[] = [];
+    private _entry: {completeEntry: string, indexableEntry: string}[] = [];
 
     // root node of the word definition
     private _root: Node;
@@ -81,11 +109,11 @@ export class WordTree {
         this._root = value;
     }
 
-    get entry(): string[] {
+    get entry(): {completeEntry: string, indexableEntry: string}[] {
         return this._entry;
     }
 
-    addEntry(entry: string): void {
+    addEntry(entry: {completeEntry: string, indexableEntry: string}): void {
         this._entry.push(entry);
     }
 }

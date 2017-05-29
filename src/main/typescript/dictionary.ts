@@ -141,7 +141,7 @@ export class DictionaryManager {
                             }
                         });
                         if(index == dirs.length - 1) {
-                            // all dirs looped, resource not found
+                            // all dirs looped, resource not isFound
                             resolve('');
                         }
                     })

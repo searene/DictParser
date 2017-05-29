@@ -3,13 +3,17 @@
       "noImplicitAny": true,
       "strictNullChecks": true,
       "outDir": "lib/",
-      "target": "es5",
-      "lib": ["es2015", "dom"],
-      "types": ["node", "mocha", "chai"]
+      "target": "es6",
+      "lib": ["es2017", "dom"],
+      "types": ["node"],
+      "sourceMap": true
     },
     "files": [
-      "src/main/typescript/DSLStateMachine.ts",
-      "src/test/typescript/DSLStateMachineTest.ts"
+      // "src/main/typescript/Reader.ts",
+      // "src/main/typescript/DSLStateMachine.ts",
+      // "src/test/typescript/ReaderTest.ts",
+      // "src/test/typescript/DSLStateMachineTest.ts",
+      "src/main/typescript/Test.ts"
     ]
     // "include": [
     //   "src/**/*",

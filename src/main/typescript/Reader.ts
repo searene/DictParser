@@ -1,10 +1,11 @@
 import * as log4js from 'log4js';
 import {LOG_CONFIG_LOCATION} from "./constant";
+import {Log} from "./util/log";
 /**
  * Created by searene on 17-1-22.
  */
 
-log4js.configure(LOG_CONFIG_LOCATION);
+let logger = Log.getLogger();
 
 export class Reader {
 
@@ -18,45 +19,44 @@ export class Reader {
     constructor(input: string) {
 
         // replace \r\n with \n so we won't deal with \r any more
-        input = input.replace('\r\n', '\n');
+        this._input = input.replace('\r\n', '\n');
 
-        this._input = input;
         this._pos = 0;
     }
 
     /** return the next character
      * 
-     * @returns valid: false if we have consumed all characters
+     * @returns isFound: false if we have consumed all characters
      *                 and nothing left for us to consume, true otherwise
-     *          value: consumed character, it exists only if {@code valid}
+     *          value: consumed character, it exists only if {@code isFound}
      *                is set true
      */
-    peakNextChar(): {valid: boolean, value?: string} {
+    peakNextChar(): {valid: boolean, value: string} {
         return this._pos < this._input.length ?
             {valid: true, value: this._input[this._pos]}:
-            {valid: false};
+            {valid: false, value: ""};
     }
 
-    getLastReadChar(): {valid: boolean, value?: string} {
+    getLastReadChar(): {valid: boolean, value: string} {
         return this._pos >= 1 ?
             {valid: true, value: this._input[this._pos]}:
-            {valid: false};
+            {valid: false, value: ""};
     }
 
     /** Read a character, return it
      *
-     * @returns valid: false if we have consumed all characters
+     * @returns isFound: false if we have consumed all characters
      *                 and nothing left for us to consume, true otherwise
-     *          value: consumed character, it exists only if {@code valid}
+     *          value: consumed character, it exists only if {@code isFound}
      *                is set true
      */
-    consumeOneChar(): {valid: boolean, value?: string} {
-        let current: {valid: boolean, char?: string} = this.peakNextChar();
-        if(current.valid) {
+    consumeOneChar(): {valid: boolean, value: string} {
+        let nextChar = this.peakNextChar();
+        if(nextChar.valid) {
             this._pos++;
-            return {valid: true, value: current.char};
+            return {valid: true, value: nextChar.value};
         } else {
-            return {valid: false};
+            return {valid: false, value: ""};
         }
     }
 
@@ -80,18 +80,18 @@ export class Reader {
      * going back.
      * 
      * If we cannot go back(i.e. the position we are in is less or
-     * equal to 0, the {@code valid} in the return value would be false)
+     * equal to 0, the {@code isFound} in the return value would be false)
      */
-    goBackOneCharacter(): {valid: boolean, value?: string} {
+    goBackOneCharacter(): {valid: boolean, value: string} {
         if(this._pos <= 0) {
             // return empty string if we cannot go back
-            return {valid: false};
+            return {valid: false, value: ""};
         } else {
             return {valid: true, value: this._input[this._pos--]};
         }
     }
 
-    consumeNChars(n: number): {valid: boolean, value?: string} {
+    consumeNChars(n: number): {valid: boolean, value: string} {
         let c = this.peakNextChar();
         let consumedCount = 0;
         let consumedString = "";
@@ -100,53 +100,34 @@ export class Reader {
             consumedString += c.value;
             c = this.peakNextChar();
         }
-        return consumedString == "" ? {valid: false} : {valid: true, value: consumedString};
+        return consumedString == "" ? {valid: false, value: ""} : {valid: true, value: consumedString};
     }
 
-    /** Consume characters until we meet {@code s}, notice that {@code s}
-     * is also included in the result
-     * 
-     * @param s consume until {@code s} is met
-     * @param considerEscape if {@code considerEscape} is set true, and suppose
-     *      {@code s} is [, we will take \[ as [ and continue to consume other
-     *      characters starting from [, instead of stopping when we see [
-     * @return {valid: boolean, value?: string}
-     *      valid: false if no more characters are left to be read, true otherwise
-     *      value: consumed string, including {@code s}
-     */
-    consumeUntilFind(s: string, considerEscape: boolean): {valid: boolean, value?: string} {
-        // let consumedString = "";
-        // let escaped = false;
-        // while(true) {
-        //     let currentChar = this.consumeOneChar();
-        //     if(currentChar.valid && currentChar.value == "\\" && considerEscape) {
-        //         escaped = true;
-        //     } else if(currentChar.valid && currentChar.value == s && escaped) {
-        //         consumedString += s;
-        //         escaped = false;
-        //     } else if(currentChar.valid && currentChar.value == s) {
-        //         return consumedString == "" ? {valid: false}
-        //                                     : {valid: true, value: consumedString};
-        //     } else if(!currentChar.valid) {
-        //         return consumedString == "" ? {valid: false}
-        //                                     : {valid: true, value: consumedString};
-        //     }
-        // }
+    consumeTo(s: string, isSearchedStringIncluded: boolean, considerEscape: boolean): {isFound: boolean, value: string} {
         if(this._pos >= this._input.length) {
-            return {valid: false};
+            return {isFound: false, value: ""};
         }
-        let remainingString = this._input.substring(this._pos);
-        let consumedString = s.substring(this._pos);
-        let index = remainingString.indexOf(s);
+        let startPos = this._pos;
+        let index = this._input.indexOf(s, startPos);
         while(index != -1) {
-            if((index - 1 >= this._pos && this._input[index - 1] != '\\') || (index == this._pos)) {
-                consumedString = s.substring(this._pos, index + 1);
+            if(!considerEscape) {
+                break;
+            } else if((index - 1 >= this._pos && this._input[index - 1] != '\\') || (index == this._pos)) {
                 break;
             } else {
-                index = remainingString.indexOf(s);
+                startPos = index + 1;
+                index = this._input.indexOf(s, startPos);
             }
         }
-        return {valid: true, value: consumedString};
+        if(index == -1) {
+            // not found
+            return {isFound: false, value: ""};
+        } else {
+            let nextPos = isSearchedStringIncluded ? index + s.length : index;
+            let consumedString = this._input.substring(this._pos, nextPos);
+            this._pos = nextPos;
+            return {isFound: true, value: consumedString};
+        }
     }
 
     consumeEmptySpaces(): void {

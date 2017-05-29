@@ -608,7 +608,7 @@ var mark = [0, 0, 255, 255]
 Inflate.prototype.inflateSync = function(z){
     var n;       // number of bytes to look at
     var p;       // pointer to bytes
-    var m;       // number of marker bytes found in a row
+    var m;       // number of marker bytes isFound in a row
     var r, w;   // temporaries to save total_in and total_out
 
     // set up
