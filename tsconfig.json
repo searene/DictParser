@@ -3,22 +3,23 @@
       "noImplicitAny": true,
       "strictNullChecks": true,
       "outDir": "lib/",
-      "target": "es6",
-      "lib": ["es2017", "dom"],
+      "target": "es5",
+      "lib": ["es2015", "dom"],
       "types": ["node"],
       "sourceMap": true
     },
     "files": [
-      // "src/main/typescript/Reader.ts",
-      // "src/main/typescript/DSLStateMachine.ts",
-      // "src/test/typescript/ReaderTest.ts",
-      // "src/test/typescript/DSLStateMachineTest.ts",
-      "src/main/typescript/Test.ts"
+      "src/main/typescript/Reader.ts",
+      "src/main/typescript/DSLStateMachine.ts",
+      "src/main/typescript/DetectEncoding.ts",
+      "src/test/typescript/ReaderTest.ts",
+      "src/test/typescript/DSLStateMachineTest.ts",
+      "src/test/typescript/DetectEncodingTest.ts",
+      "src/test/typescript/DictZipParserTest.ts"
+    ],
+    "include": [
+      "src/main/typescript/dictzip/*"
     ]
-    // "include": [
-    //   "src/**/*",
-    //   "src/test/**/*"
-    // ],
     // "exclude": [
     //   "src/dsl/dslCharState.ts",
     //   "src/dsl/dslTreeBuilder.ts"

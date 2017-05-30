@@ -1,12 +1,12 @@
 import { Log } from './util/log';
-import {TreeBuilder} from "./treeBuilder";
+import {Dictionary} from "./treeBuilder";
 import * as fsp from "fs-promise";
 import * as path from "path";
 import * as sqlite3 from 'sqlite3';
 import DictMap = DictionaryManager.DictMap;
 import {Constant} from "./constant";
 import {Statement} from "sqlite3";
-import {IndexBuilder} from "./indexBuilder";
+import {IndexManager} from "./indexBuilder";
 import {Walk} from "./util/os";
 import {DatabaseManager} from './database';
 import * as log4js from 'log4js';
@@ -15,27 +15,16 @@ import * as log4js from 'log4js';
  * Created by searene on 17-1-23.
  */
 
-export class DictionaryManager {
-
-    private databaseManager = new DatabaseManager();
+export class DictionaryFinder {
 
     private logger = Log.getLogger();
 
-    private treeBuilders: TreeBuilder[];
+    private _dictionaryManager: Dictionary[];
 
     private dictMap: DictMap[];
 
-    /** You have to call the method after you have done everything
-     * with DictionaryManager in order to release resources.
-     */
-    public close(): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            this.databaseManager.close();
-        });
-    }
-
-    public addTreeBuilder(treeBuilder: TreeBuilder): void {
-        this.treeBuilders.push(treeBuilder);
+    public addTreeBuilder(treeBuilder: Dictionary): void {
+        this._dictionaryManager.push(treeBuilder);
     }
 
     /** Classify files to directories and normal files non-recursively.
@@ -156,7 +145,7 @@ export class DictionaryManager {
      */
     private searchForDictionaryFiles(
                 dir: string,
-                treeBuilders: TreeBuilder[] = this.treeBuilders): Promise<DictMap[]> {
+                treeBuilders: Dictionary[] = this._dictionaryManager): Promise<DictMap[]> {
 
         // DictMap without resource
         let dictMap: DictMap[] = [];
@@ -280,7 +269,7 @@ export declare module DictionaryManager {
         // absolute path to the main dictionary file
         dict: string;
 
-        treeBuilder: TreeBuilder;
+        treeBuilder: Dictionary;
         resource: string;
     }
 }

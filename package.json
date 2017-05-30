@@ -38,7 +38,11 @@
   "dependencies": {
     "@types/fs-promise": "^1.0.1",
     "@types/log4js": "0.0.32",
+    "@types/mocha": "^2.2.41",
+    "detect-character-encoding": "^0.3.1",
+    "filereader": "^0.10.3",
     "fs-promise": "^1.0.0",
+    "jschardet": "^1.4.2",
     "log4js": "^1.1.0"
   }
 }

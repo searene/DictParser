@@ -1,6 +1,6 @@
-import { Log } from './../../main/typescript/util/log';
-import { WordTree } from './../../main/typescript/Tree';
-import { DSLStateMachine } from './../../main/typescript/DSLStateMachine';
+import { Log } from '../../main/typescript/util/log';
+import { WordTree } from '../../main/typescript/Tree';
+import { DSLStateMachine } from '../../main/typescript/DSLStateMachine';
 import {StateMachine} from "../../main/typescript/StateMachine";
 import * as mocha from 'mocha';
 
@@ -224,36 +224,24 @@ sample {unsorted part} card
             let stateMachine: StateMachine = new DSLStateMachine(simpleEntryContents);
             let wordTree: WordTree = stateMachine.run();
 
-            wordTree.entry.forEach(entry => {
-                logger.debug(entry);
-            })
         });
         it("Medium entry test", () => {
 
             let stateMachine: StateMachine = new DSLStateMachine(mediumEntryContents);
             let wordTree: WordTree = stateMachine.run();
 
-            wordTree.entry.forEach(entry => {
-                logger.debug(entry);
-            })
         });
         it("Complex entry test", () => {
 
             let stateMachine: StateMachine = new DSLStateMachine(complexEntryContents);
             let wordTree: WordTree = stateMachine.run();
 
-            wordTree.entry.forEach(entry => {
-                logger.debug(entry);
-            })
         });
         it("Typical entry test", () => {
 
             let stateMachine: StateMachine = new DSLStateMachine(typicalEntryContents);
             let wordTree: WordTree = stateMachine.run();
 
-            wordTree.entry.forEach(entry => {
-                logger.debug(entry);
-            })
         });
     });
 });

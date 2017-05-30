@@ -1,5 +1,5 @@
 import {Reader} from "./reader";
-import {TreeBuilder} from "./treeBuilder";
+import {Dictionary} from "./treeBuilder";
 
 /**
  * Created by searene on 17-1-23.
@@ -10,7 +10,7 @@ export enum parsingStatus {
 }
 
 export abstract class CharState {
-    protected treeBuilder: TreeBuilder;
+    protected treeBuilder: Dictionary;
     protected reader: Reader;
     private _status: parsingStatus;
 

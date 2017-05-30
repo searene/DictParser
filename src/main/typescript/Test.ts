@@ -1,18 +1,19 @@
-function fetchSomething(): Promise<string> {
-    return new Promise<string>((resolve, reject) => {
-        setTimeout(() => {
-            resolve("future value");
-        }, 500);
-    });
-}
+// import { ROOT_PATH } from './constant';
+// import * as path from 'path';
+// import DictZipParser from './dictzip/DictZipParser';
 
-async function run(): Promise<void> {
-    let contents: string = await fetchSomething();
-    console.log(contents);
-}
+// let simpleDictFile = path.join(ROOT_PATH, 'src/test/resources/simple_dict_file.txt.dz');
 
-run();
+// async function test() {
+//     try {
+//         let dictZipParser = new DictZipParser(simpleDictFile);
+//         let parsedBuffer = await dictZipParser.parse(0, 3);
 
-function(): Promise<void> {
-    return spawn()
-}
+//         let parsedString = parsedBuffer.toString('utf8');
+//         console.log(parsedString);
+//     } catch(e) {
+//         console.error(e.message);
+//     }
+// }
+
+// test();
