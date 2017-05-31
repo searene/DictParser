@@ -11,8 +11,7 @@ export default class DictZipParser {
     }
 
     async parse(pos: number, len: number): Promise<Buffer> {
-        let fileContents: Buffer = await fsp.readFile(this._dzFile);
-        let dictZipFile = new DictZipFile(fileContents., inflateBuffer);
+        let dictZipFile = new DictZipFile(this._dzFile, inflateBuffer);
         await dictZipFile.load();
         let parsedArrayBuffer: ArrayBuffer = await dictZipFile.read(pos, len);
         return Buffer.from(parsedArrayBuffer);

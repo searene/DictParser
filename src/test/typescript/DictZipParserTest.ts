@@ -11,7 +11,7 @@ describe('DictZipParser test', () => {
 
     it("#parse", async () => {
         let dictZipParser = new DictZipParser(simpleDictFile);
-        let parsedBuffer = await dictZipParser.parse(0, 3);
+        let parsedBuffer = await dictZipParser.parse(2, 3);
 
         let parsedString = parsedBuffer.toString('utf8');
         logger.debug(parsedString);
