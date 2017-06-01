@@ -7,6 +7,7 @@ import { getPosAfterBOM, detectEncodingByBOM } from '../../main/typescript/Detec
 import { assert } from "chai";
 import * as mocha from 'mocha';
 import * as path from 'path';
+import * as fsp from 'fs-promise';
 
 describe('detect encoding test', () => {
 
@@ -22,12 +23,12 @@ describe('detect encoding test', () => {
     let utf8_file = path.join(pathToEncodingsDirectory, 'utf8.txt');
 
     it("#detectEncoding", async () => {
-        let utf32be_encoding = await detectEncodingByBOM(utf32be_file);
-        let utf32le_encoding = await detectEncodingByBOM(utf32le_file);
-        let utf16be_encoding = await detectEncodingByBOM(utf16be_file);
-        let utf16le_encoding = await detectEncodingByBOM(utf16le_file);
-        let utf8withBom_encoding = await detectEncodingByBOM(utf8withBom_file);
-        let utf8_encoding = await detectEncodingByBOM(utf8_file);
+        let utf32be_encoding = await detectEncodingByBOM(await fsp.readFile(utf32be_file));
+        let utf32le_encoding = await detectEncodingByBOM(await fsp.readFile(utf32le_file));
+        let utf16be_encoding = await detectEncodingByBOM(await fsp.readFile(utf16be_file));
+        let utf16le_encoding = await detectEncodingByBOM(await fsp.readFile(utf16le_file));
+        let utf8withBom_encoding = await detectEncodingByBOM(await fsp.readFile(utf8withBom_file));
+        let utf8_encoding = await detectEncodingByBOM(await fsp.readFile(utf8_file));
         
         assert.deepEqual(utf32be_encoding, {isDetectionSuccessful: true, encoding: UTF_32_BE});
         assert.deepEqual(utf32le_encoding, {isDetectionSuccessful: true, encoding: UTF_32_LE});

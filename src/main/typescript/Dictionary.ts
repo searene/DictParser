@@ -1,9 +1,8 @@
 import { Log } from './util/log';
 import { DEFAULT_DB_PATH } from './constant';
 import { WordTree } from './Tree';
-import {DictionaryFinder} from "./dictionary";
-import {CharState, parsingStatus} from "./charState";
-import fsp from "fs-promise";
+import {DictionaryFinder} from "./DictionaryFinder";
+import * as fsp from "fs-promise";
 /**
  * Created by searene on 17-1-23.
  */
@@ -25,15 +24,16 @@ export abstract class Dictionary {
 
     /** 
      * Build the index of the given dictionary file, return it as an array
-     * @param dbFile path to dictionary
+     * @param dictFile path to dictionary
      */
-    async abstract buildIndex(dbFile: string): Promise<Index[]>;
+    async abstract buildIndex(dictFile: string): Promise<Index[]>;
 
     async saveIndex(index: Index[], dbFile = DEFAULT_DB_PATH): Promise<void> {
         let dbContents: string = await fsp.readFile(dbFile, {encoding: "utf-8"});
         let dbJson: any = JSON.parse(dbContents);
         dbJson['index'] = dbJson.hasOwnProperty('index') ? dbJson['index'] : {};
         dbJson['index'][this._dictionaryName] = index;
+        await fsp.writeFile(dbFile, dbJson, {encoding: 'utf8'});
     }
 
     async loadIndex(dbFile = DEFAULT_DB_PATH): Promise<Index[]> {

@@ -22,23 +22,24 @@ let logger = Log.getLogger();
  * Notice that a lot of UTF-8 files are deemed indetectable by the function because they don't
  * have a BOM header.
  * 
- * @param filePath path to the file whose encoding is to be detected
+ * @param fileContents file contents represented as Buffer
  * @return an object, containing two keys: 
  *          {@code isDetectionSuccessful: boolean},
  *          {@code encoding: string}
  * 
- *      1) If the function finds the encoding of the file, {@code isDetectionSuccessful}
+ *      1) If the function finds the encoding of {@code fileContents}, {@code isDetectionSuccessful}
  *         would be set to true, and {@code encoding} would be set to the detected encoding.
  *         Possible values of {@code encoding} is listed above. It is recommended to use
  *         encoding constants exported by this file instead of writing them manually to avoid
  *         possible typo.
- *      2) If the function can't find the encoding of the file, return
+ *      2) If the function can't find the encoding of {@code fileContents}, return
  *         {@code {isDetectionSuccessful: false, encoding: ""}}
  */
-export async function detectEncodingByBOM(filePath: string): Promise<{isDetectionSuccessful: boolean, encoding: string}> {
-    let fd: number = await fsp.open(filePath, 'r');
-    let bom: Buffer = Buffer.alloc(4);
-    await fsp.read(fd, bom, 0, 4, 0);
+export async function detectEncodingByBOM(fileContents: Buffer): Promise<{isDetectionSuccessful: boolean, encoding: string}> {
+    if(fileContents.length < 4) {
+        throw new Error("at least 4 bytes are needed");
+    }
+    let bom: Buffer = fileContents.slice(0, 4);
 
     if(bom.equals(Buffer.from("0000FEFF", "hex"))) {
         return {isDetectionSuccessful: true, encoding: UTF_32_BE};
@@ -63,7 +64,7 @@ export async function detectEncodingByBOM(filePath: string): Promise<{isDetectio
  * @param filePath path to the file to be checked
  */
 export async function getPosAfterBOM(filePath: string): Promise<number> {
-    let encodingDetectionResult = await detectEncodingByBOM(filePath);
+    let encodingDetectionResult = await detectEncodingByBOM(await fsp.readFile(filePath));
     let isDetected = encodingDetectionResult.isDetectionSuccessful;
     let encoding = encodingDetectionResult.encoding;
     if(isDetected && [UTF_32_BE, UTF_32_LE].indexOf(encoding) > -1) {

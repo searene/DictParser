@@ -1,14 +1,9 @@
+import { DEFAULT_DB_PATH, ROOT_PATH } from './constant';
 import { Log } from './util/log';
-import {Dictionary} from "./treeBuilder";
+import { Dictionary, Index } from "./Dictionary";
+import { Walk } from "./util/os";
 import * as fsp from "fs-promise";
 import * as path from "path";
-import * as sqlite3 from 'sqlite3';
-import DictMap = DictionaryManager.DictMap;
-import {Constant} from "./constant";
-import {Statement} from "sqlite3";
-import {IndexManager} from "./indexBuilder";
-import {Walk} from "./util/os";
-import {DatabaseManager} from './database';
 import * as log4js from 'log4js';
 
 /**
@@ -19,12 +14,12 @@ export class DictionaryFinder {
 
     private logger = Log.getLogger();
 
-    private _dictionaryManager: Dictionary[];
+    private _dictionaries: Dictionary[];
 
     private dictMap: DictMap[];
 
-    public addTreeBuilder(treeBuilder: Dictionary): void {
-        this._dictionaryManager.push(treeBuilder);
+    public addDictionary(dictionary: Dictionary): void {
+        this._dictionaries.push(dictionary);
     }
 
     /** Classify files to directories and normal files non-recursively.
@@ -140,12 +135,12 @@ export class DictionaryFinder {
     }
 
     /** Walk through all files in <i>dir</i> recursively, and look for
-     * the dictionary definition file(e.g. dz, dsl), add it along with
+     * dictionary definition files(e.g. dz, dsl), add it along with
      * its TreeBuilder to the result array.
      */
     private searchForDictionaryFiles(
                 dir: string,
-                treeBuilders: Dictionary[] = this._dictionaryManager): Promise<DictMap[]> {
+                dictionaries: Dictionary[] = this._dictionaries): Promise<DictMap[]> {
 
         // DictMap without resource
         let dictMap: DictMap[] = [];
@@ -156,11 +151,11 @@ export class DictionaryFinder {
             });
             walk.on('file', (file: string, stat: fsp.Stats) => {
                 let ext = path.extname(file);
-                for(let treeBuilder of treeBuilders) {
-                    if(ext in treeBuilder.dictionarySuffixes) {
+                for(let dictionary of dictionaries) {
+                    if(ext in dictionary.dictionarySuffixes) {
                         dictMap.push(<DictMap> {
-                            dict: file,
-                            treeBuilder: treeBuilder,
+                            dictPath: file,
+                            dictionary: dictionary,
                             resource: ''
                         });
                         break;
@@ -179,10 +174,10 @@ export class DictionaryFinder {
     private getResources(dictMap: DictMap[]): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             dictMap.forEach((map, index) => {
-                this.getResource(map.dict,
-                                path.dirname(map.dict),
-                                map.treeBuilder.resourceHolderSuffixes,
-                                map.treeBuilder.resourceFileSuffixes)
+                this.getResource(map.dictPath,
+                                path.dirname(map.dictPath),
+                                map.dictionary.resourceHolderSuffixes,
+                                map.dictionary.resourceFileSuffixes)
                     .then((res) => {
                         map.resource = res;
                         if(index == dictMap.length - 1) {
@@ -210,7 +205,7 @@ export class DictionaryFinder {
                     return this.getResources(dictMap);
                 })
                 .then(() => {
-                    return this.insertDictInfoIntoDb(this.dictMap);
+                    return this.saveDictMap(this.dictMap);
                 })
                 .then(() => {
                     return this.buildIndexWithDictMap(this.dictMap);
@@ -221,55 +216,37 @@ export class DictionaryFinder {
             });
     }
 
-    private buildIndexWithDictMap(dictMap: DictMap[]): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            dictMap.forEach((map, index) => {
-                map.treeBuilder.getIndexBuilder(map.dict).buildIndex()
-                    .then(() => {
-                        if(index = dictMap.length - 1) {
-                            resolve();
-                        }
-                    })
-                    .catch((err) => {
-                        reject(err);
-                    });
-            })
-        });
+    private async buildIndexWithDictMap(dictMapList: DictMap[], dbFile = DEFAULT_DB_PATH): Promise<void> {
+        for(let dictMap of dictMapList) {
+            let dictionary: Dictionary = dictMap.dictionary;
+            let indexList: Index[] = await dictionary.buildIndex(dictMap.dictPath);
+            await dictionary.saveIndex(indexList, dbFile);
+        }
     }
 
-    // TODO change public back to private
-    public insertDictInfoIntoDb(dictMap: DictMap[]): Promise<void> {
-        let db = this.databaseManager.getDb();
-        let dictTable = Constant.dictTableName;
-        let insertSQL = `INSERT OR REPLACE INTO ${dictTable} 
-                        (DICT_ID, DICT_FILE, RESOURCE)
-                        VALUES (NULL, ?, ?)`;
-        return new Promise<void>((resolve, reject) => {
-            db.parallelize(() => {
-                dictMap.forEach((map, index) => {
-                    db.run(insertSQL, {
-                        1: map.dict,
-                        2: map.resource
-                    }, (err) => {
-                        if(err != null) {
-                            reject(err);
-                        } else if(index == dictMap.length - 1) {
-                            resolve();
-                        }
-                    });
-                });
+    private async saveDictMap(dictMaps: DictMap[], dbFile: string = DEFAULT_DB_PATH): Promise<void> {
+        let dbContents: string = await fsp.readFile(dbFile, {encoding: "utf-8"});
+        let dbJson: any = JSON.parse(dbContents);
+
+        // remove the dictionary key
+        let newDictMaps: {dict: string, resource: string}[] = [];
+        for(let dictMap of dictMaps) {
+            newDictMaps.push({
+                dict: dictMap.dictPath,
+                resource: dictMap.resource
             });
-        });
+        }
+
+        dbJson['dictionary'] = newDictMaps;
+        await fsp.writeFile(dbFile, dbJson, {encoding: 'utf8'});
     }
 }
 
-export declare module DictionaryManager {
-    interface DictMap {
+export interface DictMap {
 
-        // absolute path to the main dictionary file
-        dict: string;
+    // absolute path to the main dictionary file
+    dictPath: string;
 
-        treeBuilder: Dictionary;
-        resource: string;
-    }
+    dictionary: Dictionary;
+    resource: string;
 }
