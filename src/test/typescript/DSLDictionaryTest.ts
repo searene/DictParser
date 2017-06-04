@@ -17,7 +17,7 @@ describe('DSLDictionaryTest', () => {
         let dictionary: Dictionary = new DSLDictionary();
         let indexableWord = (dictionary as any).getIndexableWord(word);
 
-        assert.equal(indexableWord, "abcf\\{g\\}h");
+        assert.equal(indexableWord, "abcf{g}h");
     });
     it("#buildIndex", async () => {
         let dzFile: string = path.join(ROOT_PATH, 'src/main/resources/dsl/sample.dsl');
