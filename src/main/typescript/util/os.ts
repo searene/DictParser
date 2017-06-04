@@ -12,39 +12,73 @@ export class Walk extends EventEmitter {
             this.walkthrough(dir, true);
         });
     }
-    private walkthrough(dir: string, topLevel: boolean): void {
-        let root: string;
-        fsp.stat(dir)
-            .then((stat) => {
-                if (stat.isDirectory) {
-                    return fsp.readdir(dir);
-                } else {
-                    throw new Error(`File ${dir} should be a directory.`);
+    private async walkthrough(dir: string, topLevel: boolean): Promise<void> {
+        try {
+            let root: string;
+            let files: string[];
+            let stat = await fsp.stat(dir);
+            if(stat.isDirectory) {
+                files = await readdirRecursively(dir);
+            } else {
+                throw new Error(`File ${dir} should be a directory.`);
+            }
+            for(let i = 0; i < files.length; i++) {
+                let file = files[i];
+                let stat = await fsp.stat(file);
+                if (stat.isDirectory()) {
+                    this.emit('dir', file, stat);
+                    process.nextTick(() => {
+                        this.walkthrough(file, false);
+                    })
+                } else if (stat.isFile()) {
+                    this.emit('file', file, stat);
                 }
-            })
-            .then(files => {
-                files.forEach((file, index) => {
-                    fsp.stat(file)
-                        .then((stat) => {
-                            if (stat.isDirectory) {
-                                this.emit('dir', file, stat);
-                                process.nextTick(() => {
-                                    this.walkthrough(file, false);
-                                })
-                            } else if (stat.isFile) {
-                                this.emit('file', file, stat);
-                            }
-                            if (index == files.length - 1 && topLevel) {
-                                this.emit('end');
-                            }
-                        })
-                });
-            })
-            .catch((err) => {
-                this.emit('error', err);
+            }
+            if(topLevel) {
                 this.emit('end');
-            });
+            }
+        } catch(err) {
+            this.emit('error', err);
+            this.emit('end');
+        }
     }
+}
+
+async function readdirRecursivelyInternal(dir: string): Promise<string[]> {
+    let stat = await fsp.stat(dir);
+    let files: string[] = [];
+    if(stat.isDirectory()) {
+        files.push(dir);
+        let subFiles: string[] = await fsp.readdir(dir);
+        for(let subFile of subFiles) {
+            subFile = path.join(dir, subFile);
+            (await readdirRecursivelyInternal(subFile)).forEach((file) => {
+                files.push(file);
+            });
+        }
+    } else if(stat.isFile()) {
+        files.push(dir);
+    }
+    return files;
+}
+async function readdirRecursively(dir: string): Promise<string[]> {
+    let files: string[] = [];
+    let subFiles: string[] = await fsp.readdir(dir);
+    for(let subFile of subFiles) {
+        subFile = path.join(dir, subFile);
+        (await readdirRecursivelyInternal(subFile)).forEach(file => files.push(file));
+    }
+    return files;
+}
+
+export async function readdirRecursivelyWithStat(dir: string): Promise<{filePath: string, stat: fsp.Stats}[]> {
+    let result: {filePath: string, stat: fsp.Stats}[] = [];
+    let files: string[] = await readdirRecursively(dir);
+    for(let file of files) {
+        let stat = await fsp.stat(file);
+        result.push({filePath: file, stat: stat});
+    }
+    return result;
 }
 
 export class FSHelper {

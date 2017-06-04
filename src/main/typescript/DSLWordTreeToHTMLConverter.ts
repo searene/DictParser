@@ -1,7 +1,7 @@
 import { NotImplementedError, NotResourceNodeError } from './errors';
 import { ROOT_PATH } from './constant';
 import { Node } from './Tree';
-import path from 'path';
+import * as path from 'path';
 
 export class DSLNodeToHTMLConverter {
 
@@ -55,7 +55,7 @@ export class DSLNodeToHTMLConverter {
                         let url: string = node.children.length == 1 ? node.children[0].contents : "";
                         return `<a class="dsl_url" href=${url}>${url}</a>`;
                     } else if(node.name == "c") {
-                        let color: string = node.properties.keys.length > 0 ? node.properties.keys[0] : "black";
+                        let color: string = node.properties.size > 0 ? node.properties.entries().next().value[0]: "black";
                         return `<font color=${color}>${htmlOfChildren}</font>`;
                     }
                 case Node.REF_NODE:
@@ -67,6 +67,7 @@ export class DSLNodeToHTMLConverter {
                     return "";
             }
         }
+        return "";
     }
 
     private getPathToRefWord(refWord: string): string {

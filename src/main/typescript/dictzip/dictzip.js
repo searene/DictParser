@@ -199,7 +199,7 @@
                         // index of the last chunk to be read
                         lastchunk = Math.min(Math.floor((pos+len)/chlen), chunks.length-1),
 
-                        // offset of the beginning of the given position
+                        // of/**/fset of the beginning of the given position
                         // relative to firstchunk before dictzip
                         offset = pos - firstchunk*chlen,
 

@@ -8,12 +8,13 @@
       "types": ["node"],
       "sourceMap": true
     },
-    "files": [
-      "src/test/typescript/DSLDictionaryTest.ts"
-    ]
-    // "include": [
-    //   "src/main/typescript/dictzip/*"
+    // "files": [
+    //   "src/test/typescript/DSLDictionaryTest.ts"
     // ]
+    "include": [
+      "src/main/typescript/**/*",
+      "src/test/typescript/**/*"
+    ]
     // "exclude": [
     //   "src/dsl/dslCharState.ts",
     //   "src/dsl/dslTreeBuilder.ts"

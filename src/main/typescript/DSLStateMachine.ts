@@ -27,7 +27,7 @@ export class DSLStateMachine extends StateMachine {
         super(input);
 
         // replace \r\n with \n so we won't deal with \r any more
-        this._input = this._input.replace('\r\n', '\n');
+        this._input = this._input.replace(/\r?\n|\r/g, "\n");
 
         this._reader = new Reader(this._input);
 

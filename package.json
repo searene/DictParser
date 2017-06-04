@@ -43,6 +43,7 @@
     "filereader": "^0.10.3",
     "fs-promise": "^1.0.0",
     "jschardet": "^1.4.2",
-    "log4js": "^1.1.0"
+    "log4js": "^1.1.0",
+    "ts-option": "^1.1.3"
   }
 }
