@@ -48,7 +48,7 @@ export class DSLDictionary extends Dictionary {
         }
         return i;
     }
- 
+
     async buildIndex(dictFile: string): Promise<Index[]> {
 
         let indexList: Index[] = [];
@@ -63,7 +63,7 @@ export class DSLDictionary extends Dictionary {
 
             // line is not empty and doesn't start with spaces
             if(line.trim().length != 0 && [" ", "\t"].indexOf(line.substring(0, 1)) == -1) {
-                indexList.push({word: this.getIndexableWord(line), line: i});
+                indexList.push({word: this.getIndexableWord(line), pos: i});
             }
         }
         return indexList;

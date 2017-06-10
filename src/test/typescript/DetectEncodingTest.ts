@@ -5,7 +5,6 @@ import { Reader } from "../../main/typescript/Reader";
 import { LOG_CONFIG_LOCATION } from "../../main/typescript/constant";
 import { detectEncodingInBuffer } from '../../main/typescript/DetectEncoding';
 import { assert } from "chai";
-import * as mocha from 'mocha';
 import * as path from 'path';
 import * as fsp from 'fs-promise';
 

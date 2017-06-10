@@ -20,17 +20,17 @@ describe('DSLDictionaryTest', () => {
         assert.equal(indexableWord, "abcf{g}h");
     });
     it("#buildIndex", async () => {
-        let dzFile: string = path.join(ROOT_PATH, 'src/main/resources/dsl/sample.dsl');
+        let dzFile: string = path.join(ROOT_PATH, 'src/test/resources/dsl/sample.dsl');
         let dictionary: Dictionary = new DSLDictionary();
         let indexList: Index[] = await dictionary.buildIndex(dzFile);
         assert.deepEqual(indexList, [
-            { word: 'trivial card', line: 4},
-            { word: 'sample entry', line: 7},
-            { word: 'example', line: 8},
-            { word: 'sample  card', line: 9},
-            { word: 'sample headword', line: 10},
-            { word: 'typical card', line: 191},
-            { word: 'resourceCard', line: 213}
+            { word: 'trivial card', pos: 4},
+            { word: 'sample entry', pos: 7},
+            { word: 'example', pos: 8},
+            { word: 'sample  card', pos: 9},
+            { word: 'sample headword', pos: 10},
+            { word: 'typical card', pos: 191},
+            { word: 'resourceCard', pos: 213}
         ]);
     });
 });

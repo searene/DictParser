@@ -1,8 +1,7 @@
-import { WordTree } from './Tree';
-import {StateMachine} from "./StateMachine";
-import {Reader} from "./Reader";
-import {Node} from "./Tree";
-import {Log} from "./util/log";
+import { Reader } from "./Reader";
+import { Node, WordTree } from "./Tree";
+import { Log } from "./util/log";
+import { StateMachine, StateValue } from './StateMachine';
 /**
  * Created by searene on 5/13/17.
  */
@@ -13,10 +12,9 @@ export class DSLStateMachine extends StateMachine {
 
     private _reader: Reader;
 
-    protected _output: WordTree;
+    protected _wordTree: WordTree;
 
-    private _currentEntryWithoutUnsortedPart: string;
-    private _currentEntryWithUnsortedPart: string;
+    private _currentEntry: string;
 
     private _currentNode: Node;
 
@@ -27,263 +25,241 @@ export class DSLStateMachine extends StateMachine {
         super(input);
 
         // replace \r\n with \n so we won't deal with \r any more
-        this._input = this._input.replace(/\r?\n|\r/g, "\n");
+        input = input.replace(/\r?\n|\r/g, "\n");
 
-        this._reader = new Reader(this._input);
+        this._reader = new Reader(input);
 
-        this._currentEntryWithoutUnsortedPart = "";
+        this._wordTree = new WordTree();
+        this._wordTree.root = new Node(Node.ROOT_NODE);
 
-        this._output = new WordTree();
-        this._output.root = new Node(Node.ROOT_NODE);
-
-        this._currentNode = this._output.root;
-    }
-
-    private addStringToCurrentEntry(s: string): void {
-        this._currentEntryWithoutUnsortedPart += s;
-        this._currentEntryWithUnsortedPart += s;
-    }
-
-    private resetCurrentEntry(): void {
-        this._currentEntryWithoutUnsortedPart = "";
-        this._currentEntryWithUnsortedPart = "";
+        this._currentEntry = "";
+        this._currentNode = this._wordTree.root;
     }
 
     protected states = {
-        initial: (): void => {
-            this.resetCurrentEntry();
-            this.states.inEntry();
+        initial: (param?: any): StateValue => {
+            return { next: this.states.inEntry };
         },
-        inEntry: (): void => {
+        inEntry: (param?: any): StateValue => {
             let currentChar = this._reader.consumeOneChar();
-            if(!currentChar.valid) this.states.completed();
+            if(!currentChar.valid) return { next: this.states.completed };
             switch(currentChar.value) {
                 case '\n':
-                    this._output.addEntry({completeEntry: this._currentEntryWithUnsortedPart, indexableEntry: this._currentEntryWithoutUnsortedPart});
-                    this.resetCurrentEntry();
-
+                    this._wordTree.entry = this._currentEntry;
                     let c = this._reader.consumeOneChar();
                     if(c.valid && (c.value == ' ' || c.value == '\t')) {
-                        this.states.definitionStart();
+                        return { next: this.states.defLineStart };
                     } else if(c.valid) {
-                        this._currentEntryWithoutUnsortedPart += c.value;
-                        this.states.inEntry();
+
+                        // we are in another entry, read on until we
+                        // find definition
+                        while(true) {
+                            let consumed = this._reader.consumeTo("\n", true, false);
+                            if(!consumed.isFound) return { next: this.states.completed };
+
+                            let c = this._reader.consumeOneChar();
+                            if(!c.valid) {
+                                return { next: this.states.completed };
+                            } else if([' ', '\t'].indexOf(c.value) > -1) {
+                                return { next: this.states.defLineStart };
+                            }
+                        }
                     } else {
-                        this.states.completed();
+                        return { next: this.states.completed };
                     }
-                    break;
                 case '\\':
                     let escapedChar = this._reader.consumeOneChar();
                     if(escapedChar.valid) {
-                        this.addStringToCurrentEntry(escapedChar.value);
-                        this.states.inEntry();
+                        this._currentEntry += escapedChar;
+                        return { next: this.states.inEntry };
                     } else {
-                        this.states.completed();
+                        return { next: this.states.completed };
                     }
-                    break;
                 case '{':
-                    let nextChar = this._reader.consumeOneChar();
-                    if(nextChar.valid && nextChar.value == '{') {
-                        let consumedString = this._reader.consumeTo('}}', true, true);
-                        if(consumedString.isFound) {
-                            this._currentEntryWithoutUnsortedPart += consumedString.value.substring(0, consumedString.value.length - 2);
-                            this.states.inEntry();
-                        } else {
-                            this.addStringToCurrentEntry('{');
-                            this._reader.goBackOneCharacter();
-                            this.states.inEntry();
-                        }
-                    } else {
-                        this.addStringToCurrentEntry('{');
-                        this._reader.goBackOneCharacter();
-                        this.states.inEntry();
-                    }
-                    break;
+                    return { next: this.states.inEntry };
                 default:
-                    this.addStringToCurrentEntry(currentChar.value);
-                    this.states.inEntry();
-                    break;
+                    this._currentEntry += currentChar.value;
+                    return { next: this.states.inEntry };
             }
         },
-        definitionStart: (): void => {
+        defLineStart: (param?: any): StateValue => {
             let currentChar = this._reader.consumeOneChar();
-            if(!currentChar.valid) this.states.completed();
+            if(!currentChar.valid) return { next: this.states.completed };
             switch(currentChar.value) {
                 case ' ':
                 case '\t':
-                    this.states.definitionStart();
-                    break;
+                    return { next: this.states.defLineStart };
                 case '\n':
-                    this.states.completed();
-                    break;
+                    return { next: this.states.defLineStart };
                 default:
+                    this._currentNode = this.initNewNode(this._wordTree.root, Node.NEW_LINE_NODE);
                     this._reader.goBackOneCharacter();
-                    this.states.inDefinition();
-                    break;
+                    return { next: this.states.inDefinition };
             }
         },
-        inDefinition: (): void => {
+        inDefinition: (param?: any): StateValue => {
             let currentChar = this._reader.consumeOneChar();
-            if(!currentChar.valid) this.states.completed();
+            if(!currentChar.valid) return { next: this.states.completed };
             switch(currentChar.value) {
+                case '{':
+                    return { next: this.states.enterComments, param: this.states.inDefinition };
+                case '\\':
+                    return { next: this.states.inEscape, param: this.states.inDefinition };
                 case '[':
-                    this.states.enterNodeStart();
-                    break;
+                    if(this._currentNode.type == Node.TEXT_NODE) {
+                        this._currentNode = this._currentNode.parent;
+                    }
+                    let c = this._reader.peakNextChar();
+                    if(!c.valid) return { next: this.states.completed };
+                    if(c.value == '/') {
+                        this._reader.consumeOneChar();
+                        return { next: this.states.inNodeEnd };
+                    } else {
+                        this._currentNode = this.initNewNode(this._currentNode, Node.TAG_NODE);
+                        return { next: this.states.inNodeStart };
+                    }
                 case '\n':
-                    this.states.definitionStart();
-                    break;
+                    return { next: this.states.defLineStart };
                 case '<':
+                    return { next: this.states.enterRef, param: this.states.inDefinition };
+                default:
+                    this.consume(this.states.inDefinition, currentChar.value);
+                    return { next: this.states.inDefinition };
+            }
+        },
+        inEscape: (previousFunc?: any): StateValue => {
+            this.assertFunc(previousFunc);
+            previousFunc = previousFunc as Function;
+            let currentChar = this._reader.consumeOneChar();
+            if(!currentChar.valid) return { next: this.states.completed };
+            if(currentChar.value == '\n' && previousFunc == this.states.defLineStart) {
+                this.initNewNode(this._wordTree.root, Node.NEW_LINE_NODE);
+                return { next: previousFunc };
+            } else if(currentChar.value == '\n') {
+                return { next: this.states.defLineStart };
+            } else if(['{', '}', '<', '>'].indexOf(currentChar.value) > -1) {
+                let nextChar = this._reader.consumeOneChar();
+                if(!nextChar.valid) {
+                    this.consume(previousFunc, currentChar.value);
+                    return { next: this.states.completed };
+                } else if(nextChar.value == currentChar.value) {
+                    this.consume(previousFunc, currentChar.value + nextChar.value);
+                    return { next: previousFunc };
+                } else {
+                    this._reader.goBackOneCharacter();
+                    this.consume(previousFunc, currentChar.value);
+                    return { next: previousFunc };
+                }
+            } else {
+                this.consume(previousFunc, currentChar.value);
+                return { next: previousFunc };
+            }
+        },
+        enterComments: (previousFucntion?: any): StateValue => {
+            this.assertFunc(previousFucntion);
+            let currentChar = this._reader.consumeOneChar();
+            if (!currentChar.valid) return { next: this.states.completed };
+            switch (currentChar.value) {
+                case '{':
+                    return { next: this.states.inComments, param: previousFucntion };
+                default:
+                    return { next: this.states.completed };
+            }
+        },
+        inComments: (functionBeforeComments?: any): StateValue => {
+            let currentChar = this._reader.consumeOneChar();
+            if (!currentChar.valid) return { next: this.states.completed };
+            switch (currentChar.value) {
+                case '}':
                     let nextChar = this._reader.consumeOneChar();
-                    if(nextChar.valid && nextChar.value == '<') {
-                        let consumedString = this._reader.consumeTo('>>', true, true);
-                        if(consumedString.isFound) {
-                            let refNode: Node = this.initNewNode(this._currentNode, Node.REF_NODE);
-                            let refWord: string = consumedString.value.substring(0, consumedString.value.length - 2);
-                            refNode.contents = refWord;
-                            this.states.inDefinition();
-                        } else {
-                            this.addStringToCurrentEntry('<');
-                            this._reader.goBackOneCharacter();
-                            this.states.inDefinition();
-                        }
-                    } else {
-                        this.addStringToCurrentEntry('<');
-                        this._reader.goBackOneCharacter();
-                        this.states.inDefinition();
+                    if(!nextChar.valid) return { next: this.states.completed };
+                    if(nextChar.value == '}') {
+                        // the end of comments is found
+                        return { next: functionBeforeComments };
                     }
-                    break;
-
-                default:
-                    let textNode: Node = this.initNewNode(this._currentNode, Node.TEXT_NODE);
-                    textNode.name = "text";
-                    textNode.contents += currentChar.value;
-
-                    let consumedString = this._reader.consumeTo('[', false, true);
-                    if(consumedString.isFound) {
-                        textNode.contents += consumedString.value;
-                        this.states.enterNodeStart();
-                    } else {
-                        this.states.completed();
-                    }
-                    break;
-            }
-        },
-        enterNodeStart: (): void => {
-            let currentChar = this._reader.consumeOneChar();
-            if (!currentChar.valid) this.states.completed();
-            switch (currentChar.value) {
-                case '/':
-                    this.states.enterNodeEnd();
-                    break;
-                case ']':
-                    this._currentNode = this.initNewNode(this._currentNode, Node.TAG_NODE);
-                    this.states.inDefinition();
-                    break;
-                case '{':
-                    let nextChar = this._reader.peakNextChar();
-                    if(nextChar.valid && nextChar.value == '{') {
-                        let consumedString = this._reader.consumeTo('}}', true, true);
-                        if(!consumedString.isFound) {
-                            this.states.completed();
-                        } else {
-                            this.states.enterNodeEnd();
-                        }
-                    } else if(nextChar.valid) {
-                        this.states.enterNodeEnd();
-                    } else {
-                        this.states.completed();
-                    }
-                    break;
                 case '\\':
-                    let c = this._reader.consumeOneChar();
-                    if (c.valid) {
-                        this._currentNode.name += c.value;
-                        this.states.inNodeStart();
-                    } else {
-                        this.states.completed();
-                    }
-                    break;
+                    return { next: this.states.inEscape, param: this.states.inComments };
                 default:
-                    this._currentNode.name += currentChar.value;
-                    this.states.inNodeStart();
-                    break;
+                    return { next: this.states.inComments, param: functionBeforeComments };
             }
         },
-        inNodeStart: (): void => {
+        enterRef: (previousFunction?: any): StateValue => {
             let currentChar = this._reader.consumeOneChar();
-            if(!currentChar.valid) this.states.completed();
+            if(!currentChar.valid) {
+                this.consume(previousFunction, '<');
+                return { next: this.states.completed };
+            }
+            switch(currentChar.value) {
+                case '<':
+                    return { next: this.states.inRef, param: previousFunction };
+                default:
+                    this.consume(previousFunction, '<');
+                    this._reader.goBackOneCharacter();
+                    return { next: previousFunction };
+            }
+        },
+        inRef: (functionBeforeRef?: any): StateValue => {
+            this.assertFunc(functionBeforeRef);
+            let currentChar = this._reader.consumeOneChar();
+            if(!currentChar.valid) return { next: this.states.completed };
+            switch(currentChar.value) {
+                case '\\':
+                    return { next: this.states.inEscape, param: this.states.inRef }
+                case '>':
+                    let nextChar = this._reader.consumeOneChar();
+                    if(!nextChar.valid) return { next: this.states.completed };
+                    if(nextChar.value == '>') {
+                        this._currentNode = this._currentNode.parent;
+                        return { next: functionBeforeRef };
+                    } else {
+                        this.consume(this.states.inRef, nextChar.value);
+                        return { next: this.states.inRef, param: functionBeforeRef };
+                    }
+                default:
+                    this.consume(this.states.inRef, currentChar.value);
+                    return { next: this.states.inRef, param: functionBeforeRef };
+            }
+        },
+        inNodeStart: (param?: any): StateValue => {
+            let currentChar = this._reader.consumeOneChar();
+            if(!currentChar.valid) this.states.completed;
             switch (currentChar.value) {
                 case ']':
-                    this._currentNode = this.initNewNode(this._currentNode, Node.TAG_NODE);
-                    this.states.inDefinition();
-                    break;
+                    // split name and properties
+                    let propertyList: string[] = this._currentNode.name.split(/\s+/);
+                    this._currentNode.name = propertyList[0];
+                    propertyList.slice(1).forEach((property) => {
+                        let keyAndValue: string[] = property.split('=');
+                        this._currentNode.properties.set(keyAndValue[0], keyAndValue.slice(1).join('='));
+                    });
+                    return { next: this.states.inDefinition };
                 case '{':
-                    let nextChar = this._reader.peakNextChar();
-                    if(nextChar.valid && nextChar.value == '{') {
-                        let consumedString = this._reader.consumeTo('}}', true, true);
-                        if(!consumedString.isFound) {
-                            this.states.completed();
-                        } else {
-                            this.states.inNodeStart();
-                        }
-                    } else if(nextChar.valid) {
-                        this.states.enterNodeEnd();
-                    } else {
-                        this.states.completed();
-                    }
-                    break;
+                    return { next: this.states.enterComments, param: this.states.inNodeStart };
                 case '\\':
-                    let c = this._reader.consumeOneChar();
-                    if (c.valid) {
-                        this._currentNode.name += c.value;
-                        this.states.inNodeStart();
-                    } else {
-                        this.states.completed();
-                    }
-                    break;
+                    return { next: this.states.inEscape, param: this.states.inNodeStart };
                 default:
-                    this._currentNode.name += currentChar.value;
-                    this.states.inNodeStart();
-                    break;
+                    this.consume(this.states.inNodeStart, currentChar.value);
+                    return { next: this.states.inNodeStart };
             }
         },
-        enterNodeEnd: (): void => {
+        inNodeEnd: (param?: any): StateValue => {
             let currentChar = this._reader.consumeOneChar();
-            if(!currentChar.valid) this.states.completed();
+            if(!currentChar.valid) return { next: this.states.completed };
             switch(currentChar.value) {
                 case ']':
-                    this.states.inDefinition();
-                    break;
+                    this._currentNode = this._currentNode.parent;
+                    return { next: this.states.inDefinition };
                 case '\\':
-                    if(this._reader.consumeOneChar().valid) {
-                        this.states.enterNodeEnd();
-                    } else {
-                        this.states.completed();
-                    }
-                    break;
+                    return { next: this.states.inNodeEnd, param: this.states.inNodeEnd };
                 case '{':
-                    let nextChar = this._reader.peakNextChar();
-                    if(nextChar.valid && nextChar.value == '{') {
-                        let consumedString = this._reader.consumeTo('}}', true, true);
-                        if(!consumedString.isFound) {
-                            this.states.completed();
-                        } else {
-                            this.states.enterNodeEnd();
-                        }
-                    } else if(nextChar.valid) {
-                        this.states.enterNodeEnd();
-                    } else {
-                        this.states.completed();
-                    }
-                    break;
+                    return { next: this.states.enterComments, param: this.states.inNodeEnd };
                 default:
-                    if(!this._reader.consumeOneChar().valid) {
-                        return this.states.completed();
-                    }
-                    break;
+                    return { next: this.states.inNodeEnd };
             }
         },
-        completed: (): void => {}
+        completed: (param?: any): StateValue => {
+            return { next: this.states.completed };
+        }
     };
 
     /** Create a new node, whose parent is {@code parentOfTheNewNode},
@@ -292,19 +268,47 @@ export class DSLStateMachine extends StateMachine {
      * @param parentOfTheNewNode peakNextChar node
      */
     private initNewNode(parentOfTheNewNode: Node, nodeTypeForNewNode: number): Node {
+        while(parentOfTheNewNode.type == Node.TEXT_NODE) {
+            parentOfTheNewNode = parentOfTheNewNode.parent;
+        }
         let previousNode: Node = parentOfTheNewNode;
         let newNode: Node = new Node(nodeTypeForNewNode);
         previousNode.appendChild(newNode);
         return newNode;
     }
 
-    /** Set {@code node} as {@code node}'s parent,
-     * and return the parent
-     * 
-     * @param node the node to be closed
-     */
-    private closeNode(node: Node): Node {
-        node = node.parent;
-        return node;
+    private assertFunc(obj: any): void {
+        if(obj == undefined || !(obj instanceof Function)) {
+            throw new Error(`${obj} is not a function`);
+        }
+    }
+
+    private consume(previousFunc: Function, value: string): void {
+        switch(previousFunc) {
+            case this.states.defLineStart:
+            case this.states.inDefinition:
+                if(this._currentNode.type != Node.TEXT_NODE) {
+                    this._currentNode = this.initNewNode(this._currentNode, Node.TEXT_NODE);
+                }
+                this._currentNode.contents += value;
+                break;
+            case this.states.inNodeStart:
+                if(this._currentNode.type != Node.TAG_NODE) {
+                    this._currentNode = this.initNewNode(this._currentNode, Node.TAG_NODE);
+                }
+                this._currentNode.name += value;
+                break;
+            case this.states.inRef:
+                if(this._currentNode.type != Node.REF_NODE) {
+                    this._currentNode = this.initNewNode(this._currentNode, Node.REF_NODE);
+                }
+                this._currentNode.name += value;
+                break;
+            case this.states.inComments:
+            case this.states.inNodeEnd:
+                // ignore
+            default:
+                // unknown behaviour, ignore
+        }
     }
 }

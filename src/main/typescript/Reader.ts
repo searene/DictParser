@@ -39,7 +39,7 @@ export class Reader {
 
     getLastReadChar(): {valid: boolean, value: string} {
         return this._pos >= 1 ?
-            {valid: true, value: this._input[this._pos]}:
+            {valid: true, value: this._input[this._pos - 2]}:
             {valid: false, value: ""};
     }
 

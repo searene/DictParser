@@ -62,5 +62,5 @@ export abstract class Dictionary {
 
 export interface Index {
     word: string,
-    line: number;
+    pos: number;
 }

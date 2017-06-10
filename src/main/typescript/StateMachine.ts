@@ -19,11 +19,14 @@ export abstract class StateMachine {
     run(): WordTree {
 
         // propel state machine
-        this.states[this._initialState]();
+        let stateValue: StateValue = { next: this.states[this._initialState] };
+        while(stateValue.next != this.states[this._completedState]) {
+            stateValue = stateValue.next(stateValue.param);
+        }
 
         // state machine is completed, the generated tree
         // is stored in this._output, let's fetch it
-        return this._output;
+        return this._wordTree;
     }
 
     /* input to the state machine, it should be a word entry
@@ -35,7 +38,7 @@ export abstract class StateMachine {
         key: entry list
         value: Tree built by the word definition
      */
-    protected _output: WordTree;
+    protected _wordTree: WordTree;
 
     // function name of the initial state
     protected _initialState: string = 'initial';
@@ -47,5 +50,10 @@ export abstract class StateMachine {
      * is the state name, each function has a return value, which
      * represents the next state's function
      */
-    protected abstract states: {[state: string]: () => void}
+    protected abstract states: {[state: string]: (addition?: any) => StateValue}
+}
+
+export interface StateValue {
+    next: Function;
+    param?: any;
 }

@@ -1,7 +1,10 @@
+import { DSLDictionary } from './DSLDictionary';
+import { Dictionary } from './Dictionary';
 import { NotImplementedError, NotResourceNodeError } from './errors';
-import { ROOT_PATH } from './constant';
+import { ROOT_PATH, RESOURCE_PATH } from './constant';
 import { Node } from './Tree';
 import * as path from 'path';
+import * as fsp from 'fs-promise';
 
 export class DSLNodeToHTMLConverter {
 
@@ -57,12 +60,14 @@ export class DSLNodeToHTMLConverter {
                     } else if(node.name == "c") {
                         let color: string = node.properties.size > 0 ? node.properties.entries().next().value[0]: "black";
                         return `<font color=${color}>${htmlOfChildren}</font>`;
-                    }
+                    } 
                 case Node.REF_NODE:
                     let refWord: string = node.contents;
                     return `<a class="dsl_ref" href="${this.getPathToRefWord(refWord)}">${refWord}</a>`;
                 case Node.TEXT_NODE:
                     return node.contents;
+                case Node.NEW_LINE_NODE:
+                    return `<span class="new_line">${htmlOfChildren}</span>`;
                 default:
                     return "";
             }
@@ -78,8 +83,11 @@ export class DSLNodeToHTMLConverter {
 
 export class ResourceReader {
 
-    private audioExtensions = [".wav", ".mp3"];
-    private imageExtensions = [".jpg", ".png"];
+    private _audioExtensions = [".wav", ".mp3"];
+    private _imageExtensions = [".jpg", ".png"];
+
+    private _resourceFile:string;
+    private _dslDictionary: Dictionary = new DSLDictionary();
 
     /**
      * Resource types
@@ -87,6 +95,10 @@ export class ResourceReader {
     public static AUDIO = 0;
     public static IMAGE = 1;
     public static UNKNOWN = 2;
+
+    constructor(resourceFile: string) {
+        this._resourceFile = resourceFile;
+    }
 
     isResourceNode(node: Node): boolean {
         return node.name == 's' && node.children.length == 1 && node.children[0].name == 'text';
@@ -96,9 +108,9 @@ export class ResourceReader {
         if(this.isResourceNode(node)) {
             let fileName = node.children[0].contents;
             let ext = path.extname(fileName).toLowerCase();
-            if(this.audioExtensions.indexOf(ext) > -1) {
+            if(this._audioExtensions.indexOf(ext) > -1) {
                 return ResourceReader.AUDIO;
-            } else if(this.imageExtensions.indexOf(ext) > -1) {
+            } else if(this._imageExtensions.indexOf(ext) > -1) {
                 return ResourceReader.IMAGE;
             } else {
                 return ResourceReader.UNKNOWN;
@@ -117,7 +129,7 @@ export class ResourceReader {
     }
 
     getResourcePathFromName(resourceName: string): string {
-        throw new NotImplementedError("Not implemented yet");
+        return path.join(this._resourceFile, resourceName);
     }
 
     getResourcePath(resourceNode: Node): string {
@@ -130,7 +142,7 @@ export class ResourceReader {
     }
 
     getPathToSoundImg(): string {
-        throw new NotImplementedError("Not implemented yet");
+        return path.join(RESOURCE_PATH, 'sound.png');
     }
 }
 

@@ -16,6 +16,9 @@ export class Node {
     // <<ref to another word>>
     public static REF_NODE: number = 3;
 
+    // new line
+    public static NEW_LINE_NODE: number = 4;
+
     // node name, i.e. tag name, like m1, m2, etc.
     // for text/root node, this field remains empty
     private _name: string = "";
@@ -55,6 +58,10 @@ export class Node {
         return this._properties;
     }
 
+    set properties(properties: Map<string, string>) {
+        this._properties = properties;
+    }
+
     get children(): Node[] {
         return this._children;
     }
@@ -91,12 +98,32 @@ export class Node {
     set contents(value: string) {
         this._contents = value;
     }
+
+    toString(indent = 0) {
+        let prefix = "";
+        for(let i = 0; i < indent; i++) {
+            if(i == 0) prefix += "|";
+            else prefix += "-";
+        }
+        let properties = "";
+        this._properties.forEach((value: string, key: string) => {
+            properties += `{${key} => ${value}}`;
+        })
+        let currentNodeToString = `${prefix}name:${this._name}, ${properties}, type:${this._type}, contents:${this._contents}.`;
+        let childrenNodesToString = "";
+        for(let i = 0; i < this._children.length; i++) {
+            let child: Node = this._children[i];
+            childrenNodesToString += "\n" + child.toString(indent + 2);
+        }
+    
+        return currentNodeToString +  childrenNodesToString;
+    }
 }
 
 export class WordTree {
 
     // word entry
-    private _entry: {completeEntry: string, indexableEntry: string}[] = [];
+    private _entry: string;
 
     // root node of the word definition
     private _root: Node;
@@ -109,11 +136,16 @@ export class WordTree {
         this._root = value;
     }
 
-    get entry(): {completeEntry: string, indexableEntry: string}[] {
+    get entry(): string {
         return this._entry;
     }
 
-    addEntry(entry: {completeEntry: string, indexableEntry: string}): void {
-        this._entry.push(entry);
+    set entry(entry: string) {
+        this._entry = entry;
+    }
+
+    toString() {
+        return `${this._entry}
+${this._root.toString()}`;
     }
 }

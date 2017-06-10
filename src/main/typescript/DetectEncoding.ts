@@ -48,3 +48,8 @@ export async function detectEncodingInBuffer(fileContents: Buffer): Promise<{enc
         return {encoding: UTF_8, posAfterBom: 0};
     }
 }
+
+export async function detectEncodingInFile(filePath: string): Promise<{encoding: string, posAfterBom: number}> {
+    let fileContents: Buffer = await fsp.readFile(filePath);
+    return await detectEncodingInBuffer(fileContents);
+}
