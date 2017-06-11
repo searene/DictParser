@@ -1,25 +1,39 @@
 import { DSLDictionary } from './DSLDictionary';
-import { Dictionary } from './Dictionary';
+import { Dictionary, WordTreeHTML } from './Dictionary';
+import { WordTree } from './Tree'
 import { NotImplementedError, NotResourceNodeError } from './errors';
 import { ROOT_PATH, RESOURCE_PATH } from './constant';
 import { Node } from './Tree';
 import * as path from 'path';
 import * as fsp from 'fs-promise';
 
-export class DSLNodeToHTMLConverter {
+export class DSLWordTreeToHTMLConverter {
 
-    private _node: Node;
-    private _completeEntry: string;
-    private _resourceReader: ResourceReader;
+    private _audioExtensions = [".wav", ".mp3"];
+    private _imageExtensions = [".jpg", ".png"];
 
-    constructor(completeEntry: string, node: Node, resourceReader: ResourceReader) {
-        this._completeEntry = completeEntry;
-        this._node = node;
-        this._resourceReader = resourceReader;
+    /**
+     * Resource types
+     */
+    private ResourceType = {
+        AUDIO: 1,
+        IMAGE: 2,
+        UNKNOWN: 3
     }
 
-    private convertEntryToHTML() {
-        return `<div class="dsl_headwords"><p>${this._completeEntry}</p></div>`;
+    convertWordTreeToHTML(wordTree: WordTree): WordTreeHTML {
+        return {
+            entry: this.convertEntryToHTML(wordTree.entry),
+            definition: this.convertRootNodeToHTML(wordTree.root)
+        }
+    }
+
+    private convertEntryToHTML(entry: string) {
+        return `<div class="dsl_headwords"><p>${entry}</p></div>`;
+    }
+
+    private convertRootNodeToHTML(rootNode: Node): string {
+        return this.convertNodesToHTML(rootNode.children);
     }
 
     private convertNodesToHTML(nodes: Node[]): string {
@@ -44,10 +58,10 @@ export class DSLNodeToHTMLConverter {
                         return htmlOfChildren;
                     } else if(node.name == "ex") {
                         return `<div class="dsl_opt><span class="dsl_ex"><span class="dsl_lang">${htmlOfChildren}</span></span></div>`;
-                    } else if(node.name == "s" && this._resourceReader.getResourceType(node) == ResourceReader.AUDIO) {
-                        return `<span class="dsl_s_wav"><a href="${this._resourceReader.getResourcePath(node)}"><img src="${this._resourceReader.getPathToSoundImg()}" border="0" align="absmiddle" alt="Play"></a></span>`;
-                    } else if(node.name == 's' && this._resourceReader.getResourceType(node) == ResourceReader.IMAGE) {
-                        return `<img src="${this._resourceReader.getResourcePath(node)}" alt="${this._resourceReader.getResourceName(node)}">`;
+                    } else if(node.name == "s" && this.getResourceType(node) == this.ResourceType.AUDIO) {
+                        return `<span class="dsl_s_wav"><a href="${this.getResourcePath(node)}"><img src="${this.getPathToSoundImg()}" border="0" align="absmiddle" alt="Play"></a></span>`;
+                    } else if(node.name == 's' && this.getResourceType(node) == this.ResourceType.IMAGE) {
+                        return `<img src="${this.getResourcePath(node)}" alt="${this.getResourceName(node)}">`;
                     } else if(node.name == '\'') {
                         let stressedText = node.children.length > 0 ? node.children[0].contents : "";
                         return `<span class="dsl_stress"><span class="dsl_stress_without_accent">stressedText</span><span class="dsl_stress_with_accent">${AccentConverter.getAccentedChar(stressedText)}</span></span>`;
@@ -79,48 +93,13 @@ export class DSLNodeToHTMLConverter {
         let encodedRefWord: string = encodeURIComponent(refWord);
         return `dplookup://localhost/${encodedRefWord}`;
     }
-}
 
-export class ResourceReader {
 
-    private _audioExtensions = [".wav", ".mp3"];
-    private _imageExtensions = [".jpg", ".png"];
-
-    private _resourceFile:string;
-    private _dslDictionary: Dictionary = new DSLDictionary();
-
-    /**
-     * Resource types
-     */
-    public static AUDIO = 0;
-    public static IMAGE = 1;
-    public static UNKNOWN = 2;
-
-    constructor(resourceFile: string) {
-        this._resourceFile = resourceFile;
-    }
-
-    isResourceNode(node: Node): boolean {
+    private isResourceNode(node: Node): boolean {
         return node.name == 's' && node.children.length == 1 && node.children[0].name == 'text';
     }
 
-    getResourceType(node: Node): number {
-        if(this.isResourceNode(node)) {
-            let fileName = node.children[0].contents;
-            let ext = path.extname(fileName).toLowerCase();
-            if(this._audioExtensions.indexOf(ext) > -1) {
-                return ResourceReader.AUDIO;
-            } else if(this._imageExtensions.indexOf(ext) > -1) {
-                return ResourceReader.IMAGE;
-            } else {
-                return ResourceReader.UNKNOWN;
-            }
-        } else {
-            throw new NotResourceNodeError("Not a resource node");
-        }
-    }
-
-    getResourceName(node: Node): string {
+    private getResourceName(node: Node): string {
         if(this.isResourceNode(node)) {
             return node.children[0].contents;
         } else {
@@ -128,11 +107,11 @@ export class ResourceReader {
         }
     }
 
-    getResourcePathFromName(resourceName: string): string {
-        return path.join(this._resourceFile, resourceName);
+    private getResourcePathFromName(resourceName: string): string {
+        return resourceName;
     }
 
-    getResourcePath(resourceNode: Node): string {
+    private getResourcePath(resourceNode: Node): string {
         if(this.isResourceNode(resourceNode)) {
             let fileName = resourceNode.children[0].contents;
             return this.getResourcePathFromName(fileName);
@@ -141,13 +120,23 @@ export class ResourceReader {
         }
     }
 
-    getPathToSoundImg(): string {
+    private getPathToSoundImg(): string {
         return path.join(RESOURCE_PATH, 'sound.png');
     }
-}
 
-export class AccentConverter {
-    static getAccentedChar(c: string) {
-        return new NotImplementedError("");
+    private getResourceType(node: Node): number {
+        if(this.isResourceNode(node)) {
+            let fileName = node.children[0].contents;
+            let ext = path.extname(fileName).toLowerCase();
+            if(this._audioExtensions.indexOf(ext) > -1) {
+                return this.ResourceType.AUDIO;
+            } else if(this._imageExtensions.indexOf(ext) > -1) {
+                return this.ResourceType.IMAGE;
+            } else {
+                return this.ResourceType.UNKNOWN;
+            }
+        } else {
+            throw new NotResourceNodeError("Not a resource node");
+        }
     }
 }

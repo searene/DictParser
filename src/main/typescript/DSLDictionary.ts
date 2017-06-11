@@ -1,11 +1,14 @@
-import { LineReader } from './LineReader';
+import { Option, some } from 'ts-option';
+import { DictMap } from './DictionaryFinder';
+import { DSLWordTreeToHTMLConverter } from './DSLWordTreeToHTMLConverter';
+import { LineReader, LineStats } from './LineReader';
+import { BufferReader, DzBufferReader, SimpleBufferReader } from './BufferReader';
 import { DSLStateMachine } from './DSLStateMachine';
 import { StateMachine } from './StateMachine';
 import { WordTree } from './Tree';
-import { Dictionary, Index } from "./Dictionary";
+import { Dictionary, WordPosition, DictionaryStats, WordTreeHTML } from "./Dictionary";
 import { DictZipParser } from "./dictzip/DictZipParser";
-import { detectEncodingInBuffer } from "./DetectEncoding";
-import * as DetectEncoding from "./DetectEncoding";
+import { getEncodingInFile, getEncodingInBuffer } from "./EncodingDetector";
 import * as fsp from 'fs-promise';
 import * as path from 'path';
 /**
@@ -14,61 +17,60 @@ import * as path from 'path';
 
 export class DSLDictionary extends Dictionary {
 
-    protected _dictName: string = 'dsl';
+    protected _dictionarySuffixes: string[] = ['.dsl', '.dz'];
 
-    protected _dictionarySuffixes: string[] = ['.dsl', '.dz '];
+    private wordTreeHTMLConverter: DSLWordTreeToHTMLConverter = new DSLWordTreeToHTMLConverter();
 
-    parse(contents: string): WordTree {
-        let stateMachine: StateMachine = new DSLStateMachine(contents);
+    async getWordTree(dictFile: string, pos: number, len: number): Promise<WordTree> {
+        let input: string = await this.getFileContents(dictFile, pos, len);
+        let stateMachine: StateMachine = new DSLStateMachine(input);
         return stateMachine.run();
     }
 
-    private async getDictContents(dictFile: string): Promise<string> {
-        let dictBinaryContents: Buffer;
-        if(path.extname(dictFile) == 'dz') {
-            let dictZipParser = new DictZipParser(dictFile);
-            dictBinaryContents = await dictZipParser.parse(0);
-        } else {
-            dictBinaryContents = await fsp.readFile(dictFile);
-        }
-
-        let encoding = await detectEncodingInBuffer(dictBinaryContents);
-        let dictContents: string = dictBinaryContents.slice(encoding.posAfterBom).toString(encoding.encoding);
-        return dictContents;
+    async getHTML(dictFile: string, pos: number, len: number): Promise<WordTreeHTML> {
+        let wordTree: WordTree = await this.getWordTree(dictFile, pos, len);
+        return this.wordTreeHTMLConverter.convertWordTreeToHTML(wordTree);
     }
 
-    private getStartingLineOfDefinitionPart(dictContents: string): number {
-        let i = 0;
-        // read line by line
-        let lines: string[] = dictContents.split("\n");
-        for(; i < lines.length; i++) {
-            let line = lines[i];
-            if(!line.startsWith("#") && line.trim().length != 0) {
-                break;;
-            }
-        }
-        return i;
-    }
-
-    async buildIndex(dictFile: string): Promise<Index[]> {
-        return new Promise<Index[]>((resolve, reject) => {
-            let indexList: Index[] = [];
+    async getDictionaryStats(dictFile: string): Promise<DictionaryStats> {
+        return new Promise<DictionaryStats>((resolve, reject) => {
+            let indexMap: Map<string, WordPosition> = new Map<string, WordPosition>();
+            let meta: Map<string, string> = new Map<string, string>();
             let isInDefinition = false;
 
+            let len = 0;
+            let word: Option<string>;
             let lineReader = new LineReader(dictFile);
-            lineReader.on('line', (data: [string, number]) => {
-                let line = data[0];
-                let pos = data[1];
-                if(isInDefinition && line.trim().length > 0 && [' ', '\t'].indexOf(line[0]) == -1) {
-                    indexList.push({word: this.getIndexableWord(line), pos: pos});
-                } else if(!isInDefinition && line.trim().length > 0 && !line.startsWith('#')) {
-                    isInDefinition = true;
-                    indexList.push({word: this.getIndexableWord(line), pos: pos});
+            lineReader.on('line', (lineStats: LineStats) => {
+                let line = lineStats.line;
+                let pos = lineStats.pos;
+
+                let isFirstDefinition: boolean = !isInDefinition && line.trim().length > 0 && !line.startsWith('#');
+                let isFollowingDefinition: boolean = isInDefinition && line.trim().length > 0 && [' ', '\t'].indexOf(line[0]) == -1;
+                if(isInDefinition && line.startsWith('#')) {
+                    // meta data
+                    let header: string[] = line.substring(1).split(/\s(.+)/);
+                    meta.set(header[0], header[1]);
+                } else if(isFirstDefinition || isFollowingDefinition) {
+                    if(isFirstDefinition) isInDefinition = true;
+                    if(word.exists) {
+                        indexMap.get(word.get)!.len = len;
+                    }
+                    word = some(this.getIndexableWord(line));
+                    indexMap.set(word.get, {pos: pos, len:-1});
+                    len = lineStats.length;
+                } else {
+                    len += line.length;
                 }
             });
             lineReader.on('end', () => {
-                resolve(indexList);
+                let wordPosition = indexMap.get(word.get);
+                if(wordPosition != undefined) {
+                    wordPosition.len = len;
+                }
+                resolve({meta: meta, indexMap: indexMap});
             });
+            lineReader.process();
         });
     }
 
@@ -97,5 +99,24 @@ export class DSLDictionary extends Dictionary {
             }
         }
         return indexableWord;
+    }
+
+    private getBufferReader(dictFile: string): BufferReader {
+        let bufferReader: BufferReader;
+        let ext = path.extname(dictFile);
+        if(ext == '.dsl') {
+            bufferReader = new SimpleBufferReader();
+        } else if(ext == '.dz') {
+            bufferReader = new DzBufferReader();
+        } else {
+            throw new Error(`${ext} file is not supported`);
+        }
+        return bufferReader;
+    }
+    private async getFileContents(dictFile: string, pos: number, len: number): Promise<string> {
+        let bufferReader: BufferReader = this.getBufferReader(dictFile);
+        let buffer: Buffer = await bufferReader.read(dictFile, pos, len);
+        let encoding = (await bufferReader.getEncodingStat(dictFile)).encoding;
+        return buffer.toString(encoding);
     }
 }

@@ -28,7 +28,7 @@ let logger = Log.getLogger();
  *          {@code encoding: string}
  *          {@code posAfterBom: pos of the real contents, excluding the bom at the beginning}
  */
-export async function detectEncodingInBuffer(fileContents: Buffer): Promise<EncodingStat> {
+export async function getEncodingInBuffer(fileContents: Buffer): Promise<EncodingStat> {
     if(fileContents.length < 4) {
         throw new Error("at least 4 bytes are needed");
     }
@@ -49,9 +49,14 @@ export async function detectEncodingInBuffer(fileContents: Buffer): Promise<Enco
     }
 }
 
-export async function detectEncodingInFile(filePath: string): Promise<EncodingStat> {
-    let fileContents: Buffer = await fsp.readFile(filePath);
-    return await detectEncodingInBuffer(fileContents);
+export async function getEncodingInFile(filePath: string): Promise<EncodingStat> {
+    let fd: number = await fsp.open(filePath, 'r');
+    let buffer = Buffer.alloc(4);
+    let bytesRead = (await fsp.read(fd, buffer, 0, 4, 0))[0];
+    if(bytesRead < 4) {
+        throw new Error(`at least 4 bytes are required to detect encoding in file ${filePath}`);
+    }
+    return await getEncodingInBuffer(buffer);
 }
 
 export interface EncodingStat {

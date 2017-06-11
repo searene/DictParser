@@ -1,4 +1,5 @@
-import { detectEncodingInBuffer, EncodingStat } from './DetectEncoding';
+import { BufferReader, SimpleBufferReader, DzBufferReader } from './BufferReader';
+import { getEncodingInBuffer, EncodingStat } from './EncodingDetector';
 import { DictZipParser } from './dictzip/DictZipParser';
 import * as EventEmitter from 'events';
 import * as fsp from 'fs-promise';
@@ -22,8 +23,11 @@ export class LineReader extends EventEmitter {
         super();
         this._filePath = filePath;
         this._len = len;
+    }
+
+    process() {
         process.nextTick(() => {
-            this.run();
+            run();
         });
     }
 
@@ -34,19 +38,18 @@ export class LineReader extends EventEmitter {
             throw new Error(`No BufferReader is not registered for ${ext}.`);
         }
         this._bufferReader = bufferReader as BufferReader;
-        await this._bufferReader.init(this._filePath);
     }
 
-    async run(): Promise<void> {
+    private async run(): Promise<void> {
         await this.init();
 
-        let encodingStat = await this._bufferReader.getEncodingStat();
+        let encodingStat = await this._bufferReader.getEncodingStat(this._filePath);
         this._encoding = encodingStat.encoding;
 
         let dataProcessTotally: number = encodingStat.posAfterBom;
 
         // buffer read each time from file
-        let bufferRead: Buffer = await this._bufferReader.read(dataProcessTotally, this._len);
+        let bufferRead: Buffer = await this._bufferReader.read(this._filePath, dataProcessTotally, this._len);
 
         // data to be processed
         let data = bufferRead;
@@ -60,7 +63,7 @@ export class LineReader extends EventEmitter {
             dataProcessTotally += dataProcessedEachTime;
 
             // read 64KB
-            bufferRead = await this._bufferReader.read(encodingStat.posAfterBom + i * this._len, this._len);
+            bufferRead = await this._bufferReader.read(this._filePath, encodingStat.posAfterBom + i * this._len, this._len);
 
             // concat data that is not processed last time and data read this time
             data = Buffer.concat([data.slice(dataProcessedEachTime), bufferRead]);
@@ -73,7 +76,6 @@ export class LineReader extends EventEmitter {
             }
             this.emitLines(data, dataProcessTotally);
         }
-        this.destroy();
         this.emit('end');
     }
 
@@ -82,93 +84,42 @@ export class LineReader extends EventEmitter {
         let pos = 0;
         let line: string = "";
         for(let i = 0; i < s.length; i++) {
+            line += s[i];
             if(s[i] == '\r' && i + 1 < s.length && s[i + 1] == '\n') {
                 i++;
-                this.emit('line', [line, pos + previousBytesRead]);
-                pos += Buffer.from(line + '\r\n', this._encoding).length;
+                line = line + '\n';
+                this.emit('line', {
+                    line: line, 
+                    pos: pos + previousBytesRead,
+                    length: Buffer.from(line, this._encoding).length
+                });
+                pos += Buffer.from(line, this._encoding).length;
                 line = "";
             } else if((s[i] == '\r' && i + 1 < s.length && s[i + 1] != '\n') || s[i] == '\n') {
-                this.emit('line', [line, pos + previousBytesRead]);
-                pos += Buffer.from(line + s[i], this._encoding).length;
+                this.emit('line', {
+                    line: line, 
+                    lineStartPos: pos + previousBytesRead,
+                    lineLength: Buffer.from(line, this._encoding).length
+                });
+                pos += Buffer.from(line, this._encoding).length;
                 line = "";
-            } else if(['\r', '\n'].indexOf(s[i]) == -1) {
-                line += s[i];
             }
         }
         return pos;
     }
 
-    private async destroy(): Promise<void> {
-        this._bufferReader.destroy();
-    }
-
-    static register(ext: string, bufferReader: BufferReader): void {
-        this._bufferReaders.set(ext, bufferReader);
+    static register(ext: string, BufferReaderConstructor: new () => BufferReader): void {
+        this._bufferReaders.set(ext, new BufferReaderConstructor());
     }
 }
 
-interface BufferReader {
-    init(filePath: string): void;
-    read(start: number, len: number): Promise<Buffer>;
-    getEncodingStat(): Promise<EncodingStat>;
-    destroy(): void;
-}
 
-class SimpleBufferReader implements BufferReader {
-
-    protected _fd: number;
-    protected _filePath: string;
-
-    async init(filePath: string): Promise<void> {
-        this._filePath = filePath;
-        this._fd = await fsp.open(filePath, 'r');
-    }
-
-    async read(start: number, len: number): Promise<Buffer> {
-        let buffer = Buffer.alloc(len);
-        let readContents = await fsp.read(this._fd, buffer, 0, len, start);
-        if(buffer.length > readContents[0]) {
-            buffer = buffer.slice(0, readContents[0]);
-        }
-        return buffer;
-    }
-
-    async destroy(): Promise<void> {
-        await fsp.close(this._fd);
-    }
-
-    async getEncodingStat(): Promise<EncodingStat> {
-        let buffer: Buffer = Buffer.alloc(4);
-        let bytesRead: [number, Buffer] = await fsp.read(this._fd, buffer, 0, 4, 0);
-        if(bytesRead[0] < 4) {
-            throw new Error(`The size of file ${this._filePath} cannot be less than 4 bytes.`);
-        }
-        return await detectEncodingInBuffer(buffer);
-    }
-}
-
-class DzBufferReader extends SimpleBufferReader {
-
-    private _dictZipParser: DictZipParser;
-
-    async init(filePath: string): Promise<void> {
-        super.init(filePath);
-        this._dictZipParser = new DictZipParser(filePath);
-    }
-
-    async read(start: number, len: number): Promise<Buffer> {
-        return await this._dictZipParser.parse(start, len);
-    }
-
-    async getEncodingStat(): Promise<EncodingStat> {
-        let buffer: Buffer = await this._dictZipParser.parse(0, 4);
-        if(buffer.length < 4) {
-            throw new Error(`The size of file ${this._filePath} cannot be less than 4 bytes.`);
-        }
-        return await detectEncodingInBuffer(buffer);
-    }
+export interface LineStats {
+    line: string;
+    pos: number; // in binary instead of string
+    length: number; // in binary instead of string
 }
 
 // register default BufferReaders
-LineReader.register('.dsl', new SimpleBufferReader());
-LineReader.register('.dz', new DzBufferReader());
+LineReader.register('.dsl', SimpleBufferReader);
+LineReader.register('.dz', DzBufferReader);

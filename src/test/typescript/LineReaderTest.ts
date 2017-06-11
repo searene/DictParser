@@ -32,6 +32,7 @@ describe('LineReaderTest', () => {
             ]);
             done();
         });
+        simpleLineReader.process();
     });
 
     it("#run with dz", (done) => {
@@ -55,5 +56,6 @@ describe('LineReaderTest', () => {
             ]);
             done();
         });
+        dzLineReader.process();
     });
 });

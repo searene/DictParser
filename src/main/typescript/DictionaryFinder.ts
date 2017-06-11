@@ -1,6 +1,8 @@
+import { DSLDictionary } from './DSLDictionary';
+import { DictionaryStats } from './Dictionary';
 import { DEFAULT_DB_PATH, ROOT_PATH } from './constant';
 import { Log } from './util/log';
-import { Dictionary, Index } from "./Dictionary";
+import { Dictionary, Index, WordPosition } from "./Dictionary";
 import { readdirRecursivelyWithStat } from "./util/os";
 import { Option, option, some, none } from 'ts-option';
 import * as fsp from "fs-promise";
@@ -17,12 +19,12 @@ export class DictionaryFinder {
 
     private logger = Log.getLogger();
 
-    private _dictionaries: Dictionary[] = [];
+    private static _dictionaries: Map<string, Dictionary> = new Map<string, Dictionary>();
 
     private _dictMapList: DictMap[];
 
-    addDictionary(dictionary: Dictionary): void {
-        this._dictionaries.push(dictionary);
+    static register(dictName: string, Dictionary: new () => Dictionary): void {
+        this._dictionaries.set(dictName, new Dictionary());
     }
 
     /** <p>Look for resource file/directory in <i>baseDirectory</i>, the rules are as follows.</p>
@@ -89,7 +91,6 @@ export class DictionaryFinder {
      * its {@code Dictionary} and resource to the result array.
      */
     async scan(dir: string,
-               dictionaries: Dictionary[] = this._dictionaries,
                dbPath: string = DEFAULT_DB_PATH): Promise<DictMap[]> {
 
         // DictMap without resource
@@ -99,27 +100,28 @@ export class DictionaryFinder {
             if(file.stat.isDirectory()) continue;
 
             let ext = path.extname(file.filePath);
-            for(let dict of dictionaries) {
+            for(let [dictName, dictionary] of Array.from(DictionaryFinder._dictionaries.entries())) {
 
-                if(dict.dictionarySuffixes.indexOf(ext) > -1) {
+                if(dictionary.dictionarySuffixes.indexOf(ext) > -1) {
 
                     // get resource
                     let resource: Option<string> = await this.getResource(
                         file.filePath, 
                         files.map(file => file.filePath),
-                        dict.resourceHolderSuffixes,
-                        dict.resourceFileSuffixes
+                        dictionary.resourceHolderSuffixes,
+                        dictionary.resourceFileSuffixes
                     );
 
                     // build index
-                    let indexList: Index[] = await dict.buildIndex(file.filePath);
+                    let dictStats: DictionaryStats = await dictionary.getDictionaryStats(file.filePath);
 
                     // add it to dictMapList
                     dictMapList.push(<DictMap> {
                         dictPath: file.filePath,
-                        dictName: dict.dictName,
+                        dictType: dictName,
                         resource: resource.isEmpty ? "" : resource.get,
-                        indexList: indexList
+                        meta: dictStats.meta,
+                        indexMap: dictStats.indexList
                     });
                 }
             }
@@ -131,13 +133,28 @@ export class DictionaryFinder {
         this._dictMapList = dictMapList;
         return dictMapList;
     }
+
+    static get dictionaries(): Map<string, Dictionary> {
+        return DictionaryFinder._dictionaries;
+    }
 }
 
 export interface DictMap {
 
     // absolute path to the main dictionary file
     dictPath: string;
-    dictName: string;
+
+    // e.g. dsl
+    dictType: string;
+
+    // path to resource file
     resource: string;
-    indexList: Index[];
+
+    // meta data
+    meta: Map<string, string>;
+
+    // index of the dictionary
+    indexMap: Map<string, WordPosition>;
 }
+
+DictionaryFinder.register('dsl', DSLDictionary);

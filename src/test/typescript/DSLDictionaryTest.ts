@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import { ROOT_PATH } from './../../main/typescript/constant';
 import { DSLDictionary } from './../../main/typescript/DSLDictionary';
-import {Dictionary, Index} from './../../main/typescript/Dictionary';
+import {Dictionary, WordPosition} from './../../main/typescript/Dictionary';
 import { Log } from './../../main/typescript/util/log';
 import * as mocha from 'mocha';
 import * as path from 'path';
@@ -22,7 +22,7 @@ describe('DSLDictionaryTest', () => {
     it("#buildIndex", async () => {
         let dzFile: string = path.join(ROOT_PATH, 'src/test/resources/dsl/sample.dsl');
         let dictionary: Dictionary = new DSLDictionary();
-        let indexList: Index[] = await dictionary.buildIndex(dzFile);
+        let indexList: WordPosition[] = await dictionary.getDictionaryStats(dzFile);
         assert.deepEqual(indexList, [
             { word: 'trivial card', pos: 182},
             { word: 'sample entry', pos: 388},

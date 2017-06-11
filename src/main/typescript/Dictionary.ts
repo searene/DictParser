@@ -11,8 +11,6 @@ let logger = Log.getLogger();
 
 export abstract class Dictionary {
 
-    protected abstract _dictName: string;
-
     // e.g. dsl, main definition file
     protected abstract _dictionarySuffixes: string[];
 
@@ -22,29 +20,13 @@ export abstract class Dictionary {
     // e.g. jpg, wmv, which are the actual resource files
     protected _resourceFileSuffixes: string[] = ['.jpg', '.wmv', '.bmp', '.mp3'];
 
-    /** 
-     * Build the index of the given dictionary file, return it as an array
-     * @param dictFile path to dictionary
-     */
-    async abstract buildIndex(dictFile: string): Promise<Index[]>;
+    // get meta data and index
+    async abstract getDictionaryStats(dictFile: string): Promise<DictionaryStats>;
 
-    async loadIndex(dictPath: string, dbFile = DEFAULT_DB_PATH): Promise<Index[]> {
-        let dbContents: string = await fsp.readFile(dbFile, {encoding: "utf-8"});
-        let dbJson: DictMap[] = JSON.parse(dbContents);
-        let indexList: Index[] = [];
-        for(let dict of dbJson) {
-            if(dict.dictPath != dictPath) {
-                continue;
-            }
-            indexList = dict.indexList;
-        }
-        if(indexList == undefined || indexList == null || indexList == []) {
-            throw new Error("Cannot find any index for " + dictPath);
-        }
-        return indexList;
-    }
+    // get the definition of the word, represented by a WordTree
+    async abstract getWordTree(dictFile: string, pos: number, len: number): Promise<WordTree>;
 
-    abstract parse(contents: string): WordTree;
+    async abstract getHTML(dictFile: string, pos: number, len: number): Promise<WordTreeHTML>;
 
     get dictionarySuffixes(): string[] {
         return this._dictionarySuffixes;
@@ -55,12 +37,19 @@ export abstract class Dictionary {
     get resourceFileSuffixes(): string[] {
         return this._resourceFileSuffixes;
     }
-    get dictName(): string {
-        return this._dictName;
-    }
 }
 
-export interface Index {
-    word: string,
+export interface WordPosition {
     pos: number;
+    len: number;
+}
+
+export interface DictionaryStats {
+    meta: Map<string, string>;
+    indexMap: Map<string, WordPosition>;
+}
+
+export interface WordTreeHTML {
+    entry: string;
+    definition: string;
 }

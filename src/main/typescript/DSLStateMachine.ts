@@ -18,8 +18,6 @@ export class DSLStateMachine extends StateMachine {
 
     private _currentNode: Node;
 
-    /* @param input: contents of a word entry and its definition
-     */
     constructor(input: string) {
 
         super(input);
