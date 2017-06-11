@@ -24,13 +24,13 @@ describe('DSLDictionaryTest', () => {
         let dictionary: Dictionary = new DSLDictionary();
         let indexList: Index[] = await dictionary.buildIndex(dzFile);
         assert.deepEqual(indexList, [
-            { word: 'trivial card', pos: 4},
-            { word: 'sample entry', pos: 7},
-            { word: 'example', pos: 8},
-            { word: 'sample  card', pos: 9},
-            { word: 'sample headword', pos: 10},
-            { word: 'typical card', pos: 191},
-            { word: 'resourceCard', pos: 213}
+            { word: 'trivial card', pos: 182},
+            { word: 'sample entry', pos: 388},
+            { word: 'example', pos: 416},
+            { word: 'sample  card', pos: 434},
+            { word: 'sample headword', pos: 492},
+            { word: 'typical card', pos: 29864},
+            { word: 'resourceCard', pos: 33626}
         ]);
     });
 });

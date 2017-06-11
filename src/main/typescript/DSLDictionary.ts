@@ -1,3 +1,4 @@
+import { LineReader } from './LineReader';
 import { DSLStateMachine } from './DSLStateMachine';
 import { StateMachine } from './StateMachine';
 import { WordTree } from './Tree';
@@ -50,23 +51,25 @@ export class DSLDictionary extends Dictionary {
     }
 
     async buildIndex(dictFile: string): Promise<Index[]> {
+        return new Promise<Index[]>((resolve, reject) => {
+            let indexList: Index[] = [];
+            let isInDefinition = false;
 
-        let indexList: Index[] = [];
-        let dictContents: string = await this.getDictContents(dictFile);
-        dictContents = dictContents.replace(/\r?\n|\r/g, "\n");
-
-        // read line by line
-        let lines: string[] = dictContents.split("\n");
-        let definitionStartingLineNumber = this.getStartingLineOfDefinitionPart(dictContents);
-        for(let i = definitionStartingLineNumber; i < lines.length; i++) {
-            let line = lines[i];
-
-            // line is not empty and doesn't start with spaces
-            if(line.trim().length != 0 && [" ", "\t"].indexOf(line.substring(0, 1)) == -1) {
-                indexList.push({word: this.getIndexableWord(line), pos: i});
-            }
-        }
-        return indexList;
+            let lineReader = new LineReader(dictFile);
+            lineReader.on('line', (data: [string, number]) => {
+                let line = data[0];
+                let pos = data[1];
+                if(isInDefinition && line.trim().length > 0 && [' ', '\t'].indexOf(line[0]) == -1) {
+                    indexList.push({word: this.getIndexableWord(line), pos: pos});
+                } else if(!isInDefinition && line.trim().length > 0 && !line.startsWith('#')) {
+                    isInDefinition = true;
+                    indexList.push({word: this.getIndexableWord(line), pos: pos});
+                }
+            });
+            lineReader.on('end', () => {
+                resolve(indexList);
+            });
+        });
     }
 
     /**
