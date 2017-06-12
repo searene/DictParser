@@ -12,7 +12,7 @@ export class SimpleBufferReader implements BufferReader {
     async read(filePath: string, start: number, len: number): Promise<Buffer> {
         let fd: number = await fsp.open(filePath, 'r');
         let buffer = Buffer.alloc(len);
-        let readContents = await fsp.read(this._fd, buffer, 0, len, start);
+        let readContents = await fsp.read(fd, buffer, 0, len, start);
         await fsp.close(fd);
         if(buffer.length > readContents[0]) {
             buffer = buffer.slice(0, readContents[0]);

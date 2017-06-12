@@ -1,5 +1,5 @@
 import { Option, some } from 'ts-option';
-import { DictMap } from './DictionaryFinder';
+import { DictMap, IndexMap, Meta } from './DictionaryFinder';
 import { DSLWordTreeToHTMLConverter } from './DSLWordTreeToHTMLConverter';
 import { LineReader, LineStats } from './LineReader';
 import { BufferReader, DzBufferReader, SimpleBufferReader } from './BufferReader';
@@ -34,40 +34,47 @@ export class DSLDictionary extends Dictionary {
 
     async getDictionaryStats(dictFile: string): Promise<DictionaryStats> {
         return new Promise<DictionaryStats>((resolve, reject) => {
-            let indexMap: Map<string, WordPosition> = new Map<string, WordPosition>();
-            let meta: Map<string, string> = new Map<string, string>();
+            let indexMap: IndexMap = {};
+            let meta: Meta = {};
             let isInDefinition = false;
 
-            let len = 0;
-            let word: Option<string>;
             let lineReader = new LineReader(dictFile);
+            let previousLine: string;
+            let wordTreeLength: number = 0;
+            let firstEntryPos: number;
+            let entryList: string[] = [];
+
             lineReader.on('line', (lineStats: LineStats) => {
                 let line = lineStats.line;
-                let pos = lineStats.pos;
 
-                let isFirstDefinition: boolean = !isInDefinition && line.trim().length > 0 && !line.startsWith('#');
-                let isFollowingDefinition: boolean = isInDefinition && line.trim().length > 0 && [' ', '\t'].indexOf(line[0]) == -1;
-                if(isInDefinition && line.startsWith('#')) {
+                if(!isInDefinition && line.startsWith('#')) {
                     // meta data
                     let header: string[] = line.substring(1).split(/\s(.+)/);
-                    meta.set(header[0], header[1]);
-                } else if(isFirstDefinition || isFollowingDefinition) {
-                    if(isFirstDefinition) isInDefinition = true;
-                    if(word.exists) {
-                        indexMap.get(word.get)!.len = len;
+                    meta[header[0]] = header[1].substring(1, header[1].length - 1);
+                } else if(!isInDefinition && !line.startsWith('#')) {
+                    isInDefinition = true;
+                } else if(isInDefinition && !/^\s/.test(line)) {
+                    // entry
+                    if(previousLine.trim() == '' || /^\s/.test(previousLine)) {
+                        // previous line is empty or definition,
+                        // which means the current line is the beginning of a new entry
+                        wordTreeLength = 0;
+                        entryList = [];
+                        firstEntryPos = lineStats.pos;
                     }
-                    word = some(this.getIndexableWord(line));
-                    indexMap.set(word.get, {pos: pos, len:-1});
-                    len = lineStats.length;
-                } else {
-                    len += line.length;
+                    wordTreeLength += lineStats.len;
+                    let word: string = this.getIndexableWord(lineStats.line.trim());
+                    entryList.push(word);
+                    indexMap[word] = {pos: firstEntryPos, len: -1};
+                } else if(isInDefinition && /^\s/.test(line)) {
+                    wordTreeLength += lineStats.len;
+                    entryList.forEach((entry) => {
+                        indexMap[entry].len = wordTreeLength;
+                    });
                 }
+                previousLine = line;
             });
             lineReader.on('end', () => {
-                let wordPosition = indexMap.get(word.get);
-                if(wordPosition != undefined) {
-                    wordPosition.len = len;
-                }
                 resolve({meta: meta, indexMap: indexMap});
             });
             lineReader.process();

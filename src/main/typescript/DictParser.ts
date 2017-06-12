@@ -5,12 +5,12 @@ import * as fsp from 'fs-promise';
 import { WordTree } from "./Tree";
 import { WordTreeHTML, Dictionary } from "./Dictionary";
 
-class DictParser {
+export class DictParser {
 
     private _scanFolder: Option<string> = none;
     private _dbPath: string;
     private _dictionaryFinder = new DictionaryFinder();
-    private _dictMapList: Option<DictMap[]>;
+    private _dictMapList: Option<DictMap[]> = none;
     private _dictionaries: Map<string, Dictionary> = DictionaryFinder.dictionaries;
 
     constructor(scanFolder?: string, dbPath: string = DEFAULT_DB_PATH) {
@@ -27,7 +27,7 @@ class DictParser {
         }
         let dictMapList = this._dictMapList.get;
         for(let dictMap of dictMapList) {
-            let wordPosition = dictMap.indexMap.get(word);
+            let wordPosition = dictMap.indexMap[word];
             if(wordPosition != undefined) {
                 let dictionary = this._dictionaries.get(dictMap.dictType);
                 if(dictionary == undefined) {
@@ -35,7 +35,7 @@ class DictParser {
                 }
                 let wordTree: WordTree = await dictionary.getWordTree(dictMap.dictPath, wordPosition.pos, wordPosition.len);
                 let wordTreeHTML: WordTreeHTML = await dictionary.getHTML(dictMap.dictPath, wordPosition.pos, wordPosition.len);
-                let dictName = dictMap.meta.get('NAME');
+                let dictName = dictMap.meta['NAME'];
                 wordDefinitionList.push({
                     word: word,
                     wordTree: wordTree,

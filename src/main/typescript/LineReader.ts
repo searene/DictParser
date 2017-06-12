@@ -27,7 +27,7 @@ export class LineReader extends EventEmitter {
 
     process() {
         process.nextTick(() => {
-            run();
+            this.run();
         });
     }
 
@@ -91,15 +91,15 @@ export class LineReader extends EventEmitter {
                 this.emit('line', {
                     line: line, 
                     pos: pos + previousBytesRead,
-                    length: Buffer.from(line, this._encoding).length
+                    len: Buffer.from(line, this._encoding).length
                 });
                 pos += Buffer.from(line, this._encoding).length;
                 line = "";
             } else if((s[i] == '\r' && i + 1 < s.length && s[i + 1] != '\n') || s[i] == '\n') {
                 this.emit('line', {
                     line: line, 
-                    lineStartPos: pos + previousBytesRead,
-                    lineLength: Buffer.from(line, this._encoding).length
+                    pos: pos + previousBytesRead,
+                    len: Buffer.from(line, this._encoding).length
                 });
                 pos += Buffer.from(line, this._encoding).length;
                 line = "";
@@ -117,7 +117,7 @@ export class LineReader extends EventEmitter {
 export interface LineStats {
     line: string;
     pos: number; // in binary instead of string
-    length: number; // in binary instead of string
+    len: number; // in binary instead of string
 }
 
 // register default BufferReaders

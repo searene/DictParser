@@ -1,7 +1,7 @@
 import { Log } from './util/log';
 import { DEFAULT_DB_PATH } from './constant';
 import { WordTree } from './Tree';
-import { DictionaryFinder, DictMap } from "./DictionaryFinder";
+import { DictionaryFinder, DictMap, Meta, IndexMap } from "./DictionaryFinder";
 import * as fsp from "fs-promise";
 /**
  * Created by searene on 17-1-23.
@@ -45,8 +45,8 @@ export interface WordPosition {
 }
 
 export interface DictionaryStats {
-    meta: Map<string, string>;
-    indexMap: Map<string, WordPosition>;
+    meta: Meta;
+    indexMap: IndexMap;
 }
 
 export interface WordTreeHTML {

@@ -6,17 +6,11 @@
       "target": "es5",
       "lib": ["es2015", "dom"],
       "types": ["node"],
-      "sourceMap": true
+      "sourceMap": true,
+      "allowJs": true
     },
-    // "files": [
-    //   "src/test/typescript/DSLDictionaryTest.ts"
-    // ]
     "include": [
       "src/main/typescript/**/*",
       "src/test/typescript/**/*"
     ]
-    // "exclude": [
-    //   "src/dsl/dslCharState.ts",
-    //   "src/dsl/dslTreeBuilder.ts"
-    // ]
 }

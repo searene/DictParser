@@ -2,7 +2,7 @@ import { DSLDictionary } from './DSLDictionary';
 import { DictionaryStats } from './Dictionary';
 import { DEFAULT_DB_PATH, ROOT_PATH } from './constant';
 import { Log } from './util/log';
-import { Dictionary, Index, WordPosition } from "./Dictionary";
+import { Dictionary, WordPosition } from "./Dictionary";
 import { readdirRecursivelyWithStat } from "./util/os";
 import { Option, option, some, none } from 'ts-option';
 import * as fsp from "fs-promise";
@@ -25,6 +25,58 @@ export class DictionaryFinder {
 
     static register(dictName: string, Dictionary: new () => Dictionary): void {
         this._dictionaries.set(dictName, new Dictionary());
+    }
+
+    /** Walk through all files in <i>dir</i> recursively, and look for
+     * dictionary definition files(e.g. dz, dsl), add it along with
+     * its {@code Dictionary} and resource to the result array.
+     */
+    async scan(dir: string,
+               dbPath: string = DEFAULT_DB_PATH): Promise<DictMap[]> {
+
+        // DictMap without resource
+        let dictMapList: DictMap[] = [];
+        let files = await readdirRecursivelyWithStat(dir);
+        for(let file of files) {
+            if(file.stat.isDirectory()) continue;
+
+            let ext = path.extname(file.filePath);
+            for(let [dictName, dictionary] of Array.from(DictionaryFinder._dictionaries.entries())) {
+
+                if(dictionary.dictionarySuffixes.indexOf(ext) > -1) {
+
+                    // get resource
+                    let resource: Option<string> = await this.getResource(
+                        file.filePath, 
+                        files.map(file => file.filePath),
+                        dictionary.resourceHolderSuffixes,
+                        dictionary.resourceFileSuffixes
+                    );
+
+                    // build index
+                    let dictStats: DictionaryStats = await dictionary.getDictionaryStats(file.filePath);
+
+                    // add it to dictMapList
+                    dictMapList.push(<DictMap> {
+                        dictPath: file.filePath,
+                        dictType: dictName,
+                        resource: resource.isEmpty ? "" : resource.get,
+                        meta: dictStats.meta,
+                        indexMap: dictStats.indexMap
+                    });
+                }
+            }
+        }
+
+        // save to db
+        await fsp.writeFile(dbPath, JSON.stringify(dictMapList), {encoding: 'utf8'});
+
+        this._dictMapList = dictMapList;
+        return dictMapList;
+    }
+
+    static get dictionaries(): Map<string, Dictionary> {
+        return DictionaryFinder._dictionaries;
     }
 
     /** <p>Look for resource file/directory in <i>baseDirectory</i>, the rules are as follows.</p>
@@ -86,57 +138,6 @@ export class DictionaryFinder {
         return candidates.length == 0 ? none : option(candidates[0].file);
     }
 
-    /** Walk through all files in <i>dir</i> recursively, and look for
-     * dictionary definition files(e.g. dz, dsl), add it along with
-     * its {@code Dictionary} and resource to the result array.
-     */
-    async scan(dir: string,
-               dbPath: string = DEFAULT_DB_PATH): Promise<DictMap[]> {
-
-        // DictMap without resource
-        let dictMapList: DictMap[] = [];
-        let files = await readdirRecursivelyWithStat(dir);
-        for(let file of files) {
-            if(file.stat.isDirectory()) continue;
-
-            let ext = path.extname(file.filePath);
-            for(let [dictName, dictionary] of Array.from(DictionaryFinder._dictionaries.entries())) {
-
-                if(dictionary.dictionarySuffixes.indexOf(ext) > -1) {
-
-                    // get resource
-                    let resource: Option<string> = await this.getResource(
-                        file.filePath, 
-                        files.map(file => file.filePath),
-                        dictionary.resourceHolderSuffixes,
-                        dictionary.resourceFileSuffixes
-                    );
-
-                    // build index
-                    let dictStats: DictionaryStats = await dictionary.getDictionaryStats(file.filePath);
-
-                    // add it to dictMapList
-                    dictMapList.push(<DictMap> {
-                        dictPath: file.filePath,
-                        dictType: dictName,
-                        resource: resource.isEmpty ? "" : resource.get,
-                        meta: dictStats.meta,
-                        indexMap: dictStats.indexList
-                    });
-                }
-            }
-        }
-
-        // save to db
-        await fsp.writeFile(dbPath, JSON.stringify(dictMapList), {encoding: 'utf8'});
-
-        this._dictMapList = dictMapList;
-        return dictMapList;
-    }
-
-    static get dictionaries(): Map<string, Dictionary> {
-        return DictionaryFinder._dictionaries;
-    }
 }
 
 export interface DictMap {
@@ -151,10 +152,18 @@ export interface DictMap {
     resource: string;
 
     // meta data
-    meta: Map<string, string>;
+    meta: Meta;
 
     // index of the dictionary
-    indexMap: Map<string, WordPosition>;
+    indexMap: IndexMap;
+}
+
+export interface IndexMap {
+    [word: string]: WordPosition;
+}
+
+export interface Meta {
+    [metaKey: string]: string;
 }
 
 DictionaryFinder.register('dsl', DSLDictionary);

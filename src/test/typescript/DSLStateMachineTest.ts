@@ -5,7 +5,7 @@ import { WordTree } from '../../main/typescript/Tree';
 import { DSLStateMachine } from '../../main/typescript/DSLStateMachine';
 import { StateMachine } from "../../main/typescript/StateMachine";
 import { assert } from 'chai';
-import { detectEncodingInFile } from '../../main/typescript/DetectEncoding';
+import { getEncodingInFile } from '../../main/typescript/EncodingDetector';
 import * as mocha from 'mocha';
 import * as fsp from 'fs-promise';
 import * as path from 'path';
@@ -22,7 +22,7 @@ describe("Test DSLStateMachine", () => {
 
 		before(async () => {
 			let dslFile: string = path.join(ROOT_PATH, 'src/test/resources/dsl/sample.dsl');
-			let encoding = (await detectEncodingInFile(dslFile));
+			let encoding = (await getEncodingInFile(dslFile));
 			simpleEntryContents = await readFile(dslFile, encoding.encoding, 5, 6);
 			mediumEntryContents = await readFile(dslFile, encoding.encoding, 214, 216);
 			complexEntryContents = await readFile(dslFile, encoding.encoding, 8, 190);
@@ -35,7 +35,7 @@ describe("Test DSLStateMachine", () => {
             let wordTree: WordTree = stateMachine.run();
 
 			let s = wordTree.toString();
-			logger.info(s);
+			// logger.info(s);
 
         });
         it("Medium entry test", () => {
@@ -44,7 +44,7 @@ describe("Test DSLStateMachine", () => {
             let wordTree: WordTree = stateMachine.run();
 
 			let s = wordTree.toString();
-			logger.info(s);
+			// logger.info(s);
 
         });
         it("Complex entry test", () => {
@@ -52,7 +52,7 @@ describe("Test DSLStateMachine", () => {
             let stateMachine: StateMachine = new DSLStateMachine(complexEntryContents);
             let wordTree: WordTree = stateMachine.run();
 			let s = wordTree.toString();
-			logger.info(s);
+			// logger.info(s);
 
         });
         it("Typical entry test", () => {
