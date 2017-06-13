@@ -40,8 +40,11 @@ export class DSLDictionary extends Dictionary {
 
             let lineReader = new LineReader(dictFile);
             let previousLine: string;
+
+            // used to track the bytes of the current entry + definition block
             let wordTreeLength: number = 0;
-            let firstEntryPos: number;
+
+            // word list of the current block
             let entryList: string[] = [];
 
             lineReader.on('line', (lineStats: LineStats) => {
@@ -60,16 +63,15 @@ export class DSLDictionary extends Dictionary {
                         // which means the current line is the beginning of a new entry
                         wordTreeLength = 0;
                         entryList = [];
-                        firstEntryPos = lineStats.pos;
                     }
                     wordTreeLength += lineStats.len;
                     let word: string = this.getIndexableWord(lineStats.line.trim());
                     entryList.push(word);
-                    indexMap[word] = {pos: firstEntryPos, len: -1};
+                    indexMap[word] = {pos: lineStats.pos, len: -1};
                 } else if(isInDefinition && /^\s/.test(line)) {
                     wordTreeLength += lineStats.len;
                     entryList.forEach((entry) => {
-                        indexMap[entry].len = wordTreeLength;
+                        indexMap[entry].len = wordTreeLength + indexMap[entryList[0]].pos - indexMap[entry].pos;
                     });
                 }
                 previousLine = line;

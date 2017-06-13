@@ -1,8 +1,7 @@
+import { AccentConverter } from './AccentConverter';
 import { Log } from './util/log';
-import { DEFAULT_DB_PATH } from './constant';
 import { WordTree } from './Tree';
-import { DictionaryFinder, DictMap, Meta, IndexMap } from "./DictionaryFinder";
-import * as fsp from "fs-promise";
+import { Meta, IndexMap } from "./DictionaryFinder";
 /**
  * Created by searene on 17-1-23.
  */

@@ -58,9 +58,11 @@ export class DictionaryFinder {
 
                     // add it to dictMapList
                     dictMapList.push(<DictMap> {
-                        dictPath: file.filePath,
-                        dictType: dictName,
-                        resource: resource.isEmpty ? "" : resource.get,
+                        dict: {
+                            dictPath: file.filePath,
+                            dictType: dictName,
+                            resource: resource.isEmpty ? "" : resource.get,
+                        },
                         meta: dictStats.meta,
                         indexMap: dictStats.indexMap
                     });
@@ -140,8 +142,7 @@ export class DictionaryFinder {
 
 }
 
-export interface DictMap {
-
+export interface IDictionary {
     // absolute path to the main dictionary file
     dictPath: string;
 
@@ -150,6 +151,12 @@ export interface DictMap {
 
     // path to resource file
     resource: string;
+}
+
+export interface DictMap {
+
+    // basic dictionary information
+    dict: IDictionary
 
     // meta data
     meta: Meta;

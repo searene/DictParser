@@ -30,9 +30,11 @@ describe('Test DictionaryFinder', () => {
 
 function checkDictMapList(dictMapList: DictMap[], scanFolder: string) {
 	assert.deepEqual(dictMapList, [{
-		dictPath: path.join(scanFolder, 'dsl/sample.dsl'),
-		dictType: 'dsl',
-		resource: path.join(scanFolder, 'dsl/sample.dsl.dz.files.zip'),
+		dict: {
+			dictPath: path.join(scanFolder, 'dsl/sample.dsl'),
+			dictType: 'dsl',
+			resource: path.join(scanFolder, 'dsl/sample.dsl.dz.files.zip'),
+		},
 		meta: {
 			'NAME': 'Sample DSL Dictionary',
 			'INDEX_LANGUAGE': 'English',
@@ -48,9 +50,11 @@ function checkDictMapList(dictMapList: DictMap[], scanFolder: string) {
 			'resourceCard': {pos: 33626, len: 180}
 		}
 	}, {
-		dictPath: path.join(scanFolder, 'dz/simple.dsl.dz'),
-		dictType: 'dsl',
-		resource: '',
+		dict: {
+			dictPath: path.join(scanFolder, 'dz/simple.dsl.dz'),
+			dictType: 'dsl',
+			resource: '',
+		},
 		meta: {
 			'NAME': 'Simple DSL Dictionary',
 			'INDEX_LANGUAGE': 'English',

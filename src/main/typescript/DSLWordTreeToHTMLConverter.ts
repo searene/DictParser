@@ -1,3 +1,4 @@
+import { AccentConverter } from './AccentConverter';
 import { DSLDictionary } from './DSLDictionary';
 import { Dictionary, WordTreeHTML } from './Dictionary';
 import { WordTree } from './Tree'
@@ -37,56 +38,57 @@ export class DSLWordTreeToHTMLConverter {
     }
 
     private convertNodesToHTML(nodes: Node[]): string {
+        let html: string = '';
         if(nodes.length == 0) {
-            return "";
+            html += "";
         }
         for(let node of nodes) {
             let htmlOfChildren: string = this.convertNodesToHTML(node.children);
             switch(node.type) {
                 case Node.ROOT_NODE:
-                    return `<div class="dsl_definition">${htmlOfChildren}</div>`;
+                    html += `<div class="dsl_definition">${htmlOfChildren}</div>`;
                 case Node.TAG_NODE:
                     if(["b", "i", "p"].indexOf(node.name) > -1) {
-                        return `<${node.name} class="dsl_${node.name}>${htmlOfChildren}</${node.name}>`;
+                        html += `<${node.name} class="dsl_${node.name}>${htmlOfChildren}</${node.name}>`;
                     } else if(node.name == "u") {
-                        return `<span class="dsl_u">${htmlOfChildren}</span>`;
+                        html += `<span class="dsl_u">${htmlOfChildren}</span>`;
                     } else if(["sub", "sup"].indexOf(node.name) > -1) {
-                        return `<${node.name}>${htmlOfChildren}</${node.name}>`;
+                        html += `<${node.name}>${htmlOfChildren}</${node.name}>`;
                     } else if(["m0", "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "m9"].indexOf(node.name) > -1) {
-                        return `<div class="dsl_${node.name}>${htmlOfChildren}</div>`;
+                        html += `<div class="dsl_${node.name}>${htmlOfChildren}</div>`;
                     } else if(node.name == "*") {
-                        return htmlOfChildren;
+                        html += htmlOfChildren;
                     } else if(node.name == "ex") {
-                        return `<div class="dsl_opt><span class="dsl_ex"><span class="dsl_lang">${htmlOfChildren}</span></span></div>`;
+                        html += `<div class="dsl_opt><span class="dsl_ex"><span class="dsl_lang">${htmlOfChildren}</span></span></div>`;
                     } else if(node.name == "s" && this.getResourceType(node) == this.ResourceType.AUDIO) {
-                        return `<span class="dsl_s_wav"><a href="${this.getResourcePath(node)}"><img src="${this.getPathToSoundImg()}" border="0" align="absmiddle" alt="Play"></a></span>`;
+                        html += `<span class="dsl_s_wav"><a href="${this.getResourcePath(node)}"><img src="${this.getPathToSoundImg()}" border="0" align="absmiddle" alt="Play"></a></span>`;
                     } else if(node.name == 's' && this.getResourceType(node) == this.ResourceType.IMAGE) {
-                        return `<img src="${this.getResourcePath(node)}" alt="${this.getResourceName(node)}">`;
+                        html += `<img src="${this.getResourcePath(node)}" alt="${this.getResourceName(node)}">`;
                     } else if(node.name == '\'') {
                         let stressedText = node.children.length > 0 ? node.children[0].contents : "";
-                        return `<span class="dsl_stress"><span class="dsl_stress_without_accent">stressedText</span><span class="dsl_stress_with_accent">${AccentConverter.getAccentedChar(stressedText)}</span></span>`;
+                        html += `<span class="dsl_stress"><span class="dsl_stress_without_accent">stressedText</span><span class="dsl_stress_with_accent">${AccentConverter.removeAccent(stressedText)}</span></span>`;
                     } else if(node.name == "ref") {
                         let refWord: string = node.children.length == 1 ? node.children[0].contents : "";
-                        return `<a class="dsl_ref" href="${this.getPathToRefWord(refWord)}">${refWord}</a>`;
+                        html += `<a class="dsl_ref" href="${this.getPathToRefWord(refWord)}">${refWord}</a>`;
                     } else if(node.name == "url") {
                         let url: string = node.children.length == 1 ? node.children[0].contents : "";
-                        return `<a class="dsl_url" href=${url}>${url}</a>`;
+                        html += `<a class="dsl_url" href=${url}>${url}</a>`;
                     } else if(node.name == "c") {
                         let color: string = node.properties.size > 0 ? node.properties.entries().next().value[0]: "black";
-                        return `<font color=${color}>${htmlOfChildren}</font>`;
+                        html += `<font color=${color}>${htmlOfChildren}</font>`;
                     } 
                 case Node.REF_NODE:
                     let refWord: string = node.contents;
-                    return `<a class="dsl_ref" href="${this.getPathToRefWord(refWord)}">${refWord}</a>`;
+                    html += `<a class="dsl_ref" href="${this.getPathToRefWord(refWord)}">${refWord}</a>`;
                 case Node.TEXT_NODE:
-                    return node.contents;
+                    html += node.contents;
                 case Node.NEW_LINE_NODE:
-                    return `<span class="new_line">${htmlOfChildren}</span>`;
+                    html += `<span class="new_line">${htmlOfChildren}</span>`;
                 default:
-                    return "";
+                    html += "";
             }
         }
-        return "";
+        return html;
     }
 
     private getPathToRefWord(refWord: string): string {

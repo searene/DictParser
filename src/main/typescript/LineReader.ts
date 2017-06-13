@@ -19,7 +19,7 @@ export class LineReader extends EventEmitter {
      * @param filePath: file to be processed
      * @param len: how many bytes to be read each time
      */
-    constructor(filePath: string, len: number = 64 * 104) {
+    constructor(filePath: string, len: number = 64 * 1024) {
         super();
         this._filePath = filePath;
         this._len = len;

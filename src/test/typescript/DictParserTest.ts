@@ -13,7 +13,16 @@ describe('Test DictParser', () => {
     let dbPath = path.join(ROOT_PATH, 'src/test/resources/dictParser.db');
 
     it("#getWordDefinition", async () => {
-        let dictParser = new DictParser(scanFolder, dbPath);
-        let wordDefinitionList = await dictParser.getWordDefinition('trivial card');
+        let dictParser = new DictParser(dbPath);
+        await dictParser.scan(scanFolder);
+        let wordDefinitionList = await dictParser.getWordDefinition('card');
+        console.log(wordDefinitionList);
     });
+
+    it("#guessWord", async() => {
+        let dictParser = new DictParser(dbPath);
+        await dictParser.scan(scanFolder);
+        let wordCandidates = await dictParser.getWordCandidates('trivi');
+        console.log(wordCandidates);
+    })
 });
