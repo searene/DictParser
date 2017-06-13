@@ -1,6 +1,6 @@
 import { BufferReader, SimpleBufferReader, DzBufferReader } from './BufferReader';
 import { getEncodingInBuffer, EncodingStat } from './EncodingDetector';
-import { DictZipParser } from './dictzip/DictZipParser';
+import { DictZipParser } from './dsl/dictzip/DictZipParser';
 import * as EventEmitter from 'events';
 import * as fsp from 'fs-promise';
 import * as path from 'path';

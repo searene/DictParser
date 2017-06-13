@@ -1,12 +1,12 @@
-import { DictionaryFinder, DictMap } from './../../main/typescript/DictionaryFinder';
-import { ROOT_PATH } from './../../main/typescript/constant';
-import { Node } from './../../main/typescript/Tree';
-import { Log } from '../../main/typescript/util/log';
-import { WordTree } from '../../main/typescript/Tree';
-import { DSLStateMachine } from '../../main/typescript/DSLStateMachine';
-import { StateMachine } from '../../main/typescript/StateMachine';
+import { DictionaryFinder, DictMap } from '../../main/code/DictionaryFinder';
+import { ROOT_PATH } from '../../main/code/constant';
+import { Node } from '../../main/code/Tree';
+import { Log } from '../../main/code/util/log';
+import { WordTree } from '../../main/code/Tree';
+import { DSLStateMachine } from '../../main/code/dsl/DSLStateMachine';
+import { StateMachine } from '../../main/code/StateMachine';
 import { assert } from 'chai';
-import { getEncodingInFile } from '../../main/typescript/EncodingDetector';
+import { getEncodingInFile } from '../../main/code/EncodingDetector';
 import * as mocha from 'mocha';
 import * as fsp from 'fs-promise';
 import * as path from 'path';
@@ -43,9 +43,9 @@ function checkDictMapList(dictMapList: DictMap[], scanFolder: string) {
 		indexMap: {
 			'trivial card': {pos: 182, len: 206},
 			'sample entry': {pos: 388, len: 29476},
-			'example': {pos: 388, len: 29476},
-			'sample  card': {pos: 388, len: 29476},
-			'sample headword': {pos: 388, len: 29476},
+			'example': {pos: 416, len: 29448},
+			'sample  card': {pos: 434, len: 29430},
+			'sample headword': {pos: 492, len: 29372},
 			'typical card': {pos: 29864, len: 3762},
 			'resourceCard': {pos: 33626, len: 180}
 		}

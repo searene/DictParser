@@ -1,9 +1,7 @@
-import { UTF_8, UTF_8_BOM, UTF_16_LE, UTF_16_BE, UTF_32_BE, UTF_32_LE } from './../../main/typescript/EncodingDetector';
-import { ROOT_PATH } from './../../main/typescript/constant';
-import { Log } from './../../main/typescript/util/log';
-import { Reader } from "../../main/typescript/Reader";
-import { LOG_CONFIG_LOCATION } from "../../main/typescript/constant";
-import { getEncodingInBuffer } from '../../main/typescript/EncodingDetector';
+import { UTF_8, UTF_8_BOM, UTF_16_LE, UTF_16_BE, UTF_32_BE, UTF_32_LE } from '../../main/code/EncodingDetector';
+import { ROOT_PATH } from '../../main/code/constant';
+import { Log } from '../../main/code/util/log';
+import { getEncodingInBuffer } from '../../main/code/EncodingDetector';
 import { assert } from "chai";
 import * as path from 'path';
 import * as fsp from 'fs-promise';

@@ -1,12 +1,9 @@
 import { assert } from 'chai';
-import { ROOT_PATH } from './../../main/typescript/constant';
-import { DSLDictionary } from './../../main/typescript/DSLDictionary';
-import { Dictionary, WordPosition, DictionaryStats } from './../../main/typescript/Dictionary';
-import { Log } from './../../main/typescript/util/log';
-import * as mocha from 'mocha';
+import { ROOT_PATH } from '../../../main/code/constant';
+import { DSLDictionary } from '../../../main/code/dsl/DSLDictionary';
+import { Dictionary, DictionaryStats } from '../../../main/code/Dictionary';
+import { Log } from '../../../main/code/util/log';
 import * as path from 'path';
-import * as fsp from 'fs-promise';
-import {WordTree} from "../../main/typescript/Tree";
 
 describe('DSLDictionaryTest', () => {
 
@@ -33,9 +30,9 @@ describe('DSLDictionaryTest', () => {
             indexMap: {
                 'trivial card': {pos: 182, len: 206},
                 'sample entry': {pos: 388, len: 29476},
-                'example': {pos: 388, len: 29476},
-                'sample  card': {pos: 388, len: 29476},
-                'sample headword': {pos: 388, len: 29476},
+                'example': {pos: 416, len: 29448},
+                'sample  card': {pos: 434, len: 29430},
+                'sample headword': {pos: 492, len: 29372},
                 'typical card': {pos: 29864, len: 3762},
                 'resourceCard': {pos: 33626, len: 180}
             }

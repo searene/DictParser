@@ -1,10 +1,10 @@
-import { AccentConverter } from './AccentConverter';
+import { AccentConverter } from '../AccentConverter';
 import { DSLDictionary } from './DSLDictionary';
-import { Dictionary, WordTreeHTML } from './Dictionary';
-import { WordTree } from './Tree'
-import { NotImplementedError, NotResourceNodeError } from './errors';
-import { ROOT_PATH, RESOURCE_PATH } from './constant';
-import { Node } from './Tree';
+import { Dictionary, WordTreeHTML } from '../Dictionary';
+import { WordTree } from '../Tree'
+import { NotImplementedError, NotResourceNodeError } from '../errors';
+import { ROOT_PATH, RESOURCE_PATH } from '../constant';
+import { Node } from '../Tree';
 import * as path from 'path';
 import * as fsp from 'fs-promise';
 
@@ -20,7 +20,7 @@ export class DSLWordTreeToHTMLConverter {
         AUDIO: 1,
         IMAGE: 2,
         UNKNOWN: 3
-    }
+    };
 
     convertWordTreeToHTML(wordTree: WordTree): WordTreeHTML {
         return {

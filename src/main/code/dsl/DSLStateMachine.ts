@@ -1,7 +1,7 @@
-import { Reader } from "./Reader";
-import { Node, WordTree } from "./Tree";
-import { Log } from "./util/log";
-import { StateMachine, StateValue } from './StateMachine';
+import { Reader } from "../Reader";
+import { Node, WordTree } from "../Tree";
+import { Log } from "../util/log";
+import { StateMachine, StateValue } from '../StateMachine';
 /**
  * Created by searene on 5/13/17.
  */

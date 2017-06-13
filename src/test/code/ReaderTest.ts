@@ -1,6 +1,6 @@
-import { Log } from './../../main/typescript/util/log';
-import {Reader} from "../../main/typescript/Reader";
-import {LOG_CONFIG_LOCATION} from "../../main/typescript/constant";
+import { Log } from '../../main/code/util/log';
+import {Reader} from "../../main/code/Reader";
+import {LOG_CONFIG_LOCATION} from "../../main/code/constant";
 import {assert} from "chai";
 
 describe('test Reader', () => {

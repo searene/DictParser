@@ -1,12 +1,10 @@
-import { ROOT_PATH } from './../../main/typescript/constant';
-import { Node } from './../../main/typescript/Tree';
-import { Log } from '../../main/typescript/util/log';
-import { WordTree } from '../../main/typescript/Tree';
-import { DSLStateMachine } from '../../main/typescript/DSLStateMachine';
-import { StateMachine } from "../../main/typescript/StateMachine";
+import { ROOT_PATH } from '../../../main/code/constant';
+import { Log } from '../../../main/code/util/log';
+import { WordTree } from '../../../main/code/Tree';
+import { DSLStateMachine } from '../../../main/code/dsl/DSLStateMachine';
+import { StateMachine } from "../../../main/code/StateMachine";
 import { assert } from 'chai';
-import { getEncodingInFile } from '../../main/typescript/EncodingDetector';
-import * as mocha from 'mocha';
+import { getEncodingInFile } from '../../../main/code/EncodingDetector';
 import * as fsp from 'fs-promise';
 import * as path from 'path';
 

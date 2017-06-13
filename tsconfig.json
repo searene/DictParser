@@ -10,7 +10,7 @@
       "allowJs": true
     },
     "include": [
-      "src/main/typescript/**/*",
-      "src/test/typescript/**/*"
+      "src/main/code/**/*",
+      "src/test/code/**/*"
     ]
 }

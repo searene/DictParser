@@ -1,9 +1,9 @@
-import { DSLDictionary } from './DSLDictionary';
+import { DSLDictionary } from './dsl/DSLDictionary';
 import { DictionaryStats } from './Dictionary';
 import { DEFAULT_DB_PATH, ROOT_PATH } from './constant';
 import { Log } from './util/log';
 import { Dictionary, WordPosition } from "./Dictionary";
-import { readdirRecursivelyWithStat } from "./util/os";
+import { readdirRecursivelyWithStat } from "./util/FileUtil";
 import { Option, option, some, none } from 'ts-option';
 import * as fsp from "fs-promise";
 import * as path from "path";

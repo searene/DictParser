@@ -1,4 +1,4 @@
-import { DictZipParser } from './dictzip/DictZipParser';
+import { DictZipParser } from './dsl/dictzip/DictZipParser';
 import { getEncodingInBuffer, getEncodingInFile, EncodingStat } from './EncodingDetector';
 import * as fsp from 'fs-promise';
 

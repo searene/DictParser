@@ -1,9 +1,9 @@
 import { assert } from 'chai';
-import { ROOT_PATH } from './../../main/typescript/constant';
-import { Log } from './../../main/typescript/util/log';
-import { DictZipParser } from '../../main/typescript/dictzip/DictZipParser';
+import { ROOT_PATH } from '../../main/code/constant';
+import { Log } from '../../main/code/util/log';
+import { DictZipParser } from '../../main/code/dsl/dictzip/DictZipParser';
 import * as path from 'path';
-import { DictParser } from "../../main/typescript/DictParser";
+import { DictParser } from "../../main/code/DictParser";
 
 describe('Test DictParser', () => {
 
