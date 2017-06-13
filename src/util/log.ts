@@ -1,4 +1,4 @@
-import { ROOT_PATH } from './../constant';
+import { ROOT_PATH } from '../constant';
 import * as path from 'path';
 import * as log4js from "log4js";
 

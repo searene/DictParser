@@ -1,7 +1,11 @@
+import { RESOURCE_PATH } from './constant';
+import { ROOT_PATH } from './constant';
 import { AccentConverter } from './AccentConverter';
 import { Log } from './util/log';
 import { WordTree } from './Tree';
 import { Meta, IndexMap } from "./DictionaryFinder";
+import * as fsp from 'fs-promise';
+import * as path from 'path';
 /**
  * Created by searene on 17-1-23.
  */
@@ -19,13 +23,30 @@ export abstract class Dictionary {
     // e.g. jpg, wmv, which are the actual resource files
     protected _resourceFileSuffixes: string[] = ['.jpg', '.wmv', '.bmp', '.mp3'];
 
+    // path to dictionary specific css file
+    protected _dictCSSFilePath: string = path.join(__dirname, 'style.css');
+
+    // path to universal css file
+    private _mainCSSFilePath: string = path.join(RESOURCE_PATH, 'style.css');
+
     // get meta data and index
     async abstract getDictionaryStats(dictFile: string): Promise<DictionaryStats>;
 
     // get the definition of the word, represented by a WordTree
     async abstract getWordTree(dictFile: string, pos: number, len: number): Promise<WordTree>;
 
-    async abstract getHTML(dictFile: string, pos: number, len: number): Promise<WordTreeHTML>;
+    async abstract getWordTreeHTML(dictFile: string, pos: number, len: number): Promise<WordTreeHTML>;
+
+    async getHTML(dictName: string = "Unknown", dictFile: string, pos: number, len: number): Promise<string> {
+        let wordTreeHTML: WordTreeHTML = await this.getWordTreeHTML(dictFile, pos, len);
+        return `<html><head></head><body><style>${this.getCSS()}</style><div class="container><div class="dict_title">${dictName}</div><div class="dp_entry">${wordTreeHTML.entry}</div><div class="dp_definition">${wordTreeHTML.definition}</div></div></body></html>`;
+    }
+
+    async getCSS(): Promise<string> {
+        let mainCSS: string = await fsp.readFile(this._mainCSSFilePath, {encoding: 'utf8'});
+        let dictCSS: string = await fsp.readFile(this._dictCSSFilePath, {encoding: 'utf8'});
+        return mainCSS + dictCSS;
+    }
 
     get dictionarySuffixes(): string[] {
         return this._dictionarySuffixes;

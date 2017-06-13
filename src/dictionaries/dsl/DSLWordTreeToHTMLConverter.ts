@@ -1,10 +1,10 @@
-import { AccentConverter } from '../AccentConverter';
+import { AccentConverter } from '../../AccentConverter';
 import { DSLDictionary } from './DSLDictionary';
-import { Dictionary, WordTreeHTML } from '../Dictionary';
-import { WordTree } from '../Tree'
-import { NotImplementedError, NotResourceNodeError } from '../errors';
-import { ROOT_PATH, RESOURCE_PATH } from '../constant';
-import { Node } from '../Tree';
+import { Dictionary, WordTreeHTML } from '../../Dictionary';
+import { WordTree } from '../../Tree'
+import { NotImplementedError, NotResourceNodeError } from '../../errors';
+import { ROOT_PATH, RESOURCE_PATH } from '../../constant';
+import { Node } from '../../Tree';
 import * as path from 'path';
 import * as fsp from 'fs-promise';
 
@@ -75,7 +75,7 @@ export class DSLWordTreeToHTMLConverter {
                         html += `<a class="dsl_url" href=${url}>${url}</a>`;
                     } else if(node.name == "c") {
                         let color: string = node.properties.size > 0 ? node.properties.entries().next().value[0]: "black";
-                        html += `<font color=${color}>${htmlOfChildren}</font>`;
+                        html += `<span style="color: ${color}">${htmlOfChildren}</span>`;
                     } 
                 case Node.REF_NODE:
                     let refWord: string = node.contents;

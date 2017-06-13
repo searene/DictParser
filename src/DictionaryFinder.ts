@@ -1,4 +1,4 @@
-import { DSLDictionary } from './dsl/DSLDictionary';
+import { DSLDictionary } from './dictionaries/dsl/DSLDictionary';
 import { DictionaryStats } from './Dictionary';
 import { DEFAULT_DB_PATH, ROOT_PATH } from './constant';
 import { Log } from './util/log';
@@ -142,6 +142,8 @@ export class DictionaryFinder {
 
 }
 
+DictionaryFinder.register('dsl', DSLDictionary);
+
 export interface IDictionary {
     // absolute path to the main dictionary file
     dictPath: string;
@@ -172,5 +174,3 @@ export interface IndexMap {
 export interface Meta {
     [metaKey: string]: string;
 }
-
-DictionaryFinder.register('dsl', DSLDictionary);

@@ -1,9 +1,9 @@
 import { assert } from 'chai';
-import { ROOT_PATH } from '../../main/code/constant';
-import { Log } from '../../main/code/util/log';
-import { DictZipParser } from '../../main/code/dsl/dictzip/DictZipParser';
+import { ROOT_PATH } from '../constant';
+import { Log } from '../util/log';
+import { DictZipParser } from '../dictionaries/dsl/dictzip/DictZipParser';
 import * as path from 'path';
-import { DictParser } from "../../main/code/DictParser";
+import { DictParser } from "../DictParser";
 
 describe('Test DictParser', () => {
 
@@ -15,7 +15,7 @@ describe('Test DictParser', () => {
     it("#getWordDefinition", async () => {
         let dictParser = new DictParser(dbPath);
         await dictParser.scan(scanFolder);
-        let wordDefinitionList = await dictParser.getWordDefinition('card');
+        let wordDefinitionList = await dictParser.getWordDefinition('trivial card');
         console.log(wordDefinitionList);
     });
 
@@ -24,5 +24,5 @@ describe('Test DictParser', () => {
         await dictParser.scan(scanFolder);
         let wordCandidates = await dictParser.getWordCandidates('trivi');
         console.log(wordCandidates);
-    })
+    });
 });

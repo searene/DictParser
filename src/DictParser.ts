@@ -4,7 +4,7 @@ import { Option, none, some } from 'ts-option';
 import { DEFAULT_DB_PATH } from './constant';
 import * as fsp from 'fs-promise';
 import { WordTree } from "./Tree";
-import { WordTreeHTML, Dictionary } from "./Dictionary";
+import { Dictionary } from "./Dictionary";
 
 export class DictParser {
 
@@ -81,12 +81,12 @@ export class DictParser {
                     continue;
                 }
                 let wordTree: WordTree = await dictionary.getWordTree(dictMap.dict.dictPath, wordPosition.pos, wordPosition.len);
-                let wordTreeHTML: WordTreeHTML = await dictionary.getHTML(dictMap.dict.dictPath, wordPosition.pos, wordPosition.len);
+                let html: string = await dictionary.getHTML(dictMap.meta['NAME'], dictMap.dict.dictPath, wordPosition.pos, wordPosition.len);
                 let dictName = dictMap.meta['NAME'];
                 wordDefinitionList.push({
                     word: word,
                     wordTree: wordTree,
-                    wordTreeHTML: wordTreeHTML,
+                    html: html,
                     dict: dictMap.dict
                 });
             }
@@ -113,7 +113,7 @@ export class DictParser {
 export interface WordDefinition {
     word: string;
     wordTree: WordTree;
-    wordTreeHTML: WordTreeHTML;
+    html: string;
     dict: IDictionary
 }
 

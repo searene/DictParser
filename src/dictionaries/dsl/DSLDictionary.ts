@@ -1,14 +1,16 @@
+import { ROOT_PATH } from '../../constant';
+import { DictionaryFinder } from '../../DictionaryFinder';
 import { Option, some } from 'ts-option';
-import { DictMap, IndexMap, Meta } from '../DictionaryFinder';
+import { DictMap, IndexMap, Meta } from '../../DictionaryFinder';
 import { DSLWordTreeToHTMLConverter } from './DSLWordTreeToHTMLConverter';
-import { LineReader, LineStats } from '../LineReader';
-import { BufferReader, DzBufferReader, SimpleBufferReader } from '../BufferReader';
+import { LineReader, LineStats } from '../../LineReader';
+import { BufferReader, DzBufferReader, SimpleBufferReader } from '../../BufferReader';
 import { DSLStateMachine } from './DSLStateMachine';
-import { StateMachine } from '../StateMachine';
-import { WordTree } from '../Tree';
-import { Dictionary, WordPosition, DictionaryStats, WordTreeHTML } from "../Dictionary";
+import { StateMachine } from '../../StateMachine';
+import { WordTree } from '../../Tree';
+import { Dictionary, WordPosition, DictionaryStats, WordTreeHTML } from "../../Dictionary";
 import { DictZipParser } from "./dictzip/DictZipParser";
-import { getEncodingInFile, getEncodingInBuffer } from "../EncodingDetector";
+import { getEncodingInFile, getEncodingInBuffer } from "../../EncodingDetector";
 import * as fsp from 'fs-promise';
 import * as path from 'path';
 /**
@@ -27,7 +29,7 @@ export class DSLDictionary extends Dictionary {
         return stateMachine.run();
     }
 
-    async getHTML(dictFile: string, pos: number, len: number): Promise<WordTreeHTML> {
+    async getWordTreeHTML(dictFile: string, pos: number, len: number): Promise<WordTreeHTML> {
         let wordTree: WordTree = await this.getWordTree(dictFile, pos, len);
         return this.wordTreeHTMLConverter.convertWordTreeToHTML(wordTree);
     }

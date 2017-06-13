@@ -1,8 +1,8 @@
 import { assert } from 'chai';
-import { ROOT_PATH } from '../../../main/code/constant';
-import { DSLDictionary } from '../../../main/code/dsl/DSLDictionary';
-import { Dictionary, DictionaryStats } from '../../../main/code/Dictionary';
-import { Log } from '../../../main/code/util/log';
+import { ROOT_PATH } from '../../../constant';
+import { DSLDictionary } from '../../../dictionaries/dsl/DSLDictionary';
+import { Dictionary, DictionaryStats } from '../../../Dictionary';
+import { Log } from '../../../util/log';
 import * as path from 'path';
 
 describe('DSLDictionaryTest', () => {

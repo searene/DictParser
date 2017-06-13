@@ -1,7 +1,7 @@
 import { assert } from 'chai';
-import { ROOT_PATH } from '../../main/code/constant';
-import { Log } from '../../main/code/util/log';
-import { LineReader, LineStats } from '../../main/code/LineReader';
+import { ROOT_PATH } from '../constant';
+import { Log } from '../util/log';
+import { LineReader, LineStats } from '../LineReader';
 import * as mocha from 'mocha';
 import * as path from 'path';
 

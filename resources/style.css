@@ -1,0 +1,12 @@
+.dict_title {
+    font-size: 15px;
+    font-weight: bold;
+    border: 1px dotted black;
+    padding: 10px;
+    margin: 10px;
+}
+.dp_entry {
+    font-weight: bold;
+    margin-top: 15px;
+    margin-bottom: 10px;
+}

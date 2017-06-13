@@ -1,7 +1,7 @@
-import { UTF_8, UTF_8_BOM, UTF_16_LE, UTF_16_BE, UTF_32_BE, UTF_32_LE } from '../../main/code/EncodingDetector';
-import { ROOT_PATH } from '../../main/code/constant';
-import { Log } from '../../main/code/util/log';
-import { getEncodingInBuffer } from '../../main/code/EncodingDetector';
+import { UTF_8, UTF_8_BOM, UTF_16_LE, UTF_16_BE, UTF_32_BE, UTF_32_LE } from '../EncodingDetector';
+import { ROOT_PATH } from '../constant';
+import { Log } from '../util/log';
+import { getEncodingInBuffer } from '../EncodingDetector';
 import { assert } from "chai";
 import * as path from 'path';
 import * as fsp from 'fs-promise';

@@ -1,7 +1,7 @@
 import { assert } from 'chai';
-import { ROOT_PATH } from '../../main/code/constant';
-import { Log } from '../../main/code/util/log';
-import { DictZipParser } from '../../main/code/dsl/dictzip/DictZipParser';
+import { ROOT_PATH } from '../constant';
+import { Log } from '../util/log';
+import { DictZipParser } from '../dictionaries/dsl/dictzip/DictZipParser';
 import * as path from 'path';
 
 describe('DictZipParser test', () => {
