@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { ROOT_PATH } from '../../../constant';
+import { TEST_RESOURCE_PATH } from '../../../Constant';
 import { DSLDictionary } from '../../../dictionaries/dsl/DSLDictionary';
 import { Dictionary, DictionaryStats } from '../../../Dictionary';
 import { Log } from '../../../util/log';
@@ -17,7 +17,7 @@ describe('DSLDictionaryTest', () => {
         assert.equal(indexableWord, "abcf{g}h");
     });
     it("#getDictionaryStats", async () => {
-        let dzFile: string = path.join(ROOT_PATH, 'src/test/resources/dsl/sample.dsl');
+        let dzFile: string = path.join(TEST_RESOURCE_PATH, 'dsl/sample.dsl');
         let dictionary: Dictionary = new DSLDictionary();
         let dictionaryStats: DictionaryStats = await dictionary.getDictionaryStats(dzFile);
 

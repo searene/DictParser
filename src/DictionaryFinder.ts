@@ -1,6 +1,6 @@
 import { DSLDictionary } from './dictionaries/dsl/DSLDictionary';
 import { DictionaryStats } from './Dictionary';
-import { DEFAULT_DB_PATH, ROOT_PATH } from './constant';
+import { DEFAULT_DB_PATH, ROOT_PATH } from './Constant';
 import { Log } from './util/log';
 import { Dictionary, WordPosition } from "./Dictionary";
 import { readdirRecursivelyWithStat } from "./util/FileUtil";

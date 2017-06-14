@@ -1,7 +1,6 @@
 import { Log } from './util/log';
 import * as fsp from 'fs-promise';
 
-export const UTF_8_BOM: string = "utf8";
 export const UTF_8: string = "utf8";
 export const UTF_16_BE: string = "utf16be";
 export const UTF_16_LE: string = "utf16le";
@@ -42,8 +41,6 @@ export async function getEncodingInBuffer(fileContents: Buffer): Promise<Encodin
         return {encoding: UTF_16_BE, posAfterBom: 2};
     } else if(bom.slice(0, 2).equals(Buffer.from("FFFE", "hex"))) {
         return {encoding: UTF_16_LE, posAfterBom: 2};
-    } else if(bom.slice(0, 3).equals(Buffer.from("EFBBBF", "hex"))) {
-        return {encoding: UTF_8_BOM, posAfterBom: 3};
     } else {
         return {encoding: UTF_8, posAfterBom: 0};
     }

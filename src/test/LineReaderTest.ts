@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { ROOT_PATH } from '../constant';
+import { TEST_RESOURCE_PATH } from '../Constant';
 import { Log } from '../util/log';
 import { LineReader, LineStats } from '../LineReader';
 import * as mocha from 'mocha';
@@ -8,8 +8,8 @@ import * as path from 'path';
 describe('LineReaderTest', () => {
 
     let logger = Log.getLogger();
-    let dslFile = path.join(ROOT_PATH, 'src/test/resources/simpleDSL/simple.dsl');
-    let dzFile = path.join(ROOT_PATH, 'src/test/resources/simpleDSL/simple.dsl.dz');
+    let dslFile = path.join(TEST_RESOURCE_PATH, 'simpleDSL/simple.dsl');
+    let dzFile = path.join(TEST_RESOURCE_PATH, 'simpleDSL/simple.dsl.dz');
 
     it("#run with dsl", (done) => {
         let result: LineStats[] = [];

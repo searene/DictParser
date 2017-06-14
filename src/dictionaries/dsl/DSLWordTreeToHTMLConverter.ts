@@ -2,8 +2,8 @@ import { AccentConverter } from '../../AccentConverter';
 import { DSLDictionary } from './DSLDictionary';
 import { Dictionary, WordTreeHTML } from '../../Dictionary';
 import { WordTree } from '../../Tree'
-import { NotImplementedError, NotResourceNodeError } from '../../errors';
-import { ROOT_PATH, RESOURCE_PATH } from '../../constant';
+import { NotResourceNodeError } from '../../Error';
+import { SRC_RESOURCE_PATH } from '../../Constant';
 import { Node } from '../../Tree';
 import * as path from 'path';
 import * as fsp from 'fs-promise';
@@ -123,7 +123,7 @@ export class DSLWordTreeToHTMLConverter {
     }
 
     private getPathToSoundImg(): string {
-        return path.join(RESOURCE_PATH, 'sound.png');
+        return path.join(SRC_RESOURCE_PATH, 'sound.png');
     }
 
     private getResourceType(node: Node): number {

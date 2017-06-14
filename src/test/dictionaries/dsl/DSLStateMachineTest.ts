@@ -1,4 +1,4 @@
-import { ROOT_PATH } from '../../../constant';
+import { TEST_RESOURCE_PATH } from '../../../Constant';
 import { Log } from '../../../util/log';
 import { WordTree } from '../../../Tree';
 import { DSLStateMachine } from '../../../dictionaries/dsl/DSLStateMachine';
@@ -19,7 +19,7 @@ describe("Test DSLStateMachine", () => {
 		let typicalEntryContents: string;
 
 		before(async () => {
-			let dslFile: string = path.join(ROOT_PATH, 'src/test/resources/dsl/sample.dsl');
+			let dslFile: string = path.join(TEST_RESOURCE_PATH, 'dsl/sample.dsl');
 			let encoding = (await getEncodingInFile(dslFile));
 			simpleEntryContents = await readFile(dslFile, encoding.encoding, 5, 6);
 			mediumEntryContents = await readFile(dslFile, encoding.encoding, 214, 216);

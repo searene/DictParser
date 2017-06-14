@@ -1,11 +1,9 @@
-import { RESOURCE_PATH } from './constant';
-import { ROOT_PATH } from './constant';
-import { AccentConverter } from './AccentConverter';
+import { SRC_RESOURCE_PATH } from './Constant';
 import { Log } from './util/log';
-import { WordTree } from './Tree';
+import { WordTree, Node } from './Tree';
 import { Meta, IndexMap } from "./DictionaryFinder";
 import * as fsp from 'fs-promise';
-import * as path from 'path';
+import * as path from "path";
 /**
  * Created by searene on 17-1-23.
  */
@@ -24,10 +22,10 @@ export abstract class Dictionary {
     protected _resourceFileSuffixes: string[] = ['.jpg', '.wmv', '.bmp', '.mp3'];
 
     // path to dictionary specific css file
-    protected _dictCSSFilePath: string = path.join(__dirname, 'style.css');
+    protected _dictCSSFilePath: string = path.join(SRC_RESOURCE_PATH, 'style.css');
 
     // path to universal css file
-    private _mainCSSFilePath: string = path.join(RESOURCE_PATH, 'style.css');
+    private _mainCSSFilePath: string = path.join(SRC_RESOURCE_PATH, 'style.css');
 
     // get meta data and index
     async abstract getDictionaryStats(dictFile: string): Promise<DictionaryStats>;

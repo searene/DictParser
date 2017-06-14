@@ -1,12 +1,7 @@
 import { DictionaryFinder, DictMap } from '../DictionaryFinder';
-import { ROOT_PATH } from '../constant';
-import { Node } from '../Tree';
+import { TEST_RESOURCE_PATH } from '../Constant';
 import { Log } from '../util/log';
-import { WordTree } from '../Tree';
-import { DSLStateMachine } from '../dictionaries/dsl/DSLStateMachine';
-import { StateMachine } from '../StateMachine';
 import { assert } from 'chai';
-import { getEncodingInFile } from '../EncodingDetector';
 import * as mocha from 'mocha';
 import * as fsp from 'fs-promise';
 import * as path from 'path';
@@ -15,8 +10,8 @@ let logger = Log.getLogger();
 
 describe('Test DictionaryFinder', () => {
 	it('#scan', async () => {
-		let scanFolder = path.join(ROOT_PATH, 'src/test/resources/scan');
-		let dbPath = path.join(ROOT_PATH, 'src/test/resources/dictParser.db');
+		let scanFolder = path.join(TEST_RESOURCE_PATH, 'scan');
+		let dbPath = path.join(TEST_RESOURCE_PATH, 'dictParser.db');
 
 		let dictionaryFinder = new DictionaryFinder();
 		let dictMapList: DictMap[] = await dictionaryFinder.scan(scanFolder, dbPath);

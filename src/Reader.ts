@@ -1,5 +1,4 @@
-import * as log4js from 'log4js';
-import {LOG_CONFIG_LOCATION} from "./constant";
+import {LOG_CONFIG_LOCATION} from "./Constant";
 import {Log} from "./util/log";
 /**
  * Created by searene on 17-1-22.

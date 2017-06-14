@@ -1,7 +1,7 @@
 import { AccentConverter } from './AccentConverter';
 import { DictMap, DictionaryFinder, IDictionary, IndexMap } from './DictionaryFinder';
 import { Option, none, some } from 'ts-option';
-import { DEFAULT_DB_PATH } from './constant';
+import { DEFAULT_DB_PATH } from './Constant';
 import * as fsp from 'fs-promise';
 import { WordTree } from "./Tree";
 import { Dictionary } from "./Dictionary";

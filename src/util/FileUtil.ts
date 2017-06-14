@@ -4,46 +4,6 @@ import * as fsp from 'fs-promise';
 import * as path from 'path';
 import * as log4js from 'log4js';
 
-export class Walk extends EventEmitter {
-    private log = Log.getLogger();
-    constructor(dir: string) {
-        super();
-        process.nextTick(() => {
-            this.walkthrough(dir, true);
-        });
-    }
-    private async walkthrough(dir: string, topLevel: boolean): Promise<void> {
-        try {
-            let root: string;
-            let files: string[];
-            let stat = await fsp.stat(dir);
-            if(stat.isDirectory) {
-                files = await readdirRecursively(dir);
-            } else {
-                throw new Error(`File ${dir} should be a directory.`);
-            }
-            for(let i = 0; i < files.length; i++) {
-                let file = files[i];
-                let stat = await fsp.stat(file);
-                if (stat.isDirectory()) {
-                    this.emit('dir', file, stat);
-                    process.nextTick(() => {
-                        this.walkthrough(file, false);
-                    })
-                } else if (stat.isFile()) {
-                    this.emit('file', file, stat);
-                }
-            }
-            if(topLevel) {
-                this.emit('end');
-            }
-        } catch(err) {
-            this.emit('error', err);
-            this.emit('end');
-        }
-    }
-}
-
 async function readdirRecursivelyInternal(dir: string): Promise<string[]> {
     let stat = await fsp.stat(dir);
     let files: string[] = [];
@@ -91,7 +51,7 @@ export class FSHelper {
                 })
                 .catch((err) => {
                     if (err.code == 'ENOENT') {
-                        // file doens't exist, ignore the error.
+                        // file doesn't exist, ignore the error.
                         logger.debug(`File ${filename} doesn't exist, won't remove it.`);
                     } else {
                         // maybe we don't have enough permission

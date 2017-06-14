@@ -1,16 +1,16 @@
+import { TEST_RESOURCE_PATH } from './../Constant';
 import { assert } from 'chai';
-import { ROOT_PATH } from '../constant';
 import { Log } from '../util/log';
 import { DictZipParser } from '../dictionaries/dsl/dictzip/DictZipParser';
 import * as path from 'path';
-import { DictParser } from "../DictParser";
+import { DictParser } from "../index";
 
 describe('Test DictParser', () => {
 
     let logger = Log.getLogger();
 
-    let scanFolder = path.join(ROOT_PATH, 'src/test/resources/scan');
-    let dbPath = path.join(ROOT_PATH, 'src/test/resources/dictParser.db');
+    let scanFolder = path.join(TEST_RESOURCE_PATH, 'scan');
+    let dbPath = path.join(TEST_RESOURCE_PATH, 'dictParser.db');
 
     it("#getWordDefinition", async () => {
         let dictParser = new DictParser(dbPath);

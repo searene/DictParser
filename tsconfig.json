@@ -10,7 +10,6 @@
       "allowJs": true
     },
     "include": [
-      "src/**/*",
-      "test/code/**/*"
+      "src/**/*"
     ]
 }

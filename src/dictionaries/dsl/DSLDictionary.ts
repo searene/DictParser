@@ -1,4 +1,4 @@
-import { ROOT_PATH } from '../../constant';
+import { ROOT_PATH } from '../../Constant';
 import { DictionaryFinder } from '../../DictionaryFinder';
 import { Option, some } from 'ts-option';
 import { DictMap, IndexMap, Meta } from '../../DictionaryFinder';
