@@ -9,7 +9,7 @@ import { DSLStateMachine } from './DSLStateMachine';
 import { StateMachine } from '../../StateMachine';
 import { WordTree } from '../../Tree';
 import { Dictionary, WordPosition, DictionaryStats, WordTreeHTML } from "../../Dictionary";
-import { DictZipParser } from "./dictzip/DictZipParser";
+import { DictZipParser } from "./DictZipParser";
 import { getEncodingInFile, getEncodingInBuffer } from "../../EncodingDetector";
 import * as fsp from 'fs-promise';
 import * as path from 'path';
@@ -112,7 +112,7 @@ export class DSLDictionary extends Dictionary {
         return indexableWord;
     }
 
-    private getBufferReader(dictFile: string): BufferReader {
+    private async getBufferReader(dictFile: string): Promise<BufferReader> {
         let bufferReader: BufferReader;
         let ext = path.extname(dictFile);
         if(ext == '.dsl') {
@@ -122,12 +122,16 @@ export class DSLDictionary extends Dictionary {
         } else {
             throw new Error(`${ext} file is not supported`);
         }
+        await bufferReader.open(dictFile);
         return bufferReader;
     }
     private async getFileContents(dictFile: string, pos: number, len: number): Promise<string> {
-        let bufferReader: BufferReader = this.getBufferReader(dictFile);
-        let buffer: Buffer = await bufferReader.read(dictFile, pos, len);
-        let encoding = (await bufferReader.getEncodingStat(dictFile)).encoding;
+        let bufferReader: BufferReader = await this.getBufferReader(dictFile);
+
+        let buffer: Buffer = await bufferReader.read(pos, len);
+        let encoding = (await bufferReader.getEncodingStat()).encoding;
+        await bufferReader.close();
+
         return buffer.toString(encoding);
     }
 }

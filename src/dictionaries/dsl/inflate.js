@@ -2141,7 +2141,7 @@ function jszlib_inflate_buffer(buffer, start, length, afterUncOffset) {
     }
 
     if (oBlockList.length == 1) {
-        return oBlockList[0].buffer;
+        return new Buffer(oBlockList[0]);
     } else {
         var out = new Uint8Array(totalSize);
         var cursor = 0;
@@ -2150,7 +2150,7 @@ function jszlib_inflate_buffer(buffer, start, length, afterUncOffset) {
             arrayCopy(b, 0, out, cursor, b.length);
             cursor += b.length;
         }
-        return out.buffer;
+        return new Buffer(out);
     }
 }
 

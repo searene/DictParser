@@ -25,7 +25,7 @@ export abstract class Dictionary {
     protected _dictCSSFilePath: string = path.join(SRC_RESOURCE_PATH, 'style.css');
 
     // path to universal css file
-    private _mainCSSFilePath: string = path.join(SRC_RESOURCE_PATH, 'style.css');
+    protected _mainCSSFilePath: string = path.join(SRC_RESOURCE_PATH, 'style.css');
 
     // get meta data and index
     async abstract getDictionaryStats(dictFile: string): Promise<DictionaryStats>;

@@ -1,7 +1,7 @@
 import { TEST_RESOURCE_PATH } from './../Constant';
 import { assert } from 'chai';
 import { Log } from '../util/log';
-import { DictZipParser } from '../dictionaries/dsl/dictzip/DictZipParser';
+import { DictZipParser } from '../dictionaries/dsl/DictZipParser';
 import * as path from 'path';
 import { DictParser } from "../index";
 

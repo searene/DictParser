@@ -1,6 +1,6 @@
 import { BufferReader, SimpleBufferReader, DzBufferReader } from './BufferReader';
 import { getEncodingInBuffer, EncodingStat } from './EncodingDetector';
-import { DictZipParser } from './dictionaries/dsl/dictzip/DictZipParser';
+import { DictZipParser } from './dictionaries/dsl/DictZipParser';
 import * as EventEmitter from 'events';
 import * as fsp from 'fs-promise';
 import * as path from 'path';
@@ -8,15 +8,13 @@ import * as path from 'path';
 export class LineReader extends EventEmitter {
 
     private _filePath: string;
-    private _bufferReader: BufferReader;
     private static _bufferReaders: Map<string, BufferReader> = new Map<string, BufferReader>();
-    private _encoding: string;
 
     // how many bytes to be read each time
     private _len: number;
 
     /**
-     * @param filePath: file to be processed
+     * @param filePath: path to file
      * @param len: how many bytes to be read each time
      */
     constructor(filePath: string, len: number = 64 * 1024) {
@@ -31,39 +29,37 @@ export class LineReader extends EventEmitter {
         });
     }
 
-    private async init(): Promise<void> {
+    private async run(): Promise<void> {
+
         let ext: string = path.extname(this._filePath);
         let bufferReader = LineReader._bufferReaders.get(ext);
         if(bufferReader == undefined) {
             throw new Error(`No BufferReader is not registered for ${ext}.`);
         }
-        this._bufferReader = bufferReader as BufferReader;
-    }
 
-    private async run(): Promise<void> {
-        await this.init();
+        await bufferReader.open(this._filePath);
 
-        let encodingStat = await this._bufferReader.getEncodingStat(this._filePath);
-        this._encoding = encodingStat.encoding;
+        let encodingStat = await bufferReader.getEncodingStat();
+        let encoding: string = encodingStat.encoding;
 
         let dataProcessTotally: number = encodingStat.posAfterBom;
 
         // buffer read each time from file
-        let bufferRead: Buffer = await this._bufferReader.read(this._filePath, dataProcessTotally, this._len);
+        let bufferRead: Buffer = await bufferReader.read(dataProcessTotally, this._len);
 
         // data to be processed
-        let data = bufferRead;
+        let data: Buffer = bufferRead;
 
         // the number of bytes that are processed each time
         let dataProcessedEachTime: number;
 
         let i = 1;
         while(bufferRead.length != 0) {
-            dataProcessedEachTime = this.emitLines(data, dataProcessTotally);
+            dataProcessedEachTime = this.emitLines(data, encoding, dataProcessTotally);
             dataProcessTotally += dataProcessedEachTime;
 
             // read 64KB
-            bufferRead = await this._bufferReader.read(this._filePath, encodingStat.posAfterBom + i * this._len, this._len);
+            bufferRead = await bufferReader.read(encodingStat.posAfterBom + i * this._len, this._len);
 
             // concat data that is not processed last time and data read this time
             data = Buffer.concat([data.slice(dataProcessedEachTime), bufferRead]);
@@ -71,16 +67,17 @@ export class LineReader extends EventEmitter {
             i++;
         }
         if(data.length > 0) {
-            if(!data.toString(this._encoding).endsWith('\n')) {
-                data = Buffer.concat([data, Buffer.from('\n', this._encoding)]);
+            if(!data.toString(encoding).endsWith('\n')) {
+                data = Buffer.concat([data, Buffer.from('\n', encoding)]);
             }
-            this.emitLines(data, dataProcessTotally);
+            this.emitLines(data, encoding, dataProcessTotally);
         }
+        await bufferReader.close();
         this.emit('end');
     }
 
-    private emitLines(buffer: Buffer, previousBytesRead: number): number {
-        let s = buffer.toString(this._encoding);
+    private emitLines(buffer: Buffer, encoding: string, previousBytesRead: number): number {
+        let s = buffer.toString(encoding);
         let pos = 0;
         let line: string = "";
         for(let i = 0; i < s.length; i++) {
@@ -91,17 +88,17 @@ export class LineReader extends EventEmitter {
                 this.emit('line', {
                     line: line, 
                     pos: pos + previousBytesRead,
-                    len: Buffer.from(line, this._encoding).length
+                    len: Buffer.from(line, encoding).length
                 });
-                pos += Buffer.from(line, this._encoding).length;
+                pos += Buffer.from(line, encoding).length;
                 line = "";
             } else if((s[i] == '\r' && i + 1 < s.length && s[i + 1] != '\n') || s[i] == '\n') {
                 this.emit('line', {
                     line: line, 
                     pos: pos + previousBytesRead,
-                    len: Buffer.from(line, this._encoding).length
+                    len: Buffer.from(line, encoding).length
                 });
-                pos += Buffer.from(line, this._encoding).length;
+                pos += Buffer.from(line, encoding).length;
                 line = "";
             }
         }

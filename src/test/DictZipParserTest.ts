@@ -1,8 +1,9 @@
 import { TEST_RESOURCE_PATH } from './../Constant';
 import { assert } from 'chai';
 import { Log } from '../util/log';
-import { DictZipParser } from '../dictionaries/dsl/dictzip/DictZipParser';
+import { DictZipParser } from '../dictionaries/dsl/DictZipParser';
 import * as path from 'path';
+import * as fsp from 'fs-promise';
 
 describe('DictZipParser test', () => {
 
@@ -11,10 +12,13 @@ describe('DictZipParser test', () => {
     let simpleDictFile = path.join(TEST_RESOURCE_PATH, 'dz/simple_dict_file.txt.dz');
 
     it("#parse", async () => {
-        let dictZipParser = new DictZipParser(simpleDictFile);
-        let parsedBuffer = await dictZipParser.parse(2);
+        let fd: number = await fsp.open(simpleDictFile, 'r');
+
+        let dictZipParser = new DictZipParser(fd);
+
+        let parsedBuffer = await dictZipParser.parse(1, 2);
 
         let parsedString = parsedBuffer.toString('utf8');
-        assert.equal(parsedString, 'st\n');
+        assert.equal(parsedString, 'es');
     });
 });
