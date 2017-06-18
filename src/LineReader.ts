@@ -85,7 +85,7 @@ export class LineReader extends EventEmitter {
             if(s[i] == '\r' && i + 1 < s.length && s[i + 1] == '\n') {
                 i++;
                 line = line + '\n';
-                this.emit('line', {
+                this.emit('line', <LineStats> {
                     line: line, 
                     pos: pos + previousBytesRead,
                     len: Buffer.from(line, encoding).length
@@ -93,7 +93,7 @@ export class LineReader extends EventEmitter {
                 pos += Buffer.from(line, encoding).length;
                 line = "";
             } else if((s[i] == '\r' && i + 1 < s.length && s[i + 1] != '\n') || s[i] == '\n') {
-                this.emit('line', {
+                this.emit('line', <LineStats> {
                     line: line, 
                     pos: pos + previousBytesRead,
                     len: Buffer.from(line, encoding).length

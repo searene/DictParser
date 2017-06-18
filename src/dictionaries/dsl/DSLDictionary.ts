@@ -36,7 +36,8 @@ export class DSLDictionary extends Dictionary {
 
     async getDictionaryStats(dictFile: string): Promise<DictionaryStats> {
         return new Promise<DictionaryStats>((resolve, reject) => {
-            let indexMap: IndexMap = {};
+            let originalWords: IndexMap = {};
+            let transformedWords: IndexMap = {};
             let meta: Meta = {};
             let isInDefinition = false;
 
@@ -69,17 +70,22 @@ export class DSLDictionary extends Dictionary {
                     wordTreeLength += lineStats.len;
                     let word: string = this.getIndexableWord(lineStats.line.trim());
                     entryList.push(word);
-                    indexMap[word] = {pos: lineStats.pos, len: -1};
+                    originalWords[word] = {pos: lineStats.pos, len: -1};
+
+                    // check if the word exists in transformedWords, if so, remove it.
+                    if(transformedWords[word] != undefined) {
+                        delete transformedWords[word];
+                    }
                 } else if(isInDefinition && /^\s/.test(line)) {
                     wordTreeLength += lineStats.len;
                     entryList.forEach((entry) => {
-                        indexMap[entry].len = wordTreeLength + indexMap[entryList[0]].pos - indexMap[entry].pos;
+                        originalWords[entry].len = wordTreeLength + originalWords[entryList[0]].pos - originalWords[entry].pos;
                     });
                 }
                 previousLine = line;
             });
             lineReader.on('end', () => {
-                resolve({meta: meta, indexMap: indexMap});
+                resolve({meta: meta, indexMap: originalWords});
             });
             lineReader.process();
         });

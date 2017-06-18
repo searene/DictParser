@@ -1,6 +1,6 @@
 import { DSLDictionary } from './dictionaries/dsl/DSLDictionary';
 import { DictionaryStats } from './Dictionary';
-import { DEFAULT_DB_PATH, ROOT_PATH } from './Constant';
+import { DB_PATH, ROOT_PATH, WORD_FORMS_PATH } from './Constant';
 import { Log } from './util/log';
 import { Dictionary, WordPosition } from "./Dictionary";
 import { readdirRecursivelyWithStat } from "./util/FileUtil";
@@ -8,6 +8,7 @@ import { Option, option, some, none } from 'ts-option';
 import * as fsp from "fs-promise";
 import * as path from "path";
 import * as log4js from 'log4js';
+import * as ReadLine from "readline";
 
 /**
  * Created by searene on 17-1-23.
@@ -32,7 +33,7 @@ export class DictionaryFinder {
      * its {@code Dictionary} and resource to the result array.
      */
     async scan(dir: string,
-               dbPath: string = DEFAULT_DB_PATH): Promise<DictMap[]> {
+               dbPath: string = DB_PATH): Promise<DictMap[]> {
 
         // DictMap without resource
         let dictMapList: DictMap[] = [];
@@ -57,24 +58,58 @@ export class DictionaryFinder {
                     let dictStats: DictionaryStats = await dictionary.getDictionaryStats(file.filePath);
 
                     // add it to dictMapList
-                    dictMapList.push(<DictMap> {
+                    dictMapList.push({
                         dict: {
                             dictPath: file.filePath,
                             dictType: dictName,
                             resource: resource.isEmpty ? "" : resource.get,
                         },
                         meta: dictStats.meta,
-                        indexMap: dictStats.indexMap
+                        originalWords: dictStats.indexMap,
+                        transformedWords: {}
                     });
                 }
             }
         }
+
+        // add word transformations
+        await this.addTransformedWords(dictMapList);
 
         // save to db
         await fsp.writeFile(dbPath, JSON.stringify(dictMapList), {encoding: 'utf8'});
 
         this._dictMapList = dictMapList;
         return dictMapList;
+    }
+
+    private async addTransformedWords(dictMapList: DictMap[], wordFormsFolder: string = WORD_FORMS_PATH): Promise<void> {
+        // word forms
+        let wordFormsFiles = await fsp.readdir(wordFormsFolder);
+        for(let i = 0; i < wordFormsFiles.length; i++) {
+            let wordformsFile = path.join(wordFormsFolder, wordFormsFiles[i]);
+            let lineReader = ReadLine.createInterface({
+                input: fsp.createReadStream(wordformsFile)
+            });
+            lineReader.on('line', line => {
+                let words: string[] = line.split(/[\s,:]+/);
+
+                let originalWord = words[0];
+                let transformedWords = words.slice(1);
+
+                for(let transformedWord of transformedWords) {
+                    // check each dictionary
+                    for(let dictMap of dictMapList) {
+                        if(dictMap.originalWords.hasOwnProperty(originalWord) && !dictMap.transformedWords.hasOwnProperty(transformedWord)) {
+                            dictMap.transformedWords[transformedWord] = dictMap.originalWords[originalWord];                        }
+                    }
+                }
+            });
+            return new Promise<void>((resolve, reject) => {
+                lineReader.on('close', () => {
+                    resolve();
+                });
+            });
+        }
     }
 
     static get dictionaries(): Map<string, Dictionary> {
@@ -163,8 +198,11 @@ export interface DictMap {
     // meta data
     meta: Meta;
 
-    // index of the dictionary
-    indexMap: IndexMap;
+    // pos of words in the dictionary
+    originalWords: IndexMap;
+
+    // pos of transformed words in the dictionary
+    transformedWords: IndexMap;
 }
 
 export interface IndexMap {
@@ -173,4 +211,8 @@ export interface IndexMap {
 
 export interface Meta {
     [metaKey: string]: string;
+}
+
+export interface WordForms {
+    [word: string]: WordPosition;
 }

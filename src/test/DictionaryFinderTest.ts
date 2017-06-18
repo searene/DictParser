@@ -35,7 +35,7 @@ function checkDictMapList(dictMapList: DictMap[], scanFolder: string) {
 			'INDEX_LANGUAGE': 'English',
 			'CONTENTS_LANGUAGE': 'English'
 		},
-		indexMap: {
+		originalWords: {
 			'trivial card': {pos: 182, len: 206},
 			'sample entry': {pos: 388, len: 29476},
 			'example': {pos: 416, len: 29448},
@@ -43,7 +43,12 @@ function checkDictMapList(dictMapList: DictMap[], scanFolder: string) {
 			'sample headword': {pos: 492, len: 29372},
 			'typical card': {pos: 29864, len: 3762},
 			'resourceCard': {pos: 33626, len: 180}
-		}
+		},
+        transformedWords: {
+            'examples': {pos: 416, len: 29448},
+            'exampled': {pos: 416, len: 29448},
+            'exampling': {pos: 416, len: 29448}
+        }
 	}, {
 		dict: {
 			dictPath: path.join(scanFolder, 'dz/simple.dsl.dz'),
@@ -55,8 +60,9 @@ function checkDictMapList(dictMapList: DictMap[], scanFolder: string) {
 			'INDEX_LANGUAGE': 'English',
 			'CONTENTS_LANGUAGE': 'English'
 		},
-		indexMap: {
+		originalWords: {
 			'trivial card': {pos: 182, len: 202}
-		}
+		},
+        transformedWords: {}
 	}]);
 }
