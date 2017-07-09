@@ -40,6 +40,7 @@ export class DSLDictionary extends Dictionary {
             let transformedWords: IndexMap = {};
             let meta: Meta = {};
             let isInDefinition = false;
+            let isDictionaryReported = false;
 
             let lineReader = new LineReader(dictFile);
             let previousLine: string;
@@ -56,7 +57,15 @@ export class DSLDictionary extends Dictionary {
                 if(!isInDefinition && line.startsWith('#')) {
                     // meta data
                     let header: string[] = line.substring(1).split(/\s(.+)/);
-                    meta[header[0]] = header[1].substring(1, header[1].length - 1);
+
+                    let key = header[0];
+                    let value = header[1].substring(1, header[1].length - 1);
+                    meta[key] = value;
+
+                    if(key == 'NAME' && !isDictionaryReported) {
+                        this._dictionaryScanProgressReporter.emit('name', value);
+                        isDictionaryReported = true;
+                    }
                 } else if(!isInDefinition && !line.startsWith('#')) {
                     isInDefinition = true;
                 } else if(isInDefinition && !/^\s/.test(line)) {

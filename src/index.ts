@@ -1,3 +1,4 @@
+import { EventEmitter } from 'events';
 import { AccentConverter } from './AccentConverter';
 import { DictMap, DictionaryFinder, IDictionary, IndexMap, WordForms } from './DictionaryFinder';
 import { Option, none, some } from 'ts-option';
@@ -7,7 +8,7 @@ import { WordTree } from "./Tree";
 import { Dictionary, WordPosition } from "./Dictionary";
 import * as ReadLine from "readline";
 
-export class DictParser {
+export class DictParser extends EventEmitter {
 
     private _dbPath: string;
     private _dictionaryFinder = new DictionaryFinder();
@@ -17,10 +18,14 @@ export class DictParser {
     private _wordformsMap: { [lang: string]: WordForms } = {};
 
     constructor(dbPath: string = DB_PATH) {
+        super();
         this._dbPath = dbPath;
     }
 
     async scan(scanFolder: string): Promise<DictMap[]> {
+        this._dictionaryFinder.on('name', (dictionaryName: string) => {
+            this.emit('name', dictionaryName);
+        });
         this._dictMapList = await this._dictionaryFinder.scan(scanFolder, this._dbPath);
         return this._dictMapList;
     }

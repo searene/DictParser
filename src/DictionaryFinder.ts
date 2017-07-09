@@ -9,6 +9,7 @@ import * as fsp from "fs-promise";
 import * as path from "path";
 import * as log4js from 'log4js';
 import * as ReadLine from "readline";
+import { EventEmitter } from "events";
 
 /**
  * Created by searene on 17-1-23.
@@ -16,7 +17,18 @@ import * as ReadLine from "readline";
 
 let logger = Log.getLogger();
 
-export class DictionaryFinder {
+export class DictionaryFinder extends EventEmitter {
+
+    constructor() {
+        super();
+
+        // emit dictionary name being scanned
+        for(let [dictName, dictionary] of Array.from(DictionaryFinder._dictionaries.entries())) {
+            dictionary.dictionaryScanProgressReporter.on('name', (dictionaryName: string) => {
+                this.emit('name', dictionaryName);
+            });
+        }
+    }
 
     private logger = Log.getLogger();
 
@@ -25,6 +37,7 @@ export class DictionaryFinder {
     private _dictMapList: DictMap[];
 
     static register(dictName: string, Dictionary: new () => Dictionary): void {
+        let dictionary = new Dictionary();
         this._dictionaries.set(dictName, new Dictionary());
     }
 
@@ -44,6 +57,7 @@ export class DictionaryFinder {
             let ext = path.extname(file.filePath);
             for(let [dictName, dictionary] of Array.from(DictionaryFinder._dictionaries.entries())) {
 
+                // we find a dictionary
                 if(dictionary.dictionarySuffixes.indexOf(ext) > -1) {
 
                     // get resource
@@ -53,6 +67,7 @@ export class DictionaryFinder {
                         dictionary.resourceHolderSuffixes,
                         dictionary.resourceFileSuffixes
                     );
+
 
                     // build index
                     let dictStats: DictionaryStats = await dictionary.getDictionaryStats(file.filePath);

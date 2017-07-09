@@ -14,6 +14,9 @@ describe('Test DictParser', () => {
 
     it("#getWordDefinition", async () => {
         let dictParser = new DictParser(dbPath);
+        dictParser.on('name', (dictionaryName: string) => {
+            logger.info(`scanning ${dictionaryName}...`);
+        });
         await dictParser.scan(scanFolder);
         let wordDefinitionList = await dictParser.getWordDefinition('trivial card');
         console.log(wordDefinitionList);

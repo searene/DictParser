@@ -1,3 +1,4 @@
+import { EventEmitter } from 'events';
 import { SRC_RESOURCE_PATH } from './Constant';
 import { Log } from './util/log';
 import { WordTree, Node } from './Tree';
@@ -11,6 +12,8 @@ import * as path from "path";
 let logger = Log.getLogger();
 
 export abstract class Dictionary {
+
+    protected _dictionaryScanProgressReporter: EventEmitter = new EventEmitter();
 
     // e.g. dsl, main definition file
     protected abstract _dictionarySuffixes: string[];
@@ -54,6 +57,9 @@ export abstract class Dictionary {
     }
     get resourceFileSuffixes(): string[] {
         return this._resourceFileSuffixes;
+    }
+    get dictionaryScanProgressReporter(): EventEmitter {
+        return this._dictionaryScanProgressReporter;
     }
 }
 
