@@ -11,7 +11,7 @@ gulp.task("compile", function () {
         .pipe(sourcemaps.init())
         .pipe(tsProject());
 
-    return tsResult.js
+    return tsResult
         .pipe(sourcemaps.write({
             // Return relative source map root directories per file.
             sourceRoot: function (file) {

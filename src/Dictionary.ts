@@ -59,9 +59,10 @@ export abstract class Dictionary {
         } else if(resourceHolderStats.isFile()) {
             let ext = path.extname(resourceHolder);
             if(ext == '.zip') {
-
+                throw new Error(`zip resource is not supported yet`);
             }
         }
+        throw new Error(`resource is not supported: ${resourceHolder}`);
     }
 
     async getCSS(): Promise<string> {
