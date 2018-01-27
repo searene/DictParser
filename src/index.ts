@@ -17,9 +17,9 @@ export class DictParser extends EventEmitter {
 
     private _wordformsMap: { [lang: string]: WordForms } = {};
 
-    constructor(dbPath: string = DB_PATH) {
-        super();
-        this._dbPath = dbPath;
+    constructor(dbPath: string) {
+      super();
+      this._dbPath = dbPath;
     }
 
     async scan(scanFolder: string): Promise<DictMap[]> {
@@ -28,17 +28,6 @@ export class DictParser extends EventEmitter {
         });
         this._dictMapList = await this._dictionaryFinder.scan(scanFolder, this._dbPath);
         return this._dictMapList;
-    }
-
-    async init(input: DictParserInput): Promise<void> {
-
-        // db path
-        this._dbPath = input.dbPath == undefined ? DB_PATH : this._dbPath;
-
-        // scan
-        if(input.scanFolder != undefined) {
-            this._dictMapList = await this._dictionaryFinder.scan(input.scanFolder, this._dbPath);
-        }
     }
 
     /**
@@ -171,8 +160,6 @@ export interface WordCandidate {
 }
 
 export interface DictParserInput {
-    dbPath?: string;
-    scanFolder?: string;
-    wordformsFolder?: string;
+    dbPath: string;
 }
 
