@@ -11,20 +11,22 @@ export class Log {
         log4js.configure({
             appenders: {
                 "console": { type: 'console' },
-                "file": { type: 'file', filename: `${Log.logFilePath}`, maxLogSize: 20480 }
+                "file": { type: 'file', filename: '/tmp/test.log', maxLogSize: 20480 }
             },
             categories: { default: { appenders: ['console', 'file'], level: 'debug' }}
         });
         Log.logger = log4js.getLogger("default");
     }
 
-    public static getLogger(): log4js.Logger {
-        if(Log.logger != null) {
-            return Log.logger;
-        } else {
-            Log.init();
-            return Log.logger;
-        }
+    public static getLogger() {
+        // use console for now because log4js doesn't work with webpack
+        return console;
+        // if(Log.logger != null) {
+        //     return Log.logger;
+        // } else {
+        //     Log.init();
+        //     return Log.logger;
+        // }
     }
 
 }
