@@ -97,7 +97,7 @@ export class DSLWordTreeToHTMLConverter {
 
 
     private isResourceNode(node: Node): boolean {
-        return node.name == 's' && node.children.length == 1 && node.children[0].name == 'text';
+        return node.name == 's' && node.children.length == 1 && node.children[0].type == Node.TEXT_NODE;
     }
 
     private getResourceName(node: Node): string {
@@ -137,6 +137,7 @@ export class DSLWordTreeToHTMLConverter {
                 return this.ResourceType.UNKNOWN;
             }
         } else {
+            console.log(node);
             throw new NotResourceNodeError("Not a resource node");
         }
     }

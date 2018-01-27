@@ -5,31 +5,31 @@
 export class Node {
 
     // root node, there's only one root node in a WordTree
-    public static ROOT_NODE: number = 0;
+    public static ROOT_NODE: string = 'ROOT_NODE';
 
     // pure text
-    public static TEXT_NODE: number = 1;
+    public static TEXT_NODE: string = 'TEXT_NODE';
 
     // tagNode is something like [m1]blah[/m1]
-    public static TAG_NODE: number = 2;
+    public static TAG_NODE: string = 'TAG_NODE';
 
     // <<ref to another word>>
-    public static REF_NODE: number = 3;
+    public static REF_NODE: string = 'REF_NODE';
 
     // new line
-    public static NEW_LINE_NODE: number = 4;
+    public static NEW_LINE_NODE: string = 'NEW_LINE_NODE';
 
     // node name, i.e. tag name, like m1, m2, etc.
     // for text/root node, this field remains empty
     private _name: string = "";
 
-    private _type: number;
+    private _type: string;
 
     // contents of the node, it's mainly used in
     // text nodes to store their contents
     private _contents: string = "";
 
-    constructor(nodeType: number) {
+    constructor(nodeType: string) {
         this._type = nodeType;
     }
 
@@ -70,11 +70,11 @@ export class Node {
         this._children = value;
     }
 
-    get type(): number {
+    get type(): string {
         return this._type;
     }
 
-    set type(value: number) {
+    set type(value: string) {
         this._type = value;
     }
 

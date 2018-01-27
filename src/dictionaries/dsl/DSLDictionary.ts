@@ -1,3 +1,4 @@
+import { Log } from './../../util/log';
 import { ROOT_PATH } from '../../Constant';
 import { DictionaryFinder } from '../../DictionaryFinder';
 import { Option, some } from 'ts-option';
@@ -21,6 +22,7 @@ export class DSLDictionary extends Dictionary {
     protected _dictionarySuffixes: string[] = ['.dsl', '.dz'];
 
     private wordTreeHTMLConverter: DSLWordTreeToHTMLConverter = new DSLWordTreeToHTMLConverter();
+    private logger = Log.getLogger();
 
     async getWordTree(dictFile: string, pos: number, len: number): Promise<WordTree> {
         let input: string = await this.getFileContents(dictFile, pos, len);

@@ -9,7 +9,8 @@ describe('Test DictParser', () => {
 
     let logger = Log.getLogger();
 
-    let scanFolder = path.join(TEST_RESOURCE_PATH, 'scan');
+    // let scanFolder = path.join(TEST_RESOURCE_PATH, 'scan');
+    let scanFolder = path.join('/home/searene/Public/dsl');
     let dbPath = path.join(TEST_RESOURCE_PATH, 'dictParser.db');
 
     it("#getWordDefinition", async () => {
@@ -17,8 +18,10 @@ describe('Test DictParser', () => {
         dictParser.on('name', (dictionaryName: string) => {
             logger.info(`scanning ${dictionaryName}...`);
         });
+        console.log(`scanFolder: ${scanFolder}`);
         await dictParser.scan(scanFolder);
-        let wordDefinitionList = await dictParser.getWordDefinition('trivial card');
+        // let wordDefinitionList = await dictParser.getWordDefinition('trivial card');
+        let wordDefinitionList = await dictParser.getWordDefinition('artefact');
         console.log(wordDefinitionList);
     });
 

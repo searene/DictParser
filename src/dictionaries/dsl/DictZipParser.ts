@@ -14,9 +14,11 @@ export class DictZipParser {
     }
 
     async parse(pos: number, len: number): Promise<Buffer> {
+        console.log(`parsing file from pos ${pos}, len: ${len}`);
         if(this._header == undefined) {
             this._header = await this.getHeader();
         }
+        console.log(this._header);
         let headerLength = this.getHeaderLen(this._header);
 
         let CHLEN: number = this._header.FEXTRA.FIELD.SUBFIELD.CHLEN.readUInt16LE(0);
@@ -43,9 +45,11 @@ export class DictZipParser {
             endDecompressPos += CHUNKS.readUInt16LE(i);
         }
 
+
         let compressedData: Buffer = Buffer.alloc(endDecompressPos - startDecompressPos);
         await fse.read(this._fd, compressedData, 0, compressedData.length, startDecompressPos);
 
+        console.log(new Uint8Array(compressedData));
         let decompressedData = inflateBuffer(new Uint8Array(compressedData));
         return decompressedData.slice(pos - ~~(pos / CHLEN) * CHCNT, pos + len - ~~(pos / CHLEN) * CHCNT);
     }

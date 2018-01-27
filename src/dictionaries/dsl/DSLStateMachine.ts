@@ -265,7 +265,7 @@ export class DSLStateMachine extends StateMachine {
      * 
      * @param parentOfTheNewNode peakNextChar node
      */
-    private initNewNode(parentOfTheNewNode: Node, nodeTypeForNewNode: number): Node {
+    private initNewNode(parentOfTheNewNode: Node, nodeTypeForNewNode: string): Node {
         while(parentOfTheNewNode.type == Node.TEXT_NODE) {
             parentOfTheNewNode = parentOfTheNewNode.parent;
         }
