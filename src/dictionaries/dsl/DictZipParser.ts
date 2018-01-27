@@ -1,4 +1,4 @@
-import * as fsp from 'fs-promise';
+import * as fse from 'fs-extra';
 import { inflateBuffer } from './inflate';
 
 export class DictZipParser {
@@ -44,7 +44,7 @@ export class DictZipParser {
         }
 
         let compressedData: Buffer = Buffer.alloc(endDecompressPos - startDecompressPos);
-        await fsp.read(this._fd, compressedData, 0, compressedData.length, startDecompressPos);
+        await fse.read(this._fd, compressedData, 0, compressedData.length, startDecompressPos);
 
         let decompressedData = inflateBuffer(new Uint8Array(compressedData));
         return decompressedData.slice(pos - ~~(pos / CHLEN) * CHCNT, pos + len - ~~(pos / CHLEN) * CHCNT);
@@ -55,7 +55,7 @@ export class DictZipParser {
         
         // read the first 10 bytes
         let buffer = Buffer.alloc(10);
-        await fsp.read(this._fd, buffer, 0, buffer.length, 0);
+        await fse.read(this._fd, buffer, 0, buffer.length, 0);
         header.ID1 = buffer.slice(0, 1);
         header.ID2 = buffer.slice(1, 2);
         header.CM = buffer.slice(2, 3);
@@ -73,11 +73,11 @@ export class DictZipParser {
         if((header.FLG.readUInt8(0) & 4) != 0) {
             // FEXTRA bit is set 1
             let XLEN = Buffer.alloc(2);
-            await fsp.read(this._fd, XLEN, 0, XLEN.length, pos);
+            await fse.read(this._fd, XLEN, 0, XLEN.length, pos);
 
             // read field in FEXTRA
             let FIELD = Buffer.alloc(XLEN.readUInt16LE(0));
-            await fsp.read(this._fd, FIELD, 0, FIELD.length, pos + 2);
+            await fse.read(this._fd, FIELD, 0, FIELD.length, pos + 2);
             let SI1 = FIELD.slice(0, 1);
             let SI2 = FIELD.slice(1, 2);
             let LEN = FIELD.slice(2, 4);
@@ -124,7 +124,7 @@ export class DictZipParser {
         // read FHCRC
         if((header.FLG.readUInt8(0) & 1) != 0) {
             header.FHCRC = Buffer.alloc(2);
-            await fsp.read(this._fd, header.FHCRC, 0, 2, pos);
+            await fse.read(this._fd, header.FHCRC, 0, 2, pos);
         } else {
             header.FHCRC = Buffer.alloc(0);
         }
@@ -135,20 +135,20 @@ export class DictZipParser {
         let fnameStartPos = startPos;
         let buffer: Buffer = Buffer.alloc(0);
         while(true) {
-            let bytes = await fsp.read(this._fd, Buffer.alloc(16 * 1024), 0, 16 * 1024, startPos);
-            if(bytes[0] == 0) {
+            let bytes = await fse.read(this._fd, Buffer.alloc(16 * 1024), 0, 16 * 1024, startPos);
+            if(bytes.bytesRead == 0) {
                 throw new Error("Cannot find zero bit");
             }
             let i;
-            for(i = 0; i < bytes[0]; i++) {
+            for(i = 0; i < bytes.bytesRead; i++) {
                 startPos++;
-                if(bytes[1].readUInt8(i) == 0) {
+                if(bytes.buffer.readUInt8(i) == 0) {
                     // we find zero bit
                     break;
                 }
             }
-            buffer = Buffer.concat([buffer, bytes[1].slice(0, i + 1)]);
-            if(i < bytes[0]) {
+            buffer = Buffer.concat([buffer, bytes.buffer.slice(0, i + 1)]);
+            if(i < bytes.bytesRead) {
                 // we found zero bit
                 break;
             }

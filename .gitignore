@@ -39,7 +39,6 @@ jspm_packages
 # IDE
 .alm/
 .idea/
-.vscode/
 
 # vim
 tags

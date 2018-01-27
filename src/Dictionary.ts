@@ -3,7 +3,7 @@ import { SRC_RESOURCE_PATH } from './Constant';
 import { Log } from './util/log';
 import { WordTree, Node } from './Tree';
 import { Meta, IndexMap } from "./DictionaryFinder";
-import * as fsp from 'fs-promise';
+import * as fse from 'fs-extra';
 import * as path from "path";
 /**
  * Created by searene on 17-1-23.
@@ -45,17 +45,17 @@ export abstract class Dictionary {
 
     // get resource contents
     async getResource(resourceHolder: string, resourceName: string): Promise<Buffer> {
-        let isResourceHolderExists = await fsp.exists(resourceHolder);
+        let isResourceHolderExists = await fse.pathExists(resourceHolder);
         if(!isResourceHolderExists) {
             throw new Error(`Resource Holder ${resourceHolder} doesn't exist`);
         }
-        let resourceHolderStats: fsp.Stats = await fsp.stat(resourceHolder);
+        let resourceHolderStats: fse.Stats = await fse.stat(resourceHolder);
         if(resourceHolderStats.isDirectory()) {
             let fullResourceFilePath = path.join(resourceHolder, resourceName);
-            if(!(await fsp.exists(fullResourceFilePath))) {
+            if(!(await fse.pathExists(fullResourceFilePath))) {
                 throw new Error(`Resource file ${fullResourceFilePath} doesn't exist`);
             }
-            return fsp.readFile(fullResourceFilePath);
+            return fse.readFile(fullResourceFilePath);
         } else if(resourceHolderStats.isFile()) {
             let ext = path.extname(resourceHolder);
             if(ext == '.zip') {
@@ -66,8 +66,8 @@ export abstract class Dictionary {
     }
 
     async getCSS(): Promise<string> {
-        let mainCSS: string = await fsp.readFile(this._mainCSSFilePath, {encoding: 'utf8'});
-        let dictCSS: string = await fsp.readFile(this._dictCSSFilePath, {encoding: 'utf8'});
+        let mainCSS: string = await fse.readFile(this._mainCSSFilePath, {encoding: 'utf8'});
+        let dictCSS: string = await fse.readFile(this._dictCSSFilePath, {encoding: 'utf8'});
         return mainCSS + dictCSS;
     }
 

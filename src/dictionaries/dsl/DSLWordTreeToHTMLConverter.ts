@@ -6,7 +6,6 @@ import { NotResourceNodeError } from '../../Error';
 import { SRC_RESOURCE_PATH } from '../../Constant';
 import { Node } from '../../Tree';
 import * as path from 'path';
-import * as fsp from 'fs-promise';
 
 export class DSLWordTreeToHTMLConverter {
 

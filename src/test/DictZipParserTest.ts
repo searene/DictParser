@@ -3,7 +3,7 @@ import { assert } from 'chai';
 import { Log } from '../util/log';
 import { DictZipParser } from '../dictionaries/dsl/DictZipParser';
 import * as path from 'path';
-import * as fsp from 'fs-promise';
+import * as fse from 'fs-extra';
 
 describe('DictZipParser test', () => {
 
@@ -12,7 +12,7 @@ describe('DictZipParser test', () => {
     let simpleDictFile = path.join(TEST_RESOURCE_PATH, 'dz/simple_dict_file.txt.dz');
 
     it("#parse", async () => {
-        let fd: number = await fsp.open(simpleDictFile, 'r');
+        let fd: number = await fse.open(simpleDictFile, 'r');
 
         let dictZipParser = new DictZipParser(fd);
 

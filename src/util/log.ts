@@ -1,6 +1,6 @@
-import { ROOT_PATH } from '../Constant';
 import * as path from 'path';
 import * as log4js from "log4js";
+import { ROOT_PATH } from "../Constant";
 
 export class Log {
 
@@ -9,20 +9,13 @@ export class Log {
 
     private static init(): void {
         log4js.configure({
-            appenders: [
-                {
-                    type: "console"
-                },
-                {
-                    type: "file",
-                    filename: `${Log.logFilePath}`,
-                    maxLogSize: 20480,
-                    category: "DictParser"
-                }
-            ],
-            replaceConsole: true
+            appenders: {
+                "console": { type: 'console' },
+                "file": { type: 'file', filename: `${Log.logFilePath}`, maxLogSize: 20480 }
+            },
+            categories: { default: { appenders: ['console', 'file'], level: 'debug' }}
         });
-        Log.logger = log4js.getLogger("DictParser");
+        Log.logger = log4js.getLogger("default");
     }
 
     public static getLogger(): log4js.Logger {
@@ -35,3 +28,4 @@ export class Log {
     }
 
 }
+

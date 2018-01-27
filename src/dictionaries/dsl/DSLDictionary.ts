@@ -11,7 +11,6 @@ import { WordTree } from '../../Tree';
 import { Dictionary, WordPosition, DictionaryStats, WordTreeHTML } from "../../Dictionary";
 import { DictZipParser } from "./DictZipParser";
 import { getEncodingInFile, getEncodingInBuffer } from "../../EncodingDetector";
-import * as fsp from 'fs-promise';
 import * as path from 'path';
 /**
  * Created by searene on 17-1-23.

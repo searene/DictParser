@@ -3,7 +3,7 @@ import { TEST_RESOURCE_PATH } from '../Constant';
 import { Log } from '../util/log';
 import { assert } from "chai";
 import * as path from 'path';
-import * as fsp from 'fs-promise';
+import * as fse from 'fs-extra';
 
 describe('get encoding test', () => {
 
@@ -18,11 +18,11 @@ describe('get encoding test', () => {
     let utf8_file = path.join(pathToEncodingsDirectory, 'utf8.txt');
 
     it("#getEncodingInBuffer", async () => {
-        let utf32be_encoding = await getEncodingInBuffer(await fsp.readFile(utf32be_file));
-        let utf32le_encoding = await getEncodingInBuffer(await fsp.readFile(utf32le_file));
-        let utf16be_encoding = await getEncodingInBuffer(await fsp.readFile(utf16be_file));
-        let utf16le_encoding = await getEncodingInBuffer(await fsp.readFile(utf16le_file));
-        let utf8_encoding = await getEncodingInBuffer(await fsp.readFile(utf8_file));
+        let utf32be_encoding = await getEncodingInBuffer(await fse.readFile(utf32be_file));
+        let utf32le_encoding = await getEncodingInBuffer(await fse.readFile(utf32le_file));
+        let utf16be_encoding = await getEncodingInBuffer(await fse.readFile(utf16be_file));
+        let utf16le_encoding = await getEncodingInBuffer(await fse.readFile(utf16le_file));
+        let utf8_encoding = await getEncodingInBuffer(await fse.readFile(utf8_file));
         
         assert.deepEqual(utf32be_encoding, {encoding: UTF_32_BE, posAfterBom: 4});
         assert.deepEqual(utf32le_encoding, {encoding: UTF_32_LE, posAfterBom: 4});

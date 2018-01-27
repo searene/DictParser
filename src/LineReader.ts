@@ -2,7 +2,6 @@ import { BufferReader, SimpleBufferReader, DzBufferReader } from './BufferReader
 import { getEncodingInBuffer, EncodingStat } from './EncodingDetector';
 import { DictZipParser } from './dictionaries/dsl/DictZipParser';
 import * as EventEmitter from 'events';
-import * as fsp from 'fs-promise';
 import * as path from 'path';
 
 export class LineReader extends EventEmitter {

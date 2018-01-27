@@ -1,5 +1,6 @@
 import { Log } from './util/log';
-import * as fsp from 'fs-promise';
+import * as fse from 'fs-extra';
+import { ReadResult } from 'fs-extra';
 
 export const UTF_8: string = "utf8";
 export const UTF_16_BE: string = "utf16be";
@@ -47,9 +48,9 @@ export async function getEncodingInBuffer(fileContents: Buffer): Promise<Encodin
 }
 
 export async function getEncodingInFile(filePath: string): Promise<EncodingStat> {
-    let fd: number = await fsp.open(filePath, 'r');
+    let fd: number = await fse.open(filePath, 'r');
     let buffer = Buffer.alloc(4);
-    let bytesRead = (await fsp.read(fd, buffer, 0, 4, 0))[0];
+    let bytesRead = (await fse.read(fd, buffer, 0, 4, 0)).bytesRead;
     if(bytesRead < 4) {
         throw new Error(`at least 4 bytes are required to detect encoding in file ${filePath}`);
     }

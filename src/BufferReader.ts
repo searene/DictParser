@@ -1,6 +1,6 @@
 import { DictZipParser } from './dictionaries/dsl/DictZipParser';
 import { getEncodingInBuffer, getEncodingInFile, EncodingStat } from './EncodingDetector';
-import * as fsp from 'fs-promise';
+import * as fse from 'fs-extra';
 
 export interface BufferReader {
 
@@ -21,22 +21,22 @@ export class SimpleBufferReader implements BufferReader {
 
     async open(filePath: string): Promise<number> {
         this._filePath = filePath;
-        this._fd = await fsp.open(this._filePath, 'r');
+        this._fd = await fse.open(this._filePath, 'r');
         return this._fd;
     }
 
     async read(start: number, len: number): Promise<Buffer> {
         let buffer = Buffer.alloc(len);
-        let readContents = await fsp.read(this._fd, buffer, 0, len, start);
-        if(buffer.length > readContents[0]) {
-            buffer = buffer.slice(0, readContents[0]);
+        let readContents = await fse.read(this._fd, buffer, 0, len, start);
+        if(buffer.length > readContents.bytesRead) {
+            buffer = buffer.slice(0, readContents.bytesRead);
         }
         return buffer;
     }
 
     async close(): Promise<void> {
         if(this._fd != undefined) {
-            await fsp.close(this._fd);
+            await fse.close(this._fd);
         }
     }
 
@@ -53,7 +53,7 @@ export class DzBufferReader implements BufferReader {
 
     async open(filePath: string): Promise<number> {
         this._filePath = filePath;
-        this._fd = await fsp.open(filePath, 'r');
+        this._fd = await fse.open(filePath, 'r');
         this._dictZipParser = new DictZipParser(this._fd);
         return this._fd;
     }
@@ -72,7 +72,7 @@ export class DzBufferReader implements BufferReader {
 
     async close(): Promise<void> {
         if(this._fd != undefined) {
-            await fsp.close(this._fd);
+            await fse.close(this._fd);
         }
     }
 }

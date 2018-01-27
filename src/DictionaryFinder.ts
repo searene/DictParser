@@ -5,7 +5,7 @@ import { Log } from './util/log';
 import { Dictionary, WordPosition } from "./Dictionary";
 import { readdirRecursivelyWithStat } from "./util/FileUtil";
 import { Option, option, some, none } from 'ts-option';
-import * as fsp from "fs-promise";
+import * as fse from "fs-extra";
 import * as path from "path";
 import * as log4js from 'log4js';
 import * as ReadLine from "readline";
@@ -91,7 +91,7 @@ export class DictionaryFinder extends EventEmitter {
         await this.addTransformedWords(dictMapList);
 
         // save to db
-        await fsp.writeFile(dbPath, JSON.stringify(dictMapList), {encoding: 'utf8'});
+        await fse.writeFile(dbPath, JSON.stringify(dictMapList), {encoding: 'utf8'});
 
         this._dictMapList = dictMapList;
         return dictMapList;
@@ -99,11 +99,11 @@ export class DictionaryFinder extends EventEmitter {
 
     private async addTransformedWords(dictMapList: DictMap[], wordFormsFolder: string = WORD_FORMS_PATH): Promise<void> {
         // word forms
-        let wordFormsFiles = await fsp.readdir(wordFormsFolder);
+        let wordFormsFiles = await fse.readdir(wordFormsFolder);
         for(let i = 0; i < wordFormsFiles.length; i++) {
             let wordformsFile = path.join(wordFormsFolder, wordFormsFiles[i]);
             let lineReader = ReadLine.createInterface({
-                input: fsp.createReadStream(wordformsFile)
+                input: fse.createReadStream(wordformsFile)
             });
             lineReader.on('line', line => {
                 let words: string[] = line.split(/[\s,:]+/);
@@ -162,13 +162,13 @@ export class DictionaryFinder extends EventEmitter {
         for(let resourceFile of resourceFiles) {
             if(resourceFile == dictFilePath) continue;
 
-            let isDir: boolean = (await fsp.stat(resourceFile)).isDirectory();
+            let isDir: boolean = (await fse.stat(resourceFile)).isDirectory();
             let isSameDir: boolean = path.dirname(dictFilePath) == path.dirname(resourceFile);
             let isSameBaseName: boolean = path.basename(resourceFile).split(".")[0] == dictFileBaseName;
             let isResourceHolder: boolean = !isDir && resourceHolderSuffixes.indexOf(path.extname(resourceFile)) > -1;
             let isResourceFile: boolean = await (async (): Promise<boolean> => {
                 if(!isDir) return false;
-                let files: string[] = await fsp.readdir(resourceFile);
+                let files: string[] = await fse.readdir(resourceFile);
                 for(let file of files) {
                     if(resourceFileSuffixes.indexOf(path.extname(file)) > -1) return true;
                 }

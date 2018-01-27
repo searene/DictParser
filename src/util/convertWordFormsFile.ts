@@ -1,4 +1,4 @@
-import * as fsp from 'fs-promise';
+import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as ReadLine from "readline";
 
@@ -6,7 +6,7 @@ import { WORD_FORMS_PATH } from "../Constant";
 import { WordForms } from "../DictionaryFinder";
 
 async function convert(wordFormsFolder: string = WORD_FORMS_PATH) {
-    let files = await fsp.readdir(wordFormsFolder);
+    let files = await fse.readdir(wordFormsFolder);
     for(let file of files) {
         let result: WordForms = {};
         if(path.extname(file) == '.json') continue;
@@ -16,7 +16,7 @@ async function convert(wordFormsFolder: string = WORD_FORMS_PATH) {
             continue;
         }
         let lineReader = ReadLine.createInterface({
-            input: fsp.createReadStream(file)
+            input: fse.createReadStream(file)
         });
         lineReader.on('line', line => {
             let words: string[] = line.split(/[\s,:]+/);

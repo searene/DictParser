@@ -3,7 +3,7 @@ import { TEST_RESOURCE_PATH } from '../Constant';
 import { Log } from '../util/log';
 import { assert } from 'chai';
 import * as mocha from 'mocha';
-import * as fsp from 'fs-promise';
+import * as fse from 'fs-extra';
 import * as path from 'path';
 
 let logger = Log.getLogger();
@@ -18,7 +18,7 @@ describe('Test DictionaryFinder', () => {
 		checkDictMapList(dictMapList, scanFolder);
 
 		// check db file
-		dictMapList = JSON.parse(await fsp.readFile(dbPath, {encoding: 'utf8'}));
+		dictMapList = JSON.parse(await fse.readFile(dbPath, {encoding: 'utf8'}));
 		checkDictMapList(dictMapList, scanFolder);
 	});
 });

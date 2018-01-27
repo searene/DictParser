@@ -3,7 +3,7 @@ import { AccentConverter } from './AccentConverter';
 import { DictMap, DictionaryFinder, IDictionary, IndexMap, WordForms } from './DictionaryFinder';
 import { Option, none, some } from 'ts-option';
 import { DB_PATH, WORD_FORMS_PATH } from './Constant';
-import * as fsp from 'fs-promise';
+import * as fse from 'fs-extra';
 import { WordTree } from "./Tree";
 import { Dictionary, WordPosition } from "./Dictionary";
 import * as ReadLine from "readline";
@@ -132,7 +132,7 @@ export class DictParser extends EventEmitter {
     }
 
     private async getFullDictMapList(): Promise<DictMap[]> {
-        let dbContents: string = await fsp.readFile(this._dbPath, {encoding: 'utf8'});
+        let dbContents: string = await fse.readFile(this._dbPath, {encoding: 'utf8'});
         let dictMapList: DictMap[] = JSON.parse(dbContents) as DictMap[];
         return dictMapList;
     }

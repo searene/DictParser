@@ -5,7 +5,7 @@ import { DSLStateMachine } from '../../../dictionaries/dsl/DSLStateMachine';
 import { StateMachine } from "../../../StateMachine";
 import { assert } from 'chai';
 import { getEncodingInFile } from '../../../EncodingDetector';
-import * as fsp from 'fs-promise';
+import * as fse from 'fs-extra';
 import * as path from 'path';
 
 let logger = Log.getLogger();
@@ -63,7 +63,7 @@ describe("Test DSLStateMachine", () => {
 });
 
 async function readFile(filePath: string, encoding: string, startLine: number, endLine: number): Promise<string> {
-	let fileContents: string = await fsp.readFile(filePath, {encoding: encoding});
+	let fileContents: string = await fse.readFile(filePath, {encoding: encoding});
 
 	// replace \r\n with \n so we won't deal with \r any more
 	fileContents = fileContents.replace(/\r?\n|\r/g, "\n");
