@@ -46,7 +46,8 @@ export class DictionaryFinder extends EventEmitter {
      * its {@code Dictionary} and resource to the result array.
      */
     async scan(dir: string,
-               dbPath: string = DB_PATH): Promise<DictMap[]> {
+               dbPath: string = DB_PATH,
+               wordFormsFolder: string = WORD_FORMS_PATH): Promise<DictMap[]> {
 
         // DictMap without resource
         let dictMapList: DictMap[] = [];
@@ -88,7 +89,7 @@ export class DictionaryFinder extends EventEmitter {
         }
 
         // add word transformations
-        await this.addTransformedWords(dictMapList);
+        await this.addTransformedWords(dictMapList, wordFormsFolder);
 
         // save to db
         await fse.writeFile(dbPath, JSON.stringify(dictMapList), {encoding: 'utf8'});
@@ -97,13 +98,17 @@ export class DictionaryFinder extends EventEmitter {
         return dictMapList;
     }
 
-    private async addTransformedWords(dictMapList: DictMap[], wordFormsFolder: string = WORD_FORMS_PATH): Promise<void> {
+    private async addTransformedWords(dictMapList: DictMap[], wordFormsFolder: string): Promise<void> {
         // word forms
         let wordFormsFiles = await fse.readdir(wordFormsFolder);
         for(let i = 0; i < wordFormsFiles.length; i++) {
-            let wordformsFile = path.join(wordFormsFolder, wordFormsFiles[i]);
+            let wordFormsFile = path.join(wordFormsFolder, wordFormsFiles[i]);
+            if(!await fse.pathExists(wordFormsFile)) {
+                console.log(`${wordFormsFile} doesn't exist, skip`);
+                continue;
+            }
             let lineReader = ReadLine.createInterface({
-                input: fse.createReadStream(wordformsFile)
+                input: fse.createReadStream(wordFormsFile)
             });
             lineReader.on('line', line => {
                 let words: string[] = line.split(/[\s,:]+/);
@@ -195,7 +200,7 @@ export class DictionaryFinder extends EventEmitter {
 DictionaryFinder.register('dsl', DSLDictionary);
 
 export interface IDictionary {
-    // absolute path to the main dictionary file
+    // absolute path to main dictionary file
     dictPath: string;
 
     // e.g. dsl

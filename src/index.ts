@@ -11,22 +11,24 @@ import * as ReadLine from "readline";
 export class DictParser extends EventEmitter {
 
     private _dbPath: string;
+    private _wordFormsFolder: string;
     private _dictionaryFinder = new DictionaryFinder();
     private _dictMapList: DictMap[];
     private _dictionaries: Map<string, Dictionary> = DictionaryFinder.dictionaries;
 
     private _wordformsMap: { [lang: string]: WordForms } = {};
 
-    constructor(dbPath: string) {
+    constructor(dbPath: string, wordFormsFolder: string = WORD_FORMS_PATH) {
       super();
       this._dbPath = dbPath;
+      this._wordFormsFolder = wordFormsFolder;
     }
 
     async scan(scanFolder: string): Promise<DictMap[]> {
         this._dictionaryFinder.on('name', (dictionaryName: string) => {
             this.emit('name', dictionaryName);
         });
-        this._dictMapList = await this._dictionaryFinder.scan(scanFolder, this._dbPath);
+        this._dictMapList = await this._dictionaryFinder.scan(scanFolder, this._dbPath, this._wordFormsFolder);
         return this._dictMapList;
     }
 

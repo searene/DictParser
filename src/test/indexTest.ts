@@ -10,7 +10,7 @@ describe('Test DictParser', () => {
     let logger = Log.getLogger();
 
     // let scanFolder = path.join(TEST_RESOURCE_PATH, 'scan');
-    let scanFolder = path.join('/home/searene/Public/dsl');
+    let scanFolder = path.join('/home/searene/Public/dz');
     let dbPath = path.join(TEST_RESOURCE_PATH, 'dictParser.db');
 
     it("#getWordDefinition", async () => {
