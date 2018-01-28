@@ -24,12 +24,6 @@ export abstract class Dictionary {
     // e.g. jpg, wmv, which are the actual resource files
     protected _resourceFileSuffixes: string[] = ['.jpg', '.wmv', '.bmp', '.mp3'];
 
-    // path to dictionary specific css file
-    protected _dictCSSFilePath: string = path.join(SRC_RESOURCE_PATH, 'style.css');
-
-    // path to universal css file
-    protected _mainCSSFilePath: string = path.join(SRC_RESOURCE_PATH, 'style.css');
-
     // get meta data and index
     async abstract getDictionaryStats(dictFile: string): Promise<DictionaryStats>;
 
@@ -38,9 +32,9 @@ export abstract class Dictionary {
 
     async abstract getWordTreeHTML(dictFile: string, pos: number, len: number): Promise<WordTreeHTML>;
 
-    async getHTML(dictName: string = "Unknown", dictFile: string, pos: number, len: number): Promise<string> {
+    async getHTML(dictName: string = "Unknown", dictFile: string, cssFilePath: string, pos: number, len: number): Promise<string> {
         let wordTreeHTML: WordTreeHTML = await this.getWordTreeHTML(dictFile, pos, len);
-        return `<html><head></head><body><style>${this.getCSS()}</style><div class="container><div class="dict_title">${dictName}</div><div class="dp_entry">${wordTreeHTML.entry}</div><div class="dp_definition">${wordTreeHTML.definition}</div></div></body></html>`;
+        return `<html><head></head><body><style>${this.getCSS(cssFilePath)}</style><div class="container><div class="dict_title">${dictName}</div><div class="dp_entry">${wordTreeHTML.entry}</div><div class="dp_definition">${wordTreeHTML.definition}</div></div></body></html>`;
     }
 
     // get resource contents
@@ -65,10 +59,8 @@ export abstract class Dictionary {
         throw new Error(`resource is not supported: ${resourceHolder}`);
     }
 
-    async getCSS(): Promise<string> {
-        let mainCSS: string = await fse.readFile(this._mainCSSFilePath, {encoding: 'utf8'});
-        let dictCSS: string = await fse.readFile(this._dictCSSFilePath, {encoding: 'utf8'});
-        return mainCSS + dictCSS;
+    async getCSS(cssFilePath: string): Promise<string> {
+        return await fse.readFile(cssFilePath, {encoding: 'utf8'});
     }
 
     get dictionarySuffixes(): string[] {

@@ -2,33 +2,44 @@ import { EventEmitter } from 'events';
 import { AccentConverter } from './AccentConverter';
 import { DictMap, DictionaryFinder, IDictionary, IndexMap, WordForms } from './DictionaryFinder';
 import { Option, none, some } from 'ts-option';
-import { DB_PATH, WORD_FORMS_PATH } from './Constant';
+import { DB_PATH, WORD_FORMS_PATH, SRC_RESOURCE_PATH } from './Constant';
 import * as fse from 'fs-extra';
 import { WordTree } from "./Tree";
 import { Dictionary, WordPosition } from "./Dictionary";
 import * as ReadLine from "readline";
+import * as path from 'path';
 
 export class DictParser extends EventEmitter {
 
     private _dbPath: string;
     private _wordFormsFolder: string;
+    private _cssFilePath: string;
     private _dictionaryFinder = new DictionaryFinder();
     private _dictMapList: DictMap[];
     private _dictionaries: Map<string, Dictionary> = DictionaryFinder.dictionaries;
 
     private _wordformsMap: { [lang: string]: WordForms } = {};
 
-    constructor(dbPath: string, wordFormsFolder: string = WORD_FORMS_PATH) {
+    constructor(
+      dbPath: string = DB_PATH,
+      wordFormsFolder: string = WORD_FORMS_PATH,
+      cssFilePath: string = path.join(SRC_RESOURCE_PATH, 'style.css')
+    ) {
       super();
       this._dbPath = dbPath;
       this._wordFormsFolder = wordFormsFolder;
+      this._cssFilePath = cssFilePath;
     }
 
     async scan(scanFolder: string | string[]): Promise<DictMap[]> {
         this._dictionaryFinder.on('name', (dictionaryName: string) => {
             this.emit('name', dictionaryName);
         });
-        this._dictMapList = await this._dictionaryFinder.scan(scanFolder, this._dbPath, this._wordFormsFolder);
+        this._dictMapList = await this._dictionaryFinder.scan(
+          scanFolder,
+          this._dbPath,
+          this._wordFormsFolder,
+          this._cssFilePath);
         return this._dictMapList;
     }
 
@@ -121,7 +132,13 @@ export class DictParser extends EventEmitter {
                 continue;
             }
             let wordTree: WordTree = await dictionary.getWordTree(dictMap.dict.dictPath, wordPosition.pos, wordPosition.len);
-            let html: string = await dictionary.getHTML(dictMap.meta['NAME'], dictMap.dict.dictPath, wordPosition.pos, wordPosition.len);
+            let html: string = await dictionary.getHTML(
+              dictMap.meta['NAME'],
+              dictMap.dict.dictPath,
+              this._cssFilePath,
+              wordPosition.pos,
+              wordPosition.len
+            );
             let dictName = dictMap.meta['NAME'];
             wordDefinitionList.push({
                 word: word,
