@@ -18,7 +18,6 @@ export class DictZipParser {
         if(this._header == undefined) {
             this._header = await this.getHeader();
         }
-        console.log(this._header);
         let headerLength = this.getHeaderLen(this._header);
 
         let CHLEN: number = this._header.FEXTRA.FIELD.SUBFIELD.CHLEN.readUInt16LE(0);
@@ -40,9 +39,9 @@ export class DictZipParser {
                 break;
              }
             if(i <= ~~(pos / CHLEN) - 1) {
-                startDecompressPos += CHUNKS.readUInt16LE(i)
+                startDecompressPos += CHUNKS.readUInt16LE(i * 2)
             }
-            endDecompressPos += CHUNKS.readUInt16LE(i);
+            endDecompressPos += CHUNKS.readUInt16LE(i * 2);
         }
 
 
@@ -50,7 +49,7 @@ export class DictZipParser {
         await fse.read(this._fd, compressedData, 0, compressedData.length, startDecompressPos);
 
         let decompressedData = inflateBuffer(new Uint8Array(compressedData));
-        return decompressedData.slice(pos - ~~(pos / CHLEN) * CHCNT, pos + len - ~~(pos / CHLEN) * CHCNT);
+        return decompressedData.slice(pos - ~~(pos / CHLEN) * CHLEN, pos + len - ~~(pos / CHLEN) * CHLEN);
     }
     
     private async getHeader(): Promise<DzHeader> {

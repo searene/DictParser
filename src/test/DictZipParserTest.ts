@@ -12,13 +12,10 @@ describe('DictZipParser test', () => {
     let simpleDictFile = path.join(TEST_RESOURCE_PATH, 'dz/simple_dict_file.txt.dz');
 
     it("#parse", async () => {
-        let fd: number = await fse.open(simpleDictFile, 'r');
-
+        let fd: number = await fse.open("/home/searene/Public/dz/longman.dsl.dz", 'r');
         let dictZipParser = new DictZipParser(fd);
-
-        let parsedBuffer = await dictZipParser.parse(1, 2);
-
-        let parsedString = parsedBuffer.toString('utf8');
-        assert.equal(parsedString, 'es');
+        let parsedBuffer = await dictZipParser.parse(120000, 10000);
+        let parsedString = parsedBuffer.toString('utf16le');
+        console.log(parsedString);
     });
 });
