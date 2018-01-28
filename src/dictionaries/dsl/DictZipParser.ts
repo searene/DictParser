@@ -49,7 +49,6 @@ export class DictZipParser {
         let compressedData: Buffer = Buffer.alloc(endDecompressPos - startDecompressPos);
         await fse.read(this._fd, compressedData, 0, compressedData.length, startDecompressPos);
 
-        console.log(new Uint8Array(compressedData));
         let decompressedData = inflateBuffer(new Uint8Array(compressedData));
         return decompressedData.slice(pos - ~~(pos / CHLEN) * CHCNT, pos + len - ~~(pos / CHLEN) * CHCNT);
     }
@@ -89,9 +88,9 @@ export class DictZipParser {
             let VER = SUBFIELD.slice(0, 2);
             let CHLEN = SUBFIELD.slice(2, 4);
             let CHCNT = SUBFIELD.slice(4, 6);
-            let CHUNKS = SUBFIELD.slice(6, CHCNT.readUInt16LE(0) + 7);
+            let CHUNKS = SUBFIELD.slice(6, CHCNT.readUInt16LE(0) * 2 + 7);
             if(String.fromCharCode(SI1.readUInt8(0)) != 'R' || String.fromCharCode(SI2.readUInt8(0)) != 'A') {
-                throw new Error("Not a dictzip File, SI1 or SI2 don't match.");
+                throw new Error("Not a dictzip File, SI1 or SI2 doesn't match.");
             }
             header.FEXTRA = {
                 XLEN: XLEN,
