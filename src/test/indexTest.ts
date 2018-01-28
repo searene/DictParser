@@ -9,8 +9,8 @@ describe('Test DictParser', () => {
 
     let logger = Log.getLogger();
 
-    // let scanFolder = path.join(TEST_RESOURCE_PATH, 'scan');
-    let scanFolder = path.join('/home/searene/Public/dz');
+    let scanFolder1 = path.join(TEST_RESOURCE_PATH, 'scan');
+    let scanFolder2 = path.join('/home/searene/Public/dz');
     let dbPath = path.join(TEST_RESOURCE_PATH, 'dictParser.db');
 
     it("#getWordDefinition", async () => {
@@ -18,16 +18,15 @@ describe('Test DictParser', () => {
         dictParser.on('name', (dictionaryName: string) => {
             logger.info(`scanning ${dictionaryName}...`);
         });
-        console.log(`scanFolder: ${scanFolder}`);
-        await dictParser.scan(scanFolder);
+        await dictParser.scan([scanFolder1, scanFolder2]);
         // let wordDefinitionList = await dictParser.getWordDefinition('trivial card');
-        let wordDefinitionList = await dictParser.getWordDefinition('artefact');
+        let wordDefinitionList = await dictParser.getWordDefinitions('example');
         console.log(wordDefinitionList);
     });
 
     it("#guessWord", async() => {
         let dictParser = new DictParser(dbPath);
-        await dictParser.scan(scanFolder);
+        await dictParser.scan([scanFolder1, scanFolder2]);
         let wordCandidates = await dictParser.getWordCandidates('trivi');
         console.log(wordCandidates);
     });

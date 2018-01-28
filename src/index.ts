@@ -24,7 +24,7 @@ export class DictParser extends EventEmitter {
       this._wordFormsFolder = wordFormsFolder;
     }
 
-    async scan(scanFolder: string): Promise<DictMap[]> {
+    async scan(scanFolder: string | string[]): Promise<DictMap[]> {
         this._dictionaryFinder.on('name', (dictionaryName: string) => {
             this.emit('name', dictionaryName);
         });
@@ -102,7 +102,7 @@ export class DictParser extends EventEmitter {
         return result;
     }
 
-    async getWordDefinition(word: string): Promise<WordDefinition[]> {
+    async getWordDefinitions(word: string): Promise<WordDefinition[]> {
         let wordDefinitionList: WordDefinition[] = [];
         if(this._dictMapList == undefined) {
             this._dictMapList = await this.getFullDictMapList();

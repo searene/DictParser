@@ -4,6 +4,11 @@ import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as log4js from 'log4js';
 
+export interface FileWithStats {
+  filePath: string,
+  stat: fse.Stats,
+}
+
 async function readdirRecursivelyInternal(dir: string): Promise<string[]> {
     let stat = await fse.stat(dir);
     let files: string[] = [];
@@ -31,7 +36,7 @@ async function readdirRecursively(dir: string): Promise<string[]> {
     return files;
 }
 
-export async function readdirRecursivelyWithStat(dir: string): Promise<{filePath: string, stat: fse.Stats}[]> {
+export async function readdirRecursivelyWithStat(dir: string): Promise<FileWithStats[]> {
     let result: {filePath: string, stat: fse.Stats}[] = [];
     let files: string[] = await readdirRecursively(dir);
     for(let file of files) {

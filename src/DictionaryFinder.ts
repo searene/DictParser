@@ -3,7 +3,7 @@ import { DictionaryStats } from './Dictionary';
 import { DB_PATH, ROOT_PATH, WORD_FORMS_PATH } from './Constant';
 import { Log } from './util/log';
 import { Dictionary, WordPosition } from "./Dictionary";
-import { readdirRecursivelyWithStat } from "./util/FileUtil";
+import { readdirRecursivelyWithStat, FileWithStats } from "./util/FileUtil";
 import { Option, option, some, none } from 'ts-option';
 import * as fse from "fs-extra";
 import * as path from "path";
@@ -45,13 +45,16 @@ export class DictionaryFinder extends EventEmitter {
      * dictionary definition files(e.g. dz, dsl), add it along with
      * its {@code Dictionary} and resource to the result array.
      */
-    async scan(dir: string,
+    async scan(dirs: string | string[],
                dbPath: string = DB_PATH,
                wordFormsFolder: string = WORD_FORMS_PATH): Promise<DictMap[]> {
 
         // DictMap without resource
         let dictMapList: DictMap[] = [];
-        let files = await readdirRecursivelyWithStat(dir);
+        let files: FileWithStats[] = [];
+        for(const dir of Array.isArray(dirs) ? dirs : [dirs]) {
+          files = files.concat(await readdirRecursivelyWithStat(dir));
+        }
         for(let file of files) {
             if(file.stat.isDirectory()) continue;
 
