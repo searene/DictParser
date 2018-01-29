@@ -1,3 +1,4 @@
+import { SRC_RESOURCE_PATH } from './../Constant';
 import { DictionaryFinder, DictMap } from '../DictionaryFinder';
 import { TEST_RESOURCE_PATH } from '../Constant';
 import { Log } from '../util/log';
@@ -14,7 +15,7 @@ describe('Test DictionaryFinder', () => {
 		let dbPath = path.join(TEST_RESOURCE_PATH, 'dictParser.db');
 
 		let dictionaryFinder = new DictionaryFinder();
-		let dictMapList: DictMap[] = await dictionaryFinder.scan(scanFolder, dbPath);
+		let dictMapList: DictMap[] = await dictionaryFinder.scan(scanFolder, dbPath, SRC_RESOURCE_PATH);
 		checkDictMapList(dictMapList, scanFolder);
 
 		// check db file

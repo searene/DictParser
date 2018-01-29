@@ -18,14 +18,20 @@ export class DictParser extends EventEmitter {
     private _dictionaries: Map<string, Dictionary> = DictionaryFinder.dictionaries;
 
     private _wordformsMap: { [lang: string]: WordForms } = {};
+    private _resourcePath: string;
 
     constructor(
       dbPath: string = DB_PATH,
       wordFormsFolder: string = WORD_FORMS_PATH,
+      resourcePath: string = SRC_RESOURCE_PATH
     ) {
       super();
       this._dbPath = dbPath;
       this._wordFormsFolder = wordFormsFolder;
+      this._resourcePath = resourcePath;
+      this._dictionaries.forEach((dictionary: Dictionary, dictType: string) => {
+        dictionary.resourcePath = this._resourcePath;
+      })
     }
 
     async scan(scanFolder: string | string[]): Promise<DictMap[]> {
