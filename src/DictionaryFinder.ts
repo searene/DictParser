@@ -47,8 +47,7 @@ export class DictionaryFinder extends EventEmitter {
      */
     async scan(dirs: string | string[],
                dbPath: string,
-               wordFormsFolder: string,
-               cssFilePath: string): Promise<DictMap[]> {
+               wordFormsFolder: string): Promise<DictMap[]> {
 
         // DictMap without resource
         let dictMapList: DictMap[] = [];

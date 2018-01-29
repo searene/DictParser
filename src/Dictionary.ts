@@ -32,9 +32,9 @@ export abstract class Dictionary {
 
     async abstract getWordTreeHTML(dictFile: string, pos: number, len: number): Promise<WordTreeHTML>;
 
-    async getHTML(dictName: string = "Unknown", dictFile: string, cssFilePath: string, pos: number, len: number): Promise<string> {
+    async getHTML(dictName: string = "Unknown", dictFile: string, pos: number, len: number): Promise<string> {
         let wordTreeHTML: WordTreeHTML = await this.getWordTreeHTML(dictFile, pos, len);
-        return `<html><head></head><body><style>${this.getCSS(cssFilePath)}</style><div class="container><div class="dict_title">${dictName}</div><div class="dp_entry">${wordTreeHTML.entry}</div><div class="dp_definition">${wordTreeHTML.definition}</div></div></body></html>`;
+        return `<div class="container><div class="dict_title">${dictName}</div><div class="dp_entry">${wordTreeHTML.entry}</div><div class="dp_definition">${wordTreeHTML.definition}</div></div>`;
     }
 
     // get resource contents
@@ -57,10 +57,6 @@ export abstract class Dictionary {
             }
         }
         throw new Error(`resource is not supported: ${resourceHolder}`);
-    }
-
-    async getCSS(cssFilePath: string): Promise<string> {
-        return await fse.readFile(cssFilePath, {encoding: 'utf8'});
     }
 
     get dictionarySuffixes(): string[] {

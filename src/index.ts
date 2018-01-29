@@ -13,7 +13,6 @@ export class DictParser extends EventEmitter {
 
     private _dbPath: string;
     private _wordFormsFolder: string;
-    private _cssFilePath: string;
     private _dictionaryFinder = new DictionaryFinder();
     private _dictMapList: DictMap[];
     private _dictionaries: Map<string, Dictionary> = DictionaryFinder.dictionaries;
@@ -23,12 +22,10 @@ export class DictParser extends EventEmitter {
     constructor(
       dbPath: string = DB_PATH,
       wordFormsFolder: string = WORD_FORMS_PATH,
-      cssFilePath: string = path.join(SRC_RESOURCE_PATH, 'style.css')
     ) {
       super();
       this._dbPath = dbPath;
       this._wordFormsFolder = wordFormsFolder;
-      this._cssFilePath = cssFilePath;
     }
 
     async scan(scanFolder: string | string[]): Promise<DictMap[]> {
@@ -38,8 +35,7 @@ export class DictParser extends EventEmitter {
         this._dictMapList = await this._dictionaryFinder.scan(
           scanFolder,
           this._dbPath,
-          this._wordFormsFolder,
-          this._cssFilePath);
+          this._wordFormsFolder);
         return this._dictMapList;
     }
 
@@ -135,7 +131,6 @@ export class DictParser extends EventEmitter {
             let html: string = await dictionary.getHTML(
               dictMap.meta['NAME'],
               dictMap.dict.dictPath,
-              this._cssFilePath,
               wordPosition.pos,
               wordPosition.len
             );
