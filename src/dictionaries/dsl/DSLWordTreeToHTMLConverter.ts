@@ -65,7 +65,7 @@ export class DSLWordTreeToHTMLConverter {
           } else if (node.name == "ex") {
             html += `<div class="dsl_opt><span class="dsl_ex"><span class="dsl_lang">${htmlOfChildren}</span></span></div>`;
           } else if (node.name == "s" && this.getResourceType(node) == this.ResourceType.AUDIO) {
-            html += `<span class="dsl_s_wav"><a href="${this.getResourcePath(node)}"><img src="${this.getPathToSoundImg()}" border="0" align="absmiddle" alt="Play"></a></span>`;
+            html += `<span class="dsl_s_wav"><a href="${this.getResourcePath(node)}"><img class="sound-img" src="${this.getPathToSoundImg()}" border="0" align="absmiddle" alt="Play"></a></span>`;
           } else if (node.name == 's' && this.getResourceType(node) == this.ResourceType.IMAGE) {
             html += `<img src="${this.getResourcePath(node)}" alt="${this.getResourceName(node)}">`;
           } else if (node.name == '\'') {
