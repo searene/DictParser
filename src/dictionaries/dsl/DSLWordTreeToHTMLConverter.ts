@@ -53,14 +53,16 @@ export class DSLWordTreeToHTMLConverter {
           html += `<div class="dsl_definition">${htmlOfChildren}</div>`;
           break;
         case Node.TAG_NODE:
-          if (["b", "i", "p"].indexOf(node.name) > -1) {
+          if (["b", "i"].indexOf(node.name) > -1) {
             html += `<${node.name} class="dsl_${node.name}">${htmlOfChildren}</${node.name}>`;
+          } else if (node.name === "p") {
+            html += `<span class="dsl_p">${htmlOfChildren}</span>`
           } else if (node.name == "u") {
             html += `<span class="dsl_u">${htmlOfChildren}</span>`;
           } else if (["sub", "sup"].indexOf(node.name) > -1) {
             html += `<${node.name}>${htmlOfChildren}</${node.name}>`;
           } else if (["m0", "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "m9"].indexOf(node.name) > -1) {
-            html += `<div class="dsl_${node.name}>${htmlOfChildren}</div>`;
+            html += `<div class="dsl_${node.name}">${htmlOfChildren}</div>`;
           } else if (node.name == "*") {
             html += htmlOfChildren;
           } else if (node.name == "ex") {
@@ -79,7 +81,7 @@ export class DSLWordTreeToHTMLConverter {
             let url: string = node.children.length == 1 ? node.children[0].contents : "";
             html += `<a class="dsl_url" href=${url}>${url}</a>`;
           } else if (node.name == "c") {
-            let color: string = node.properties.size > 0 ? node.properties.entries().next().value[0] : "black";
+            let color: string = node.properties.size > 0 ? node.properties.entries().next().value[0] : "green";
             html += `<span style="color: ${color}">${htmlOfChildren}</span>`;
           }
         case Node.REF_NODE:

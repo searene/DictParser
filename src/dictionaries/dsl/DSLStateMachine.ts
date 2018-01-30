@@ -300,7 +300,7 @@ export class DSLStateMachine extends StateMachine {
                 if(this._currentNode.type != Node.REF_NODE) {
                     this._currentNode = this.initNewNode(this._currentNode, Node.REF_NODE);
                 }
-                this._currentNode.name += value;
+                this._currentNode.contents += value;
                 break;
             case this.states.inComments:
             case this.states.inNodeEnd:
