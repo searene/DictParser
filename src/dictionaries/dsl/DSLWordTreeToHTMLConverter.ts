@@ -51,6 +51,7 @@ export class DSLWordTreeToHTMLConverter {
       switch (node.type) {
         case Node.ROOT_NODE:
           html += `<div class="dsl_definition">${htmlOfChildren}</div>`;
+          break;
         case Node.TAG_NODE:
           if (["b", "i", "p"].indexOf(node.name) > -1) {
             html += `<${node.name} class="dsl_${node.name}>${htmlOfChildren}</${node.name}>`;
@@ -84,10 +85,13 @@ export class DSLWordTreeToHTMLConverter {
         case Node.REF_NODE:
           let refWord: string = node.contents;
           html += `<a class="dsl_ref" href="${this.getPathToRefWord(refWord)}">${refWord}</a>`;
+          break;
         case Node.TEXT_NODE:
           html += node.contents;
+          break;
         case Node.NEW_LINE_NODE:
-          html += `<span class="new_line">${htmlOfChildren}</span>`;
+          html += `<div class="dsl_line">${htmlOfChildren}</div>`;
+          break;
         default:
           html += "";
       }
