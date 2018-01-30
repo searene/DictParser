@@ -36,7 +36,7 @@ export abstract class Dictionary {
 
   async getHTML(dictName: string = "Unknown", dictFile: string, pos: number, len: number): Promise<string> {
     let wordTreeHTML: WordTreeHTML = await this.getWordTreeHTML(dictFile, pos, len);
-    return `<div class="container><div class="dict_title">${dictName}</div><div class="dp_entry">${wordTreeHTML.entry}</div><div class="dp_definition">${wordTreeHTML.definition}</div></div>`;
+    return `<div class="container"><div class="dict_title">${dictName}</div><div class="dp_entry">${wordTreeHTML.entry}</div><div class="dp_definition">${wordTreeHTML.definition}</div></div>`;
   }
 
   // get resource contents
