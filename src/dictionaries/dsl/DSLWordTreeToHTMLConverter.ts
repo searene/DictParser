@@ -66,7 +66,7 @@ export class DSLWordTreeToHTMLConverter {
           } else if (node.name == "*") {
             html += htmlOfChildren;
           } else if (node.name == "ex") {
-            html += `<div class="dsl_opt"><span class="dsl_ex"><span class="dsl_lang">${htmlOfChildren}</span></span></div>`;
+            html += `<div class="dsl_opt"><span class="dsl_ex">${htmlOfChildren}</span></div>`;
           } else if (node.name == "s" && this.getResourceType(node) == this.ResourceType.AUDIO) {
             html += `<span class="dsl_s_wav"><a href="${this.getResourcePath(node)}"><img class="sound-img" src="${this.getPathToSoundImg()}" border="0" align="absmiddle" alt="Play"></a></span>`;
           } else if (node.name == 's' && this.getResourceType(node) == this.ResourceType.IMAGE) {
@@ -83,6 +83,8 @@ export class DSLWordTreeToHTMLConverter {
           } else if (node.name == "c") {
             let color: string = node.properties.size > 0 ? node.properties.entries().next().value[0] : "green";
             html += `<span style="color: ${color}">${htmlOfChildren}</span>`;
+          } else if (node.name == 'lang') {
+            html += `<span class="dsl_lang">${htmlOfChildren}</span>`;
           }
         case Node.REF_NODE:
           let refWord: string = node.contents;
