@@ -8,15 +8,17 @@ import { LineReader, LineStats } from '../../LineReader';
 import { BufferReader, DzBufferReader, SimpleBufferReader } from '../../BufferReader';
 import { DSLStateMachine } from './DSLStateMachine';
 import { StateMachine } from '../../StateMachine';
-import { WordTree } from '../../Tree';
+import { WordTree, getAllChildNodes } from '../../Tree';
 import { Dictionary, WordPosition, DictionaryStats, WordTreeHTML } from "../../Dictionary";
 import { DictZipParser } from "./DictZipParser";
 import { getEncodingInFile, getEncodingInBuffer } from "../../EncodingDetector";
 import * as path from 'path';
+import { Node } from '../../Tree';
+const StreamZip = require('node-stream-zip');
+
 /**
  * Created by searene on 17-1-23.
  */
-
 export class DSLDictionary extends Dictionary {
 
   protected _dictionarySuffixes: string[] = ['.dsl', '.dz'];

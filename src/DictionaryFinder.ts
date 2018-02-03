@@ -1,3 +1,4 @@
+import {ResourceManager, resourceManagers} from './ResourceManager';
 import { DSLDictionary } from './dictionaries/dsl/DSLDictionary';
 import { DictionaryStats } from './Dictionary';
 import { DB_PATH, ROOT_PATH, WORD_FORMS_PATH } from './Constant';
@@ -66,12 +67,11 @@ export class DictionaryFinder extends EventEmitter {
 
                     // get resource
                     let resource: Option<string> = await this.getResource(
-                        file.filePath, 
+                        file.filePath,
                         files.map(file => file.filePath),
                         dictionary.resourceHolderSuffixes,
                         dictionary.resourceFileSuffixes
                     );
-
 
                     // build index
                     let dictStats: DictionaryStats = await dictionary.getDictionaryStats(file.filePath);
@@ -82,6 +82,7 @@ export class DictionaryFinder extends EventEmitter {
                             dictPath: file.filePath,
                             dictType: dictName,
                             resource: resource.isEmpty ? "" : resource.get,
+                            resourceManager: resourceManagers[dictName]
                         },
                         meta: dictStats.meta,
                         originalWords: dictStats.indexMap,
@@ -211,6 +212,8 @@ export interface IDictionary {
 
     // path to resource file
     resource: string;
+
+    resourceManager: ResourceManager;
 }
 
 export interface DictMap {

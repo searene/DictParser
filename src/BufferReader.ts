@@ -48,7 +48,7 @@ export class SimpleBufferReader implements BufferReader {
 export class DzBufferReader implements BufferReader {
 
     private _fd: number;
-    private _filePath: string
+    private _filePath: string;
     private _dictZipParser: DictZipParser;
 
     async open(filePath: string): Promise<number> {

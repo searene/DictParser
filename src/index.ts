@@ -8,6 +8,8 @@ import { WordTree } from "./Tree";
 import { Dictionary, WordPosition } from "./Dictionary";
 import * as ReadLine from "readline";
 import * as path from 'path';
+import {registerResourceManagers} from "./DictionaryRegister";
+import {ResourceContents} from "./ResourceManager";
 
 export class DictParser extends EventEmitter {
 
@@ -26,6 +28,9 @@ export class DictParser extends EventEmitter {
       resourcePath: string = SRC_RESOURCE_PATH
     ) {
       super();
+
+      registerResourceManagers();
+
       this._dbPath = dbPath;
       this._wordFormsFolder = wordFormsFolder;
       this._resourcePath = resourcePath;
@@ -134,6 +139,8 @@ export class DictParser extends EventEmitter {
                 continue;
             }
             let wordTree: WordTree = await dictionary.getWordTree(dictMap.dict.dictPath, wordPosition.pos, wordPosition.len);
+            const resourceManager = dictMap.dict.resourceManager;
+            const resourceContentsList = await resourceManager.getResourceContentsList(wordTree, dictMap.dict.resource);
             let html: string = await dictionary.getHTML(
               dictMap.meta['NAME'],
               dictMap.dict.dictPath,
@@ -145,7 +152,8 @@ export class DictParser extends EventEmitter {
                 word: word,
                 wordTree: wordTree,
                 html: html,
-                dict: dictMap.dict
+                dict: dictMap.dict,
+                resourceContentsList: resourceContentsList
             });
         }
         return wordDefinitionList;
@@ -153,8 +161,7 @@ export class DictParser extends EventEmitter {
 
     private async getFullDictMapList(): Promise<DictMap[]> {
         let dbContents: string = await fse.readFile(this._dbPath, {encoding: 'utf8'});
-        let dictMapList: DictMap[] = JSON.parse(dbContents) as DictMap[];
-        return dictMapList;
+      return JSON.parse(dbContents) as DictMap[];
     }
 
     private normalize(word: string): string {
@@ -171,15 +178,11 @@ export interface WordDefinition {
     word: string;
     wordTree: WordTree;
     html: string;
-    dict: IDictionary
+    dict: IDictionary,
+    resourceContentsList: ResourceContents[]
 }
 
 export interface WordCandidate {
     word: string,
     dict: IDictionary
 }
-
-export interface DictParserInput {
-    dbPath: string;
-}
-

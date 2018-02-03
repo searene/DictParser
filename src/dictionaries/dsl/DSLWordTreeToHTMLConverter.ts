@@ -1,7 +1,9 @@
+import { ResourceManager } from './../../ResourceManager';
+import { DSLResourceManager } from './DSLResourceManager';
 import { AccentConverter } from '../../AccentConverter';
 import { DSLDictionary } from './DSLDictionary';
 import { Dictionary, WordTreeHTML } from '../../Dictionary';
-import { WordTree } from '../../Tree'
+import { WordTree } from '../../Tree';
 import { NotResourceNodeError } from '../../Error';
 import { SRC_RESOURCE_PATH } from '../../Constant';
 import { Node } from '../../Tree';
@@ -9,18 +11,11 @@ import * as path from 'path';
 
 export class DSLWordTreeToHTMLConverter {
 
-  private _audioExtensions = [".wav", ".mp3"];
-  private _imageExtensions = [".jpg", ".png"];
-
   /**
    * Resource types
    */
-  private ResourceType = {
-    AUDIO: 1,
-    IMAGE: 2,
-    UNKNOWN: 3
-  };
   private _resourceFolder: string;
+  private _dslResourceManager = new DSLResourceManager();
 
   constructor(resourceFolder: string) {
     this._resourceFolder = resourceFolder;
@@ -67,10 +62,10 @@ export class DSLWordTreeToHTMLConverter {
             html += htmlOfChildren;
           } else if (node.name == "ex") {
             html += `<div class="dsl_opt"><span class="dsl_ex">${htmlOfChildren}</span></div>`;
-          } else if (node.name == "s" && this.getResourceType(node) == this.ResourceType.AUDIO) {
-            html += `<span class="dsl_s_wav"><a href="${this.getResourcePath(node)}"><img class="sound-img" src="${this.getPathToSoundImg()}" border="0" align="absmiddle" alt="Play"></a></span>`;
-          } else if (node.name == 's' && this.getResourceType(node) == this.ResourceType.IMAGE) {
-            html += `<img src="${this.getResourcePath(node)}" alt="${this.getResourceName(node)}">`;
+          } else if (node.name == "s" && this._dslResourceManager.getResourceType(node) == this._dslResourceManager.ResourceType.AUDIO) {
+            html += `<span class="dsl_s_wav"><a href="${this._dslResourceManager.getResourceName(node)}"><img class="sound-img" src="${this.getPathToSoundImg()}" border="0" align="absmiddle" alt="Play"></a></span>`;
+          } else if (node.name == 's' && this._dslResourceManager.getResourceType(node) == this._dslResourceManager.ResourceType.IMAGE) {
+            html += `<img src="${this._dslResourceManager.getResourceName(node)}" alt="${this._dslResourceManager.getResourceName(node)}">`;
           } else if (node.name == '\'') {
             let stressedText = node.children.length > 0 ? node.children[0].contents : "";
             html += `<span class="dsl_stress"><span class="dsl_stress_without_accent">stressedText</span><span class="dsl_stress_with_accent">${AccentConverter.removeAccent(stressedText)}</span></span>`;
@@ -86,6 +81,7 @@ export class DSLWordTreeToHTMLConverter {
           } else if (node.name == 'lang') {
             html += `<span class="dsl_lang">${htmlOfChildren}</span>`;
           }
+          break;
         case Node.REF_NODE:
           let refWord: string = node.contents;
           html += `<a class="dsl_ref" href="${this.getPathToRefWord(refWord)}">${refWord}</a>`;
@@ -102,55 +98,11 @@ export class DSLWordTreeToHTMLConverter {
     }
     return html;
   }
-
   private getPathToRefWord(refWord: string): string {
     let encodedRefWord: string = encodeURIComponent(refWord);
     return `dplookup://localhost/${encodedRefWord}`;
   }
-
-
-  private isResourceNode(node: Node): boolean {
-    return node.name == 's' && node.children.length == 1 && node.children[0].type == Node.TEXT_NODE;
-  }
-
-  private getResourceName(node: Node): string {
-    if (this.isResourceNode(node)) {
-      return node.children[0].contents;
-    } else {
-      throw new NotResourceNodeError("Not a resource node");
-    }
-  }
-
-  private getResourcePathFromName(resourceName: string): string {
-    return resourceName;
-  }
-
-  private getResourcePath(resourceNode: Node): string {
-    if (this.isResourceNode(resourceNode)) {
-      let fileName = resourceNode.children[0].contents;
-      return this.getResourcePathFromName(fileName);
-    } else {
-      throw new NotResourceNodeError("Not a resource node");
-    }
-  }
-
   private getPathToSoundImg(): string {
     return path.join(this._resourceFolder, 'sound.png');
-  }
-
-  private getResourceType(node: Node): number {
-    if (this.isResourceNode(node)) {
-      let fileName = node.children[0].contents;
-      let ext = path.extname(fileName).toLowerCase();
-      if (this._audioExtensions.indexOf(ext) > -1) {
-        return this.ResourceType.AUDIO;
-      } else if (this._imageExtensions.indexOf(ext) > -1) {
-        return this.ResourceType.IMAGE;
-      } else {
-        return this.ResourceType.UNKNOWN;
-      }
-    } else {
-      throw new NotResourceNodeError("Not a resource node");
-    }
   }
 }

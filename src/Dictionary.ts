@@ -5,6 +5,8 @@ import { WordTree, Node } from './Tree';
 import { Meta, IndexMap } from "./DictionaryFinder";
 import * as fse from 'fs-extra';
 import * as path from "path";
+import { WriteStream } from 'tty';
+
 /**
  * Created by searene on 17-1-23.
  */
@@ -40,26 +42,6 @@ export abstract class Dictionary {
   }
 
   // get resource contents
-  async getResource(resourceHolder: string, resourceName: string): Promise<Buffer> {
-    let isResourceHolderExists = await fse.pathExists(resourceHolder);
-    if (!isResourceHolderExists) {
-      throw new Error(`Resource Holder ${resourceHolder} doesn't exist`);
-    }
-    let resourceHolderStats: fse.Stats = await fse.stat(resourceHolder);
-    if (resourceHolderStats.isDirectory()) {
-      let fullResourceFilePath = path.join(resourceHolder, resourceName);
-      if (!(await fse.pathExists(fullResourceFilePath))) {
-        throw new Error(`Resource file ${fullResourceFilePath} doesn't exist`);
-      }
-      return fse.readFile(fullResourceFilePath);
-    } else if (resourceHolderStats.isFile()) {
-      let ext = path.extname(resourceHolder);
-      if (ext == '.zip') {
-        throw new Error(`zip resource is not supported yet`);
-      }
-    }
-    throw new Error(`resource is not supported: ${resourceHolder}`);
-  }
 
   get dictionarySuffixes(): string[] {
     return this._dictionarySuffixes;

@@ -149,3 +149,15 @@ export class WordTree {
 ${this._root.toString()}`;
     }
 }
+
+export function getAllChildNodes(node: Node): Node[] {
+  let result: Node[] = [];
+  if(node.children.length === 0) {
+    return [];
+  }
+  for(const child of node.children) {
+    result.push(child);
+    result = result.concat(getAllChildNodes(child));
+  }
+  return result;
+}
