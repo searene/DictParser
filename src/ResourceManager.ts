@@ -16,8 +16,11 @@ export interface ResourceContents {
   resourceBuffer: Buffer
 }
 
-export let resourceManagers: { [index: string]: ResourceManager } = {};
+let resourceManagers: { [index: string]: ResourceManager } = {};
 
 export function registerResourceManager(dictType: string, resourceManager: ResourceManager) {
   resourceManagers[dictType] = resourceManager;
+}
+export function getResourceManagerByDictType(dictType: string) {
+  return resourceManagers[dictType];
 }

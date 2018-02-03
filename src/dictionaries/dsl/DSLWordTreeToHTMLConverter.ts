@@ -14,11 +14,11 @@ export class DSLWordTreeToHTMLConverter {
   /**
    * Resource types
    */
-  private _resourceFolder: string;
+  private _metaResourceFolder: string;
   private _dslResourceManager = new DSLResourceManager();
 
-  constructor(resourceFolder: string) {
-    this._resourceFolder = resourceFolder;
+  constructor(metaResourceFolder: string) {
+    this._metaResourceFolder = metaResourceFolder;
   }
 
   convertWordTreeToHTML(wordTree: WordTree): WordTreeHTML {
@@ -63,7 +63,7 @@ export class DSLWordTreeToHTMLConverter {
           } else if (node.name == "ex") {
             html += `<div class="dsl_opt"><span class="dsl_ex">${htmlOfChildren}</span></div>`;
           } else if (node.name == "s" && this._dslResourceManager.getResourceType(node) == this._dslResourceManager.ResourceType.AUDIO) {
-            html += `<span class="dsl_s_wav"><a href="${this._dslResourceManager.getResourceName(node)}"><img class="sound-img" src="${this.getPathToSoundImg()}" border="0" align="absmiddle" alt="Play"></a></span>`;
+            html += `<a class="dsl_audio" href="${this._dslResourceManager.getResourceName(node)}"><img class="sound-img" src="${this.getPathToSoundImg()}" border="0" align="absmiddle" alt="Play"></a>`;
           } else if (node.name == 's' && this._dslResourceManager.getResourceType(node) == this._dslResourceManager.ResourceType.IMAGE) {
             html += `<img src="${this._dslResourceManager.getResourceName(node)}" alt="${this._dslResourceManager.getResourceName(node)}">`;
           } else if (node.name == '\'') {
@@ -103,6 +103,6 @@ export class DSLWordTreeToHTMLConverter {
     return `dplookup://localhost/${encodedRefWord}`;
   }
   private getPathToSoundImg(): string {
-    return path.join(this._resourceFolder, 'sound.png');
+    return path.join(this._metaResourceFolder, 'sound.png');
   }
 }
