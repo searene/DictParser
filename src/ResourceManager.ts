@@ -1,6 +1,7 @@
 import { WordTree } from './Tree';
 
 export abstract class ResourceManager {
+  static commonResourceDirectory: string;
   audioExtensions = [".wav", ".mp3"];
   imageExtensions = [".jpg", ".png"];
   ResourceType = {

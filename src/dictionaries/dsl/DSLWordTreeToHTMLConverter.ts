@@ -8,17 +8,18 @@ import { NotResourceNodeError } from '../../Error';
 import { SRC_RESOURCE_PATH } from '../../Constant';
 import { Node } from '../../Tree';
 import * as path from 'path';
+import {DictMap} from "../../DictionaryFinder";
 
 export class DSLWordTreeToHTMLConverter {
 
   /**
    * Resource types
    */
-  private _metaResourceFolder: string;
   private _dslResourceManager = new DSLResourceManager();
+  private _dictMap: DictMap;
 
-  constructor(metaResourceFolder: string) {
-    this._metaResourceFolder = metaResourceFolder;
+  constructor(dictMap: DictMap) {
+    this._dictMap = dictMap;
   }
 
   convertWordTreeToHTML(wordTree: WordTree): WordTreeHTML {
@@ -103,6 +104,6 @@ export class DSLWordTreeToHTMLConverter {
     return `dplookup://localhost/${encodedRefWord}`;
   }
   private getPathToSoundImg(): string {
-    return path.join(this._metaResourceFolder, 'sound.png');
+    return path.join(ResourceManager.commonResourceDirectory, 'sound.png');
   }
 }

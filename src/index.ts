@@ -5,7 +5,10 @@ import {DB_PATH, WORD_FORMS_PATH, SRC_RESOURCE_PATH} from './Constant';
 import * as fse from 'fs-extra';
 import {WordTree} from "./Tree";
 import {Dictionary, WordPosition} from "./Dictionary";
-import { ResourceContents, registerResourceManager, getResourceManagerByDictType } from "./ResourceManager";
+import {
+  ResourceContents, registerResourceManager, getResourceManagerByDictType,
+  ResourceManager
+} from "./ResourceManager";
 import { registerResourceManagers } from './DictionaryRegister';
 import { DSLResourceManager } from './dictionaries/dsl/DSLResourceManager';
 
@@ -22,17 +25,14 @@ export class DictParser extends EventEmitter {
 
   constructor(dbPath: string = DB_PATH,
               wordFormsFolder: string = WORD_FORMS_PATH,
-              resourcePath: string = SRC_RESOURCE_PATH) {
+              commonResourceDirectory: string = SRC_RESOURCE_PATH) {
     super();
 
     registerResourceManagers();
+    ResourceManager.commonResourceDirectory = commonResourceDirectory;
 
     this._dbPath = dbPath;
     this._wordFormsFolder = wordFormsFolder;
-    this._resourcePath = resourcePath;
-    this._dictionaries.forEach((dictionary: Dictionary, dictType: string) => {
-      dictionary.resourcePath = this._resourcePath;
-    })
   }
 
   async scan(scanFolder: string | string[]): Promise<DictMap[]> {
@@ -134,15 +134,10 @@ export class DictParser extends EventEmitter {
       if (dictionary == undefined) {
         continue;
       }
-      let wordTree: WordTree = await dictionary.getWordTree(dictMap.dict.dictPath, wordPosition.pos, wordPosition.len);
+      let wordTree: WordTree = await dictionary.getWordTree(dictMap, wordPosition);
       const resourceManager = getResourceManagerByDictType(dictMap.dict.dictType);
-      const resourceContentsList = await resourceManager.getResourceContentsList(wordTree, dictMap.dict.resource);
-      let html: string = await dictionary.getHTML(
-        dictMap.meta['NAME'],
-        dictMap.dict.dictPath,
-        wordPosition.pos,
-        wordPosition.len
-      );
+      const resourceContentsList = await resourceManager.getResourceContentsList(wordTree, dictMap.dict.resourceHolder);
+      let html: string = await dictionary.getHTML(dictMap, wordPosition);
       let dictName = dictMap.meta['NAME'];
       wordDefinitionList.push({
         word: word,

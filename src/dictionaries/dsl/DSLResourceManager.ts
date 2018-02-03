@@ -19,7 +19,7 @@ export class DSLResourceManager extends ResourceManager {
         return this.ResourceType.UNKNOWN;
       }
     } else {
-      throw new Error("Not a resource node");
+      throw new Error("Not a resourceHolder node");
     }
   }
   isResourceNode(node: Node): boolean {
@@ -29,7 +29,7 @@ export class DSLResourceManager extends ResourceManager {
     if (this.isResourceNode(node)) {
       return node.children[0].contents;
     } else {
-      throw new Error("Not a resource node");
+      throw new Error("Not a resourceHolder node");
     }
   }
   getResourceContentsList = async (wordTree: WordTree, resourceHolder: string): Promise<ResourceContents[]> => {

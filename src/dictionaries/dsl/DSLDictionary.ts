@@ -25,15 +25,15 @@ export class DSLDictionary extends Dictionary {
 
   private logger = Log.getLogger();
 
-  async getWordTree(dictFile: string, pos: number, len: number): Promise<WordTree> {
-    let input: string = await this.getFileContents(dictFile, pos, len);
+  async getWordTree(dictMap: DictMap, wordPosition: WordPosition): Promise<WordTree> {
+    let input: string = await this.getFileContents(dictMap.dict.dictPath, wordPosition);
     let stateMachine: StateMachine = new DSLStateMachine(input);
     return stateMachine.run();
   }
 
-  async getWordTreeHTML(dictFile: string, pos: number, len: number): Promise<WordTreeHTML> {
-    let wordTree: WordTree = await this.getWordTree(dictFile, pos, len);
-    return new DSLWordTreeToHTMLConverter(this._resourcePath).convertWordTreeToHTML(wordTree);
+  async getWordTreeHTML(dictMap: DictMap, wordPosition: WordPosition): Promise<WordTreeHTML> {
+    let wordTree: WordTree = await this.getWordTree(dictMap, wordPosition);
+    return new DSLWordTreeToHTMLConverter(dictMap).convertWordTreeToHTML(wordTree);
   }
 
   async getDictionaryStats(dictFile: string): Promise<DictionaryStats> {
@@ -142,10 +142,10 @@ export class DSLDictionary extends Dictionary {
     await bufferReader.open(dictFile);
     return bufferReader;
   }
-  private async getFileContents(dictFile: string, pos: number, len: number): Promise<string> {
+  private async getFileContents(dictFile: string, wordPosition: WordPosition): Promise<string> {
     let bufferReader: BufferReader = await this.getBufferReader(dictFile);
 
-    let buffer: Buffer = await bufferReader.read(pos, len);
+    let buffer: Buffer = await bufferReader.read(wordPosition.pos, wordPosition.len);
     let encoding = (await bufferReader.getEncodingStat()).encoding;
     await bufferReader.close();
 

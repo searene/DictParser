@@ -44,13 +44,13 @@ export class DictionaryFinder extends EventEmitter {
 
     /** Walk through all files in <i>dir</i> recursively, and look for
      * dictionary definition files(e.g. dz, dsl), add it along with
-     * its {@code Dictionary} and resource to the result array.
+     * its {@code Dictionary} and resourceHolder to the result array.
      */
     async scan(dirs: string | string[],
                dbPath: string,
                wordFormsFolder: string): Promise<DictMap[]> {
 
-        // DictMap without resource
+        // DictMap without resourceHolder
         let dictMapList: DictMap[] = [];
         let files: FileWithStats[] = [];
         for(const dir of Array.isArray(dirs) ? dirs : [dirs]) {
@@ -65,7 +65,7 @@ export class DictionaryFinder extends EventEmitter {
                 // we find a dictionary
                 if(dictionary.dictionarySuffixes.indexOf(ext) > -1) {
 
-                    // get resource
+                    // get resourceHolder
                     let resource: Option<string> = await this.getResource(
                         file.filePath,
                         files.map(file => file.filePath),
@@ -81,7 +81,7 @@ export class DictionaryFinder extends EventEmitter {
                         dict: {
                             dictPath: file.filePath,
                             dictType: dictName,
-                            resource: resource.isEmpty ? "" : resource.get,
+                            resourceHolder: resource.isEmpty ? "" : resource.get,
                         },
                         meta: dictStats.meta,
                         originalWords: dictStats.indexMap,
@@ -139,10 +139,10 @@ export class DictionaryFinder extends EventEmitter {
         return DictionaryFinder._dictionaries;
     }
 
-    /** <p>Look for resource file/directory in <i>baseDirectory</i>, the rules are as follows.</p>
+    /** <p>Look for resourceHolder file/directory in <i>baseDirectory</i>, the rules are as follows.</p>
      * 1. If we find a file whose extension is in <i>resourceHolderSuffixes</i>
      *    and its basename(filename without extension) is the same as
-     *    <i>dictFileName</i>'s basename, this is exactly the resource
+     *    <i>dictFileName</i>'s basename, this is exactly the resourceHolder
      *    we need, return it.
      * 2. If we cannot find such a file mentioned above, try to find the first file
      *    whose extension is in <i>resourceHolderSuffixes</i>, return it.
@@ -153,9 +153,9 @@ export class DictionaryFinder extends EventEmitter {
      * @param dictFilePath absolute path to the dictionary file
      * @param baseDirectory the directory where the dictionary definition file
      *        (such as .dsl) lies
-     * @param resourceHolderSuffixes extensions of the archived resource file(e.g. zip)
-     * @param resourceFileSuffixes resource extensions(e.g. wmv)
-     * @returns path to the resource archive/directory represented in string
+     * @param resourceHolderSuffixes extensions of the archived resourceHolder file(e.g. zip)
+     * @param resourceFileSuffixes resourceHolder extensions(e.g. wmv)
+     * @returns path to the resourceHolder archive/directory represented in string
      */
     private async getResource(dictFilePath: string,
                               resourceFiles: string[],
@@ -209,8 +209,8 @@ export interface IDictionary {
     // e.g. dsl
     dictType: string;
 
-    // path to resource file
-    resource: string;
+    // path to resourceHolder file
+    resourceHolder: string;
 }
 
 export interface DictMap {

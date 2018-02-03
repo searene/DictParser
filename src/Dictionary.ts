@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 import { SRC_RESOURCE_PATH } from './Constant';
 import { Log } from './util/log';
 import { WordTree, Node } from './Tree';
-import { Meta, IndexMap } from "./DictionaryFinder";
+import {Meta, IndexMap, DictMap} from "./DictionaryFinder";
 import * as fse from 'fs-extra';
 import * as path from "path";
 import { WriteStream } from 'tty';
@@ -23,25 +23,23 @@ export abstract class Dictionary {
   // e.g. zip, dz, containing all the resources such as images/audios
   protected _resourceHolderSuffixes: string[] = ['.zip'];
 
-  // e.g. jpg, wmv, which are the actual resource files
+  // e.g. jpg, wmv, which are the actual resourceHolder files
   protected _resourceFileSuffixes: string[] = ['.jpg', '.wmv', '.bmp', '.mp3'];
-
-  protected _resourcePath: string;
 
   // get meta data and index
   async abstract getDictionaryStats(dictFile: string): Promise<DictionaryStats>;
 
   // get the definition of the word, represented by a WordTree
-  async abstract getWordTree(dictFile: string, pos: number, len: number): Promise<WordTree>;
+  async abstract getWordTree(dictMap: DictMap, wordPosition: WordPosition): Promise<WordTree>;
 
-  async abstract getWordTreeHTML(dictFile: string, pos: number, len: number): Promise<WordTreeHTML>;
+  async abstract getWordTreeHTML(dictMap: DictMap, wordPosition: WordPosition): Promise<WordTreeHTML>;
 
-  async getHTML(dictName: string = "Unknown", dictFile: string, pos: number, len: number): Promise<string> {
-    let wordTreeHTML: WordTreeHTML = await this.getWordTreeHTML(dictFile, pos, len);
-    return `<div class="container"><div class="dict_title">${dictName}</div><div class="dp_entry">${wordTreeHTML.entry}</div><div class="dp_definition">${wordTreeHTML.definition}</div></div>`;
+  async getHTML(dictMap: DictMap, wordPosition: WordPosition): Promise<string> {
+    let wordTreeHTML: WordTreeHTML = await this.getWordTreeHTML(dictMap, wordPosition);
+    return `<div class="container"><div class="dict_title">${dictMap.meta['NAME']}</div><div class="dp_entry">${wordTreeHTML.entry}</div><div class="dp_definition">${wordTreeHTML.definition}</div></div>`;
   }
 
-  // get resource contents
+  // get resourceHolder contents
 
   get dictionarySuffixes(): string[] {
     return this._dictionarySuffixes;
@@ -54,12 +52,6 @@ export abstract class Dictionary {
   }
   get dictionaryScanProgressReporter(): EventEmitter {
     return this._dictionaryScanProgressReporter;
-  }
-  get resourcePath(): string {
-    return this._resourcePath;
-  }
-  set resourcePath(_resourcePath: string) {
-    this._resourcePath = _resourcePath;
   }
 }
 
