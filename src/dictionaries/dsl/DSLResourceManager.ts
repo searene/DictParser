@@ -88,5 +88,6 @@ export class DSLResourceManager extends ResourceManager {
         });
       });
     });
-  }
+  };
+
 }

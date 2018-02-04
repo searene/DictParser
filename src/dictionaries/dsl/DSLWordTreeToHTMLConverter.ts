@@ -38,10 +38,7 @@ export class DSLWordTreeToHTMLConverter {
   }
 
   private convertNodesToHTML(nodes: Node[]): string {
-    let html: string = '';
-    if (nodes.length == 0) {
-      html += "";
-    }
+    let html = '';
     for (let node of nodes) {
       let htmlOfChildren: string = this.convertNodesToHTML(node.children);
       switch (node.type) {
@@ -64,7 +61,14 @@ export class DSLWordTreeToHTMLConverter {
           } else if (node.name == "ex") {
             html += `<div class="dsl_opt"><span class="dsl_ex">${htmlOfChildren}</span></div>`;
           } else if (node.name == "s" && this._dslResourceManager.getResourceType(node) == this._dslResourceManager.ResourceType.AUDIO) {
-            html += `<a class="dsl_audio" href="${this._dslResourceManager.getResourceName(node)}"><img class="sound-img" src="${this.getPathToSoundImg()}" border="0" align="absmiddle" alt="Play"></a>`;
+            const resourceHolder = this._dictMap.dict.resourceHolder;
+            const resourceName = this._dslResourceManager.getResourceName(node);
+            const completeResourcePath = `/resource/${resourceHolder}/${resourceName}`;
+            // html += `<audio id="${completeResourcePath}" src="${completeResourcePath}"></audio>`;
+            html += `<audio id="${completeResourcePath}" src="http://other.web.nf01.sycdn.kuwo.cn/resource/n2/0/45/2382586584.mp3"></audio>`;
+            html += `<a class="dsl_audio" href="#" onclick="playAudio('${completeResourcePath}')">
+                        <img class="sound-img" src="${this.getPathToSoundImg()}" border="0" align="absmiddle" alt="Play">
+                     </a>`;
           } else if (node.name == 's' && this._dslResourceManager.getResourceType(node) == this._dslResourceManager.ResourceType.IMAGE) {
             html += `<img src="${this._dslResourceManager.getResourceName(node)}" alt="${this._dslResourceManager.getResourceName(node)}">`;
           } else if (node.name == '\'') {
