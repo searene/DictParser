@@ -32,7 +32,7 @@ export class DSLDictionary extends Dictionary {
 
   async getWordTreeHTML(dictMap: DictMap, wordPosition: WordPosition): Promise<WordTreeHTML> {
     let wordTree: WordTree = await this.getWordTree(dictMap, wordPosition);
-    return new DSLWordTreeToHTMLConverter(dictMap).convertWordTreeToHTML(wordTree);
+    return await new DSLWordTreeToHTMLConverter(dictMap).convertWordTreeToHTML(wordTree);
   }
 
   async getDictionaryStats(dictFile: string): Promise<DictionaryStats> {

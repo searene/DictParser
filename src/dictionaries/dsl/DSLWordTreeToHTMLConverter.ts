@@ -22,10 +22,10 @@ export class DSLWordTreeToHTMLConverter {
     this._dictMap = dictMap;
   }
 
-  convertWordTreeToHTML(wordTree: WordTree): WordTreeHTML {
+  async convertWordTreeToHTML(wordTree: WordTree): Promise<WordTreeHTML> {
     return {
       entry: this.convertEntryToHTML(wordTree.entry),
-      definition: this.convertRootNodeToHTML(wordTree.root)
+      definition: await this.convertRootNodeToHTML(wordTree.root)
     }
   }
 
@@ -33,14 +33,14 @@ export class DSLWordTreeToHTMLConverter {
     return `<div class="dsl_headwords"><p>${entry}</p></div>`;
   }
 
-  private convertRootNodeToHTML(rootNode: Node): string {
-    return this.convertNodesToHTML(rootNode.children);
+  private async convertRootNodeToHTML(rootNode: Node): Promise<string> {
+    return await this.convertNodesToHTML(rootNode.children);
   }
 
-  private convertNodesToHTML(nodes: Node[]): string {
+  private async convertNodesToHTML(nodes: Node[]): Promise<string> {
     let html = '';
     for (let node of nodes) {
-      let htmlOfChildren: string = this.convertNodesToHTML(node.children);
+      let htmlOfChildren: string = await this.convertNodesToHTML(node.children);
       switch (node.type) {
         case Node.ROOT_NODE:
           html += `<div class="dsl_definition">${htmlOfChildren}</div>`;
@@ -62,14 +62,19 @@ export class DSLWordTreeToHTMLConverter {
             html += `<div class="dsl_opt"><span class="dsl_ex">${htmlOfChildren}</span></div>`;
           } else if (node.name == "s" && this._dslResourceManager.getResourceType(node) == this._dslResourceManager.ResourceType.AUDIO) {
             const resourceHolder = this._dictMap.dict.resourceHolder;
+            const resourceHolderType = await this._dslResourceManager.getResourceHolderType(resourceHolder);
             const resourceName = this._dslResourceManager.getResourceName(node);
-            const completeResourcePath = `dictp://resource/${resourceHolder}/${resourceName}`;
+            const completeResourcePath = resourceHolderType === 'dir' ? path.join(resourceHolder, resourceName) : `dictp://audio:${resourceHolderType}:${resourceHolder}:${resourceName}`;
             html += `<audio id="${completeResourcePath}" src="${completeResourcePath}"></audio>`;
             html += `<a class="dsl_audio" href="#" onclick="playAudio('${completeResourcePath}')">
                         <img class="sound-img" src="${this.getPathToSoundImg()}" border="0" align="absmiddle" alt="Play">
                      </a>`;
           } else if (node.name == 's' && this._dslResourceManager.getResourceType(node) == this._dslResourceManager.ResourceType.IMAGE) {
-            html += `<img src="${this._dslResourceManager.getResourceName(node)}" alt="${this._dslResourceManager.getResourceName(node)}">`;
+            const resourceHolder = this._dictMap.dict.resourceHolder;
+            const resourceHolderType = await this._dslResourceManager.getResourceHolderType(resourceHolder);
+            const resourceName = this._dslResourceManager.getResourceName(node);
+            const completeResourcePath = resourceHolderType === 'dir' ? path.join(resourceHolder, resourceName) : `dictp://image:${resourceHolderType}:${resourceHolder}:${resourceName}`;
+            html += `<img src=${completeResourcePath} alt="${this._dslResourceManager.getResourceName(node)}">`;
           } else if (node.name == '\'') {
             let stressedText = node.children.length > 0 ? node.children[0].contents : "";
             html += `<span class="dsl_stress"><span class="dsl_stress_without_accent">stressedText</span><span class="dsl_stress_with_accent">${AccentConverter.removeAccent(stressedText)}</span></span>`;
@@ -109,4 +114,5 @@ export class DSLWordTreeToHTMLConverter {
   private getPathToSoundImg(): string {
     return path.join(ResourceManager.commonResourceDirectory, 'sound.png');
   }
+
 }

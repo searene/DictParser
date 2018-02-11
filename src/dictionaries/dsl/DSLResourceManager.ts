@@ -3,9 +3,11 @@ import { WriteStream } from 'tty';
 import { Node, WordTree, getAllChildNodes } from '../../Tree';
 import * as fse from 'fs-extra';
 import * as path from 'path';
-const StreamZip = require('node-stream-zip');
 
 export class DSLResourceManager extends ResourceManager {
+
+  private RESOURCE_HOLDER_TYPE_DIR = 'dir';
+  private RESOURCE_HOLDER_TYPE_ZIP = 'zip';
 
   getResourceType(node: Node): string {
     if (this.isResourceNode(node)) {
@@ -32,4 +34,16 @@ export class DSLResourceManager extends ResourceManager {
       throw new Error("Not a resourceHolder node");
     }
   }
+  getResourceHolderType = async (resourceHolderPath: string): Promise<string> => {
+    const stat = await fse.lstat(resourceHolderPath);
+    if(stat.isDirectory()) {
+      return this.RESOURCE_HOLDER_TYPE_DIR;
+    } else {
+      const ext = resourceHolderPath.split('.').pop();
+      if(ext !== undefined && ext.toLowerCase() === 'zip') {
+        return this.RESOURCE_HOLDER_TYPE_ZIP;
+      }
+    }
+    throw new Error(`Resource is not supported: ${resourceHolderPath}`);
+  };
 }
