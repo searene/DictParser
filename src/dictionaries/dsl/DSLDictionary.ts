@@ -14,7 +14,6 @@ import { DictZipParser } from "./DictZipParser";
 import { getEncodingInFile, getEncodingInBuffer } from "../../EncodingDetector";
 import * as path from 'path';
 import { Node } from '../../Tree';
-const StreamZip = require('node-stream-zip');
 
 /**
  * Created by searene on 17-1-23.

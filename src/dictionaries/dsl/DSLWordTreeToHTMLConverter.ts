@@ -63,9 +63,8 @@ export class DSLWordTreeToHTMLConverter {
           } else if (node.name == "s" && this._dslResourceManager.getResourceType(node) == this._dslResourceManager.ResourceType.AUDIO) {
             const resourceHolder = this._dictMap.dict.resourceHolder;
             const resourceName = this._dslResourceManager.getResourceName(node);
-            const completeResourcePath = `/resource/${resourceHolder}/${resourceName}`;
-            // html += `<audio id="${completeResourcePath}" src="${completeResourcePath}"></audio>`;
-            html += `<audio id="${completeResourcePath}" src="http://other.web.nf01.sycdn.kuwo.cn/resource/n2/0/45/2382586584.mp3"></audio>`;
+            const completeResourcePath = `dictp://resource/${resourceHolder}/${resourceName}`;
+            html += `<audio id="${completeResourcePath}" src="${completeResourcePath}"></audio>`;
             html += `<a class="dsl_audio" href="#" onclick="playAudio('${completeResourcePath}')">
                         <img class="sound-img" src="${this.getPathToSoundImg()}" border="0" align="absmiddle" alt="Play">
                      </a>`;
