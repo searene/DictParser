@@ -9,9 +9,6 @@ export abstract class ResourceManager {
     IMAGE: 'IMAGE',
     UNKNOWN: 'UNKNOWN'
   };
-  abstract getResourceContentsList: (wordTree: WordTree, resourceHolder: string) => Promise<ResourceContents[]>;
-
-  abstract async getResource(resourceHolder: string, resourceName: string): Promise<Buffer>;
 }
 
 export interface ResourceContents {

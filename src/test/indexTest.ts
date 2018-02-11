@@ -11,7 +11,7 @@ describe('Test DictParser', () => {
   let logger = Log.getLogger();
 
   let scanFolder1 = path.join(TEST_RESOURCE_PATH, 'scan');
-  let scanFolder2 = path.join(os.homedir(), 'apps/dictionaries/En-En_Longman_DOCE5');
+  let scanFolder2 = path.join('/home/searene/Public/complete');
   let dbPath = path.join(TEST_RESOURCE_PATH, 'dictParser.db');
 
   it("#getWordDefinition", async () => {
@@ -19,7 +19,7 @@ describe('Test DictParser', () => {
     dictParser.on('name', (dictionaryName: string) => {
       logger.info(`scanning ${dictionaryName}...`);
     });
-    await dictParser.scan([scanFolder1, scanFolder2]);
+    await dictParser.scan([scanFolder2]);
     // let wordDefinitionList = await dictParser.getWordDefinition('trivial card');
     let wordDefinitionList = await dictParser.getWordDefinitions('whose');
     console.log(wordDefinitionList);

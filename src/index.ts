@@ -136,7 +136,6 @@ export class DictParser extends EventEmitter {
       }
       let wordTree: WordTree = await dictionary.getWordTree(dictMap, wordPosition);
       const resourceManager = getResourceManagerByDictType(dictMap.dict.dictType);
-      const resourceContentsList = await resourceManager.getResourceContentsList(wordTree, dictMap.dict.resourceHolder);
       let html: string = await dictionary.getHTML(dictMap, wordPosition);
       let dictName = dictMap.meta['NAME'];
       wordDefinitionList.push({
@@ -144,7 +143,6 @@ export class DictParser extends EventEmitter {
         wordTree: wordTree,
         html: html,
         dict: dictMap.dict,
-        resourceContentsList: resourceContentsList
       });
     }
     return wordDefinitionList;
@@ -171,7 +169,6 @@ export interface WordDefinition {
   wordTree: WordTree;
   html: string;
   dict: IDictionary,
-  resourceContentsList: ResourceContents[]
 }
 
 export interface WordCandidate {
