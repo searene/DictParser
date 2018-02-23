@@ -78,9 +78,6 @@ export class DSLWordTreeToHTMLConverter {
           } else if (node.name == '\'') {
             let stressedText = node.children.length > 0 ? node.children[0].contents : "";
             html += `<span class="dsl_stress"><span class="dsl_stress_without_accent">stressedText</span><span class="dsl_stress_with_accent">${AccentConverter.removeAccent(stressedText)}</span></span>`;
-          } else if (node.name == "ref") {
-            let refWord: string = node.children.length == 1 ? node.children[0].contents : "";
-            html += `<a class="dsl_ref" href="${this.getPathToRefWord(refWord)}">${refWord}</a>`;
           } else if (node.name == "url") {
             let url: string = node.children.length == 1 ? node.children[0].contents : "";
             html += `<a class="dsl_url" href=${url}>${url}</a>`;
@@ -92,8 +89,8 @@ export class DSLWordTreeToHTMLConverter {
           }
           break;
         case Node.REF_NODE:
-          let refWord: string = node.contents;
-          html += `<a class="dsl_ref" href="${this.getPathToRefWord(refWord)}">${refWord}</a>`;
+          let refWord: string = node.contents.replace(/'/g, `\'`);
+          html += `<a class="dsl_ref" href="#" data-ref='${refWord}' onClick="{var button=document.getElementById('refer-word-search-button'); button.innerHTML='${refWord}'; button.click();}">${refWord}</a>`;
           break;
         case Node.TEXT_NODE:
           html += node.contents;
@@ -109,7 +106,7 @@ export class DSLWordTreeToHTMLConverter {
   }
   private getPathToRefWord(refWord: string): string {
     let encodedRefWord: string = encodeURIComponent(refWord);
-    return `dplookup://localhost/${encodedRefWord}`;
+    return `dictp://lookup:${encodedRefWord}`;
   }
   private getPathToSoundImg(): string {
     return path.join(ResourceManager.commonResourceDirectory, 'sound.png');
