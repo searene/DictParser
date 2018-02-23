@@ -80,6 +80,12 @@ export class DictParser extends EventEmitter {
                 dict: dictMap.dict,
                 isTransformed: words == dictMap.transformedWords
               });
+              // if(wordSuggestions.length >= resultCount) {
+              //   return wordSuggestions.map(wordSuggestion => ({
+              //     word: wordSuggestion.word,
+              //     dict: wordSuggestion.dict
+              //   }));
+              // }
             }
           }
         }
@@ -148,11 +154,15 @@ export class DictParser extends EventEmitter {
     return wordDefinitionList;
   }
 
-  private async readDictMapListFromFile(): Promise<DictMap[]> {
+  async readDictMapListFromFile(): Promise<DictMap[]> {
     let dbContents: string = await fse.readFile(this._dbPath, {encoding: 'utf8'});
     const dictMapList = JSON.parse(dbContents) as DictMap[];
     return dictMapList;
   }
+
+  setDictMapList = (dictMapList: DictMap[]): void => {
+    this._dictMapList = dictMapList;
+  };
 
   private normalize(word: string): string {
     let normalizedWord: string = "";
