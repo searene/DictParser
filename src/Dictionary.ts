@@ -36,7 +36,7 @@ export abstract class Dictionary {
 
   async getHTML(dictMap: DictMap, wordPosition: WordPosition): Promise<string> {
     let wordTreeHTML: WordTreeHTML = await this.getWordTreeHTML(dictMap, wordPosition);
-    return `<div class="container"><div class="dict_title">${dictMap.meta['NAME']}</div><div class="dp_entry">${wordTreeHTML.entry}</div><div class="dp_definition">${wordTreeHTML.definition}</div></div>`;
+    return `<div class="container"><div class="dict-title">${dictMap.meta['NAME']}</div><div class="dp-entry">${wordTreeHTML.entry}</div><div class="dp-definition">${wordTreeHTML.definition}</div></div>`;
   }
 
   // get resourceHolder contents
