@@ -72,11 +72,14 @@ export class DictParser extends EventEmitter {
         result.add(originalWord);
       })
     }
+    for(const normalizedWord of Array.from(this._wordMap.keys())) {
+        if(normalizedWord.startsWith(input)) {
+          const originalWords = this._wordMap.get(normalizedWord);
+          originalWords!.forEach((w: string) => result.add(w));
+        }
+    }
     try {
       this._wordMap.forEach((originalWords, normalizedWord) => {
-        if(normalizedWord.indexOf(input) === 0) {
-          originalWords.forEach(w => result.add(w));
-        }
         if(result.size >= resultCount) {
           throw BreakError;
         }
