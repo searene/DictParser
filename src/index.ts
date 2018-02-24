@@ -64,28 +64,27 @@ export class DictParser extends EventEmitter {
    * Guess what word the user wants based on the word input
    */
   async getWordCandidates(input: string, resultCount = 30): Promise<string[]> {
+
     let result: Set<string> = new Set<string>();
-    const BreakError = {};
     input = this.normalize(input);
+
+    if(input === '') {
+      return [];
+    }
+
+    // first add the input word if it exists in dictionaries
     if(this._wordMap.has(input)) {
       this._wordMap.get(input)!.forEach(originalWord => {
         result.add(originalWord);
-      })
+      });
     }
+
+    // check other candidates
     for(const normalizedWord of Array.from(this._wordMap.keys())) {
         if(normalizedWord.startsWith(input)) {
           const originalWords = this._wordMap.get(normalizedWord);
           originalWords!.forEach((w: string) => result.add(w));
         }
-    }
-    try {
-      this._wordMap.forEach((originalWords, normalizedWord) => {
-        if(result.size >= resultCount) {
-          throw BreakError;
-        }
-      });
-    } catch(e) {
-      if(e !== BreakError) throw e;
     }
     return Array.from(result).slice(0, resultCount);
   }
@@ -141,7 +140,7 @@ export class DictParser extends EventEmitter {
     for (let c of word) {
       normalizedWord += AccentConverter.removeAccent(c).toLowerCase();
     }
-    return normalizedWord;
+    return normalizedWord.trim();
   }
   private getWordMap = (dictMapList: DictMap[]): Map<string, Set<string>> => {
     // normalized words => original words
