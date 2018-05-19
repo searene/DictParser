@@ -65,9 +65,8 @@ export class DSLWordTreeToHTMLConverter {
             const resourceHolderType = await this._dslResourceManager.getResourceHolderType(resourceHolder);
             const resourceName = this._dslResourceManager.getResourceName(node);
             const completeResourcePath = resourceHolderType === 'dir' ? path.join(resourceHolder, resourceName) : `dictp://audio:${resourceHolderType}:${resourceHolder}:${resourceName}`;
-            const onclick=`playAudio('${completeResourcePath}')`;
             html += `<audio id="${completeResourcePath}" src="${completeResourcePath}"></audio>`;
-            html += `<a class="dsl-audio" href="#" onclick="${onclick}" data-onclick="${onclick}">
+            html += `<a class="dsl-audio" href="#" onclick="playAudio('${completeResourcePath}')">
                         <img class="sound-img" src="${this.getPathToSoundImg()}" border="0" align="absmiddle" alt="Play">
                      </a>`;
           } else if (node.name == 's' && this._dslResourceManager.getResourceType(node) == this._dslResourceManager.ResourceType.IMAGE) {
