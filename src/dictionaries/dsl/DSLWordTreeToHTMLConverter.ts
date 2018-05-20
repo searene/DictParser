@@ -1,3 +1,4 @@
+import { buildAudioTag } from './../../util/HTMLUtil';
 import { ResourceManager } from './../../ResourceManager';
 import { DSLResourceManager } from './DSLResourceManager';
 import { AccentConverter } from '../../AccentConverter';
@@ -65,9 +66,9 @@ export class DSLWordTreeToHTMLConverter {
             const resourceHolderType = await this._dslResourceManager.getResourceHolderType(resourceHolder);
             const resourceName = this._dslResourceManager.getResourceName(node);
             const completeResourcePath = resourceHolderType === 'dir' ? path.join(resourceHolder, resourceName) : `dictp://audio:${resourceHolderType}:${resourceHolder}:${resourceName}`;
-            html += `<audio id="${completeResourcePath}" src="${completeResourcePath}"></audio>`;
-            html += `<a class="dsl-audio" href="#" onclick="playAudio('${completeResourcePath}')">
+            html += `<a class="dictp-audio dsl-audio" href="#" onclick="playAudio('${completeResourcePath}')" data-dictp-audio-id="${completeResourcePath}">
                         <img class="sound-img" src="${this.getPathToSoundImg()}" border="0" align="absmiddle" alt="Play">
+                        ${buildAudioTag(completeResourcePath)}
                      </a>`;
           } else if (node.name == 's' && this._dslResourceManager.getResourceType(node) == this._dslResourceManager.ResourceType.IMAGE) {
             const resourceHolder = this._dictMap.dict.resourceHolder;

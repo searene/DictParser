@@ -5,7 +5,7 @@ import * as ReadLine from "readline";
 import { WORD_FORMS_PATH } from "../Constant";
 import { WordForms } from "../DictionaryFinder";
 
-async function convert(wordFormsFolder: string = WORD_FORMS_PATH) {
+async function convertWordFormsFile(wordFormsFolder: string = WORD_FORMS_PATH) {
     let files = await fse.readdir(wordFormsFolder);
     for(let file of files) {
         let result: WordForms = {};
