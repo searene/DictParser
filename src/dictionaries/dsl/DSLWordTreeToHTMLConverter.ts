@@ -41,7 +41,6 @@ export class DSLWordTreeToHTMLConverter {
   private async convertRootNodeToHTML(rootNode: Node): Promise<string> {
     let html = this.getPlayAudioHTML();
     html += await this.convertNodesToHTML(rootNode.children);
-    await fse.writeFile("/tmp/index.html", html);
     return html;
   }
 
