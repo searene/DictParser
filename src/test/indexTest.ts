@@ -4,6 +4,7 @@ import {Log} from '../util/log';
 import {DictZipParser} from '../dictionaries/dsl/DictZipParser';
 import * as path from 'path';
 import {DictParser} from "../index";
+import * as fse from "fs-extra";
 import * as os from 'os';
 
 describe('Test DictParser', () => {
@@ -22,7 +23,7 @@ describe('Test DictParser', () => {
     await dictParser.scan([scanFolder2]);
     // let wordDefinitionList = await dictParser.getWordDefinition('trivial card');
     let wordDefinitionList = await dictParser.getWordDefinitions('whose');
-    console.log(wordDefinitionList);
+    await fse.writeFile("/tmp/index.html", wordDefinitionList[0].html);
   });
 
   it("#guessWord", async () => {
