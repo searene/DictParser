@@ -32,10 +32,10 @@ export abstract class Dictionary {
   // get the definition of the word, represented by a WordTree
   async abstract getWordTree(dictMap: DictMap, wordPosition: WordPosition): Promise<WordTree>;
 
-  async abstract getWordTreeHTML(dictMap: DictMap, wordPosition: WordPosition): Promise<WordTreeHTML>;
+  async abstract getWordTreeHTML(dictMap: DictMap, wordPosition: WordPosition, sqliteDbPath: string): Promise<WordTreeHTML>;
 
-  async getHTML(dictMap: DictMap, wordPosition: WordPosition): Promise<string> {
-    let wordTreeHTML: WordTreeHTML = await this.getWordTreeHTML(dictMap, wordPosition);
+  async getHTML(dictMap: DictMap, wordPosition: WordPosition, sqliteDbPath: string): Promise<string> {
+    let wordTreeHTML: WordTreeHTML = await this.getWordTreeHTML(dictMap, wordPosition, sqliteDbPath);
     return `<div class="container"><div class="dict-title">${dictMap.meta['NAME']}</div><div class="dp-entry">${wordTreeHTML.entry}</div><div class="dp-definition">${wordTreeHTML.definition}</div></div>`;
   }
 

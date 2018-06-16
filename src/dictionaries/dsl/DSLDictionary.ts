@@ -30,9 +30,9 @@ export class DSLDictionary extends Dictionary {
     return stateMachine.run();
   }
 
-  async getWordTreeHTML(dictMap: DictMap, wordPosition: WordPosition): Promise<WordTreeHTML> {
+  async getWordTreeHTML(dictMap: DictMap, wordPosition: WordPosition, sqliteDbPath: string): Promise<WordTreeHTML> {
     let wordTree: WordTree = await this.getWordTree(dictMap, wordPosition);
-    return await new DSLWordTreeToHTMLConverter(dictMap).convertWordTreeToHTML(wordTree);
+    return await new DSLWordTreeToHTMLConverter(dictMap, sqliteDbPath).convertWordTreeToHTML(wordTree);
   }
 
   async getDictionaryStats(dictFile: string): Promise<DictionaryStats> {

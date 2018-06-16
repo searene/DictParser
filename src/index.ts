@@ -2,7 +2,7 @@ import { WordCandidate } from './index';
 import {EventEmitter} from 'events';
 import {AccentConverter} from './AccentConverter';
 import {DictMap, DictionaryFinder, IDictionary, IndexMap, WordForms} from './DictionaryFinder';
-import {DB_PATH, WORD_FORMS_PATH, SRC_RESOURCE_PATH} from './Constant';
+import {JSON_DB_PATH, WORD_FORMS_PATH, SRC_RESOURCE_PATH, SQLITE_DB_PATH} from './Constant';
 import * as fse from 'fs-extra';
 import {WordTree} from "./Tree";
 import {Dictionary, WordPosition} from "./Dictionary";
@@ -15,7 +15,8 @@ import { DSLResourceManager } from './dictionaries/dsl/DSLResourceManager';
 
 export class DictParser extends EventEmitter {
 
-  private _dbPath: string;
+  private _jsonDbPath: string;
+  private _sqliteDbPath: string;
   private _wordFormsFolder: string;
   private _dictionaryFinder = new DictionaryFinder();
   private _dictMapList: DictMap[];
@@ -25,7 +26,8 @@ export class DictParser extends EventEmitter {
   private _resourcePath: string;
   private _wordMap: Map<string, Set<string>>;
 
-  constructor(dbPath: string = DB_PATH,
+  constructor(jsonDbPath: string = JSON_DB_PATH,
+              sqliteDbPath: string = SQLITE_DB_PATH,
               wordFormsFolder: string = WORD_FORMS_PATH,
               commonResourceDirectory: string = SRC_RESOURCE_PATH) {
     super();
@@ -33,7 +35,8 @@ export class DictParser extends EventEmitter {
     registerResourceManagers();
     ResourceManager.commonResourceDirectory = commonResourceDirectory;
 
-    this._dbPath = dbPath;
+    this._jsonDbPath = jsonDbPath;
+    this._sqliteDbPath = sqliteDbPath;
     this._wordFormsFolder = wordFormsFolder;
   }
 
@@ -54,7 +57,8 @@ export class DictParser extends EventEmitter {
     });
     this._dictMapList = await this._dictionaryFinder.scan(
       scanFolder,
-      this._dbPath,
+      this._jsonDbPath,
+      this._sqliteDbPath,
       this._wordFormsFolder);
     await this.buildWordList(this._dictMapList);
     return this._dictMapList;
@@ -109,7 +113,7 @@ export class DictParser extends EventEmitter {
       }
       let wordTree: WordTree = await dictionary.getWordTree(dictMap, wordPosition);
       const resourceManager = getResourceManagerByDictType(dictMap.dict.dictType);
-      let html: string = await dictionary.getHTML(dictMap, wordPosition);
+      let html: string = await dictionary.getHTML(dictMap, wordPosition, this._sqliteDbPath);
       let dictName = dictMap.meta['NAME'];
       wordDefinitionList.push({
         word: word,
@@ -122,8 +126,8 @@ export class DictParser extends EventEmitter {
   }
 
   async readDictMapListFromFile(): Promise<DictMap[]> {
-    if(await fse.pathExists(this._dbPath)) {
-      let dbContents = await fse.readFile(this._dbPath, {encoding: 'utf8'});
+    if(await fse.pathExists(this._jsonDbPath)) {
+      let dbContents = await fse.readFile(this._jsonDbPath, {encoding: 'utf8'});
       const dictMapList = JSON.parse(dbContents) as DictMap[];
       return dictMapList;
     } else {

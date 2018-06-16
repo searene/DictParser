@@ -7,9 +7,11 @@ import { Dictionary, WordTreeHTML } from '../../Dictionary';
 import { WordTree } from '../../Tree';
 import { NotResourceNodeError } from '../../Error';
 import { SRC_RESOURCE_PATH } from '../../Constant';
+import * as fse from "fs-extra";
 import { Node } from '../../Tree';
 import * as path from 'path';
 import {DictMap} from "../../DictionaryFinder";
+import {ZipReader} from "../../util/ZipReader";
 
 export class DSLWordTreeToHTMLConverter {
 
@@ -18,9 +20,11 @@ export class DSLWordTreeToHTMLConverter {
    */
   private _dslResourceManager = new DSLResourceManager();
   private _dictMap: DictMap;
+  private _sqliteDbPath: string;
 
-  constructor(dictMap: DictMap) {
+  constructor(dictMap: DictMap, sqliteDbPath: string) {
     this._dictMap = dictMap;
+    this._sqliteDbPath = sqliteDbPath;
   }
 
   async convertWordTreeToHTML(wordTree: WordTree): Promise<WordTreeHTML> {
@@ -35,11 +39,14 @@ export class DSLWordTreeToHTMLConverter {
   }
 
   private async convertRootNodeToHTML(rootNode: Node): Promise<string> {
-    return await this.convertNodesToHTML(rootNode.children);
+    let html = this.getPlayAudioHTML();
+    html += await this.convertNodesToHTML(rootNode.children);
+    await fse.writeFile("/tmp/index.html", html);
+    return html;
   }
 
   private async convertNodesToHTML(nodes: Node[]): Promise<string> {
-    let html = '';
+    let html = "";
     for (let node of nodes) {
       let htmlOfChildren: string = await this.convertNodesToHTML(node.children);
       switch (node.type) {
@@ -62,20 +69,17 @@ export class DSLWordTreeToHTMLConverter {
           } else if (node.name == "ex") {
             html += `<div class="dsl-opt"><span class="dsl-ex">${htmlOfChildren}</span></div>`;
           } else if (node.name == "s" && this._dslResourceManager.getResourceType(node) == this._dslResourceManager.ResourceType.AUDIO) {
-            const resourceHolder = this._dictMap.dict.resourceHolder;
-            const resourceHolderType = await this._dslResourceManager.getResourceHolderType(resourceHolder);
-            const resourceName = this._dslResourceManager.getResourceName(node);
-            const completeResourcePath = resourceHolderType === 'dir' ? path.join(resourceHolder, resourceName) : `dictp://audio:${resourceHolderType}:${resourceHolder}:${resourceName}`;
-            html += `<a class="dictp-audio dsl-audio" href="#" onclick="playAudio('${completeResourcePath}')" data-dictp-audio-id="${completeResourcePath}">
-                        <img class="sound-img" src="${this.getPathToSoundImg()}" border="0" align="absmiddle" alt="Play">
-                        ${buildAudioTag(completeResourcePath)}
+            const audioType = path.extname(this._dslResourceManager.getResourceName(node)).substr(1); // wav
+            const resourceAsBase64 = await this.getResourceAsBase64(node);
+            html += `<a class="dictp-audio dsl-audio" href="#" onclick="playAudio('${audioType}', '${resourceAsBase64}')" data-dictp-audio-base64="${resourceAsBase64}">
+                        <img class="sound-img" src="data:image/png;base64,${await this.getSoundImgAsBase64()}" border="0" align="absmiddle" alt="Play"/>
                      </a>`;
           } else if (node.name == 's' && this._dslResourceManager.getResourceType(node) == this._dslResourceManager.ResourceType.IMAGE) {
             const resourceHolder = this._dictMap.dict.resourceHolder;
             const resourceHolderType = await this._dslResourceManager.getResourceHolderType(resourceHolder);
             const resourceName = this._dslResourceManager.getResourceName(node);
             const completeResourcePath = resourceHolderType === 'dir' ? path.join(resourceHolder, resourceName) : `dictp://image:${resourceHolderType}:${resourceHolder}:${resourceName}`;
-            html += `<img src=${completeResourcePath} alt="${this._dslResourceManager.getResourceName(node)}">`;
+            html += `<img src=${completeResourcePath} alt="${this._dslResourceManager.getResourceName(node)}"/>`;
           } else if (node.name == '\'') {
             let stressedText = node.children.length > 0 ? node.children[0].contents : "";
             html += `<span class="dsl-stress"><span class="dsl-stress-without-accent">stressedText</span><span class="dsl-stress-with-accent">${AccentConverter.removeAccent(stressedText)}</span></span>`;
@@ -112,5 +116,37 @@ export class DSLWordTreeToHTMLConverter {
   private getPathToSoundImg(): string {
     return path.join(ResourceManager.commonResourceDirectory, 'sound.png');
   }
-
+  private base64Encode = async (filePath: string): Promise<string> => {
+    const bitmap = await fse.readFile(filePath);
+    return new Buffer(bitmap).toString('base64');
+  };
+  private getSoundImgAsBase64 = async (): Promise<string> => {
+    const filePath = this.getPathToSoundImg();
+    return await this.base64Encode(filePath);
+  };
+  private getResourceAsBase64 = async (resourceNode: Node): Promise<string> => {
+    const resourceHolder = this._dictMap.dict.resourceHolder;
+    const resourceHolderType = await this._dslResourceManager.getResourceHolderType(resourceHolder);
+    const resourceName = this._dslResourceManager.getResourceName(resourceNode);
+    if (resourceHolderType === "dir") {
+      const filePath = path.join(resourceHolder, resourceName);
+      return await this.base64Encode(filePath);
+    } else if (resourceHolderType === "zip") {
+      const zipReader = new ZipReader(this._sqliteDbPath, resourceHolder);
+      const buffer = await zipReader.extractFileFromZip(resourceName);
+      return buffer.toString("base64");
+    } else {
+      throw new Error(`ResourceHolderType ${resourceHolderType} is not supported`);
+    }
+  };
+  private getPlayAudioHTML = (): string => {
+    return `
+      <script>
+        function playAudio(audioType, base64) {
+          var audio = new Audio("data:audio/" + audioType + ";base64," + base64);
+          audio.play();
+        }
+      </script>
+    `;
+  }
 }

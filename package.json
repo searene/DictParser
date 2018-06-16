@@ -8,7 +8,7 @@
     "lib/"
   ],
   "scripts": {
-    "test": "gulp && mocha -u tdd --timeout 999999 --colors lib/test -g '#guessWord'",
+    "test": "gulp && mocha -u tdd --timeout 999999 --colors lib/test -g '#getWordDefinition'",
     "build": "gulp"
   },
   "repository": {
@@ -45,6 +45,8 @@
     "fs-extra": "^5.0.0",
     "log4js": "2.5.2",
     "node-stream-zip": "^1.4.2",
+    "prettier": "^1.13.5",
+    "sqlite": "^2.9.2",
     "ts-option": "1.1.4",
     "typed-event-emitter": "1.0.3",
     "unzip": "0.1.11"
