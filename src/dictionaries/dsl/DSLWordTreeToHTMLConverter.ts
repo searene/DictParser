@@ -95,7 +95,7 @@ export class DSLWordTreeToHTMLConverter {
                           var audio = new Audio("data:audio/${audioType};base64,${resourceAsBase64}");
                           audio.play();
                         })()'
-                        class="sound-img" 
+                        class="dictp-sound-img" 
                         src="data:image/png;base64,${await this.getSoundImgAsBase64()}" 
                         border="0" 
                         align="absmiddle" 
