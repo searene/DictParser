@@ -38,9 +38,7 @@ export class DSLWordTreeToHTMLConverter {
   }
 
   private async convertRootNodeToHTML(rootNode: Node): Promise<string> {
-    let html = this.getPlayAudioHTML();
-    html += await this.convertNodesToHTML(rootNode.children);
-    return html;
+    return await this.convertNodesToHTML(rootNode.children);
   }
 
   private async convertNodesToHTML(nodes: Node[]): Promise<string> {
@@ -186,15 +184,5 @@ export class DSLWordTreeToHTMLConverter {
         `ResourceHolderType ${resourceHolderType} is not supported`
       );
     }
-  };
-  private getPlayAudioHTML = (): string => {
-    return `
-      <script>
-        function playAudio(audioType, base64) {
-          var audio = new Audio("data:audio/" + audioType + ";base64," + base64);
-          audio.play();
-        }
-      </script>
-    `;
   };
 }
