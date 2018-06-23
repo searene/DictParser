@@ -731,9 +731,11 @@ ZipEntry.prototype.read = function (data, offset) {
 };
 
 ZipEntry.prototype.validateName = function () {
-  if (/\\|^\w+:|^\/|(^|\/)\.\.(\/|$)/.test(this.name)) {
-    throw new Error('Malicious entry: ' + this.name);
-  }
+  // I don't know why the name should be validated, according to which rule.
+  // Comment them for now.
+  // if (/\\|^\w+:|^\/|(^|\/)\.\.(\/|$)/.test(this.name)) {
+  //   throw new Error('Malicious entry: ' + this.name);
+  // }
 };
 
 ZipEntry.prototype.readExtra = function (data, offset) {

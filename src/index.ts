@@ -46,9 +46,9 @@ export class DictParser extends EventEmitter {
 
   buildWordList = async (dictMapList?: DictMap[]) => {
     if(dictMapList === undefined) {
-      dictMapList = await this.readDictMapListFromFile();
+      this._dictMapList = await this.readDictMapListFromFile();
     }
-    this._wordMap = this.getWordMap(dictMapList); 
+    this._wordMap = this.getWordMap(this._dictMapList);
   };
 
   async scan(scanFolder: string | string[]): Promise<DictMap[]> {
@@ -88,6 +88,9 @@ export class DictParser extends EventEmitter {
         if(normalizedWord.startsWith(input)) {
           const originalWords = this._wordMap.get(normalizedWord);
           originalWords!.forEach((w: string) => result.add(w));
+          if (result.size >= resultCount) {
+            break;
+          }
         }
     }
     return Array.from(result).slice(0, resultCount);

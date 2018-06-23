@@ -2399,10 +2399,6 @@ node-pre-gyp@~0.9.0:
     semver "^5.3.0"
     tar "^4"
 
-node-stream-zip@^1.4.2:
-  version "1.7.0"
-  resolved "http://registry.npm.taobao.org/node-stream-zip/download/node-stream-zip-1.7.0.tgz#26f766f6b34be00ba5bbe5d32a810feddb24f779"
-
 node-uuid@~1.4.7:
   version "1.4.8"
   resolved "http://registry.npm.taobao.org/node-uuid/download/node-uuid-1.4.8.tgz#b040eb0923968afabf8d32fb1f17f1167fdab907"
@@ -3260,7 +3256,7 @@ split-string@^3.0.1, split-string@^3.0.2:
   dependencies:
     extend-shallow "^3.0.0"
 
-sqlite3@4.0.0, sqlite3@^4.0.0:
+sqlite3@4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/sqlite3/-/sqlite3-4.0.0.tgz#cc0e093ab51873f50d9dfc4126fcbef15d486570"
   dependencies:
