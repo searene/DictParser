@@ -1,4 +1,3 @@
-import { WordCandidate } from './index';
 import {EventEmitter} from 'events';
 import {AccentConverter} from './AccentConverter';
 import {DictMap, DictionaryFinder, IDictionary, IndexMap, WordForms} from './DictionaryFinder';
@@ -12,6 +11,7 @@ import {
 } from "./ResourceManager";
 import { registerResourceManagers } from './DictionaryRegister';
 import { DSLResourceManager } from './dictionaries/dsl/DSLResourceManager';
+import { WordDefinition } from "./model/WordDefinition";
 
 export class DictParser extends EventEmitter {
 
@@ -24,7 +24,7 @@ export class DictParser extends EventEmitter {
 
   private _wordformsMap: { [lang: string]: WordForms } = {};
   private _resourcePath: string;
-  private _wordMap: Map<string, Set<string>>;
+  private _vocabulary: Set<string>;
 
   constructor(jsonDbPath: string = JSON_DB_PATH,
               sqliteDbPath: string = SQLITE_DB_PATH,
@@ -41,14 +41,8 @@ export class DictParser extends EventEmitter {
   }
 
   public init = async (): Promise<void> => {
-    await this.buildWordList();
-  };
-
-  public buildWordList = async (dictMapList?: DictMap[]) => {
-    if(dictMapList === undefined) {
-      this._dictMapList = await this.readDictMapListFromFile();
-    }
-    this._wordMap = this.getWordMap(this._dictMapList);
+    this._dictMapList = await this.loadDictMapList();
+    this._vocabulary = await this.loadVocabulary(this._dictMapList);
   };
 
   public async scan(scanFolder: string | string[]): Promise<DictMap[]> {
@@ -60,7 +54,6 @@ export class DictParser extends EventEmitter {
       this._jsonDbPath,
       this._sqliteDbPath,
       this._wordFormsFolder);
-    await this.buildWordList(this._dictMapList);
     return this._dictMapList;
   }
 
@@ -72,27 +65,17 @@ export class DictParser extends EventEmitter {
     const result: Set<string> = new Set<string>();
     input = this.normalize(input);
 
-    if(input === '') {
+    if (input === '') {
       return [];
     }
 
     // first add the input word if it exists in dictionaries
-    if(this._wordMap.has(input)) {
-      this._wordMap.get(input)!.forEach(originalWord => {
-        result.add(originalWord);
-      });
+    if (this._vocabulary.has(input)) {
+      result.add(input);
     }
 
     // check other candidates
-    for(const normalizedWord of Array.from(this._wordMap.keys())) {
-        if(normalizedWord.startsWith(input)) {
-          const originalWords = this._wordMap.get(normalizedWord);
-          originalWords!.forEach((w: string) => result.add(w));
-          if (result.size >= resultCount) {
-            break;
-          }
-        }
-    }
+    this.addSimilarWords(input, this._vocabulary, resultCount, result);
     return Array.from(result).slice(0, resultCount);
   }
 
@@ -111,13 +94,13 @@ export class DictParser extends EventEmitter {
         continue;
       }
       const dictionary = this._dictionaries.get(dictMap.dict.dictType);
-      if (dictionary == undefined) {
+      if (dictionary === undefined) {
         continue;
       }
       const wordTree: WordTree = await dictionary.getWordTree(dictMap, wordPosition);
       // const resourceManager = getResourceManagerByDictType(dictMap.dict.dictType);
       const html: string = await dictionary.getHTML(dictMap, wordPosition, this._sqliteDbPath);
-      const dictName = dictMap.meta.NAME;
+      // const dictName = dictMap.meta.NAME;
       wordDefinitionList.push({
         word,
         wordTree,
@@ -129,8 +112,8 @@ export class DictParser extends EventEmitter {
   }
 
   public async readDictMapListFromFile(): Promise<DictMap[]> {
-    if(await fse.pathExists(this._jsonDbPath)) {
-      const dbContents = await fse.readFile(this._jsonDbPath, {encoding: 'utf8'});
+    if (await fse.pathExists(this._jsonDbPath)) {
+      const dbContents = await fse.readFile(this._jsonDbPath, { encoding: 'utf8' });
       const dictMapList = JSON.parse(dbContents) as DictMap[];
       return dictMapList;
     } else {
@@ -149,36 +132,34 @@ export class DictParser extends EventEmitter {
     }
     return normalizedWord.trim();
   }
-  private getWordMap = (dictMapList: DictMap[]): Map<string, Set<string>> => {
-    // normalized words => original words
-    const wordMap = new Map<string, Set<string>>();
-    for(const dictMap of dictMapList) {
-      for(const words of [dictMap.originalWords, dictMap.transformedWords]) {
-        for(const word in words) {
-          const normalizedWord = this.normalize(word);
-          if(wordMap.has(normalizedWord)) {
-            wordMap.get(normalizedWord)!.add(word);
-          } else {
-            const originalWordSet = new Set<string>();
-            originalWordSet.add(word);
-            wordMap.set(normalizedWord, originalWordSet);
-          }
+
+  private loadDictMapList = async () => {
+    return await this.readDictMapListFromFile();
+  }
+  private loadVocabulary = (dictMapList: DictMap[]) => {
+    const vocabulary = new Set<string>();
+    for (let dictMap of dictMapList) {
+      this.loadAllWordsFromIndexMap(dictMap.originalWords, vocabulary);
+      this.loadAllWordsFromIndexMap(dictMap.transformedWords, vocabulary);
+    }
+    return vocabulary;
+  }
+  private loadAllWordsFromIndexMap = (indexMap: IndexMap, vocabulary: Set<string>) => {
+    for (let word in indexMap) {
+      if (indexMap.hasOwnProperty(word)) {
+        vocabulary.add(word);
+      }
+    }
+  }
+  private addSimilarWords = (input: string, vocabulary: Set<string>, resultCount: number, result: Set<string>) => {
+    for (let word of Array.from(vocabulary.values())) {
+      if (word.startsWith(input)) {
+        result.add(word);
+        if (result.size > resultCount) {
+          return;
         }
       }
     }
-    return wordMap;
   }
-
 }
 
-export interface WordDefinition {
-  word: string;
-  wordTree: WordTree;
-  html: string;
-  dict: IDictionary,
-}
-
-export interface WordCandidate {
-  word: string,
-  dict: IDictionary
-}

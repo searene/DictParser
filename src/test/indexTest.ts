@@ -15,6 +15,7 @@ describe('Test DictParser', () => {
 
   it("#scanAndGetWordDefinition", async () => {
     const dictParser = new DictParser(dbPath);
+    await dictParser.init();
     dictParser.on('name', (dictionaryName: string) => {
       console.log(`scanning ${dictionaryName}...`);
     });
@@ -33,7 +34,8 @@ describe('Test DictParser', () => {
 
   it("#guessWord", async () => {
     const dictParser = new DictParser(dbPath);
-    await dictParser.scan([scanFolder1, scanFolder2]);
+    await dictParser.init();
+    // await dictParser.scan([scanFolder2]);
     const wordCandidates = await dictParser.getWordCandidates('trivi');
     console.log(wordCandidates);
   });
