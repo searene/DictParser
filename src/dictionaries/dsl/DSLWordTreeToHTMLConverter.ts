@@ -151,13 +151,9 @@ export class DSLWordTreeToHTMLConverter {
     }
     return html;
   }
-  private getPathToRefWord(refWord: string): string {
-    let encodedRefWord: string = encodeURIComponent(refWord);
-    return `dictp://lookup:${encodedRefWord}`;
-  }
-  private getPathToSoundImg(): string {
+  private getPathToSoundImg = (): string => {
     return path.join(ResourceManager.commonResourceDirectory, "sound.png");
-  }
+  };
   private base64Encode = async (filePath: string): Promise<string> => {
     const bitmap = await fse.readFile(filePath);
     return new Buffer(bitmap).toString("base64");

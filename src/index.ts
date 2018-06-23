@@ -112,7 +112,7 @@ export class DictParser extends EventEmitter {
         continue;
       }
       let wordTree: WordTree = await dictionary.getWordTree(dictMap, wordPosition);
-      const resourceManager = getResourceManagerByDictType(dictMap.dict.dictType);
+      // const resourceManager = getResourceManagerByDictType(dictMap.dict.dictType);
       let html: string = await dictionary.getHTML(dictMap, wordPosition, this._sqliteDbPath);
       let dictName = dictMap.meta['NAME'];
       wordDefinitionList.push({

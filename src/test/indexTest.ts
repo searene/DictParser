@@ -13,17 +13,18 @@ describe('Test DictParser', () => {
 
   let scanFolder1 = path.join(TEST_RESOURCE_PATH, 'scan');
   let scanFolder2 = path.join('/home/searene/Public/complete');
-  let dbPath = path.join(TEST_RESOURCE_PATH, 'dictParser.db');
+  // let dbPath = path.join(TEST_RESOURCE_PATH, 'dictParser.db');
+  const dbPath = "/tmp/dict-parser.db";
 
-  it("#getWordDefinition", async () => {
+  it("#scanAndGetWordDefinition", async () => {
     let dictParser = new DictParser(dbPath);
     dictParser.on('name', (dictionaryName: string) => {
       logger.info(`scanning ${dictionaryName}...`);
     });
     await dictParser.scan([scanFolder2]);
     // let wordDefinitionList = await dictParser.getWordDefinition('trivial card');
-    let wordDefinitionList = await dictParser.getWordDefinitions('whose');
-    await fse.writeFile("/tmp/index.html", wordDefinitionList[0].html);
+    let wordDefinitionList = await dictParser.getWordDefinitions('long');
+    console.log(wordDefinitionList);
   });
 
   it("#guessWord", async () => {
@@ -31,5 +32,11 @@ describe('Test DictParser', () => {
     await dictParser.scan([scanFolder1, scanFolder2]);
     let wordCandidates = await dictParser.getWordCandidates('trivi');
     console.log(wordCandidates);
+  });
+
+  it("#getWordDefinition", async () => {
+    let dictParser = new DictParser(dbPath);
+    let wordDefinitionList = await dictParser.getWordDefinitions('long');
+    console.log(wordDefinitionList);
   });
 });
