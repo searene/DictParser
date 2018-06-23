@@ -9,10 +9,10 @@ export class DSLResourceManager extends ResourceManager {
   private RESOURCE_HOLDER_TYPE_DIR = 'dir';
   private RESOURCE_HOLDER_TYPE_ZIP = 'zip';
 
-  getResourceType(node: Node): string {
+  public getResourceType(node: Node): string {
     if (this.isResourceNode(node)) {
-      let fileName = node.children[0].contents;
-      let ext = path.extname(fileName).toLowerCase();
+      const fileName = node.children[0].contents;
+      const ext = path.extname(fileName).toLowerCase();
       if (this.audioExtensions.indexOf(ext) > -1) {
         return this.ResourceType.AUDIO;
       } else if (this.imageExtensions.indexOf(ext) > -1) {
@@ -24,17 +24,17 @@ export class DSLResourceManager extends ResourceManager {
       throw new Error("Not a resourceHolder node");
     }
   }
-  isResourceNode(node: Node): boolean {
+  public isResourceNode(node: Node): boolean {
     return node.name == 's' && node.children.length == 1 && node.children[0].type == Node.TEXT_NODE;
   }
-  getResourceName(node: Node): string {
+  public getResourceName(node: Node): string {
     if (this.isResourceNode(node)) {
       return node.children[0].contents;
     } else {
       throw new Error("Not a resourceHolder node");
     }
   }
-  getResourceHolderType = async (resourceHolderPath: string): Promise<string> => {
+  public getResourceHolderType = async (resourceHolderPath: string): Promise<string> => {
     const stat = await fse.lstat(resourceHolderPath);
     if(stat.isDirectory()) {
       return this.RESOURCE_HOLDER_TYPE_DIR;

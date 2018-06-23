@@ -1,10 +1,10 @@
 import { Option } from 'ts-option';
 export class AccentConverter {
-    static removeAccent(c: string): string {
-        let normalChar: string = AccentConverter.accentMap[c];
+    public static removeAccent(c: string): string {
+        const normalChar: string = AccentConverter.accentMap[c];
         return normalChar != undefined ? normalChar : c;
     }
-    static accentMap: { [accent: string]: string } = {
+    public static accentMap: { [accent: string]: string } = {
         "Á":"A",
         "Ă":"A",
         "Ắ":"A",

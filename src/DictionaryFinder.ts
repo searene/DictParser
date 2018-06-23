@@ -20,7 +20,7 @@ export class DictionaryFinder extends EventEmitter {
     super();
 
     // emit dictionary name being scanned
-    for (let [dictName, dictionary] of Array.from(
+    for (const [dictName, dictionary] of Array.from(
       DictionaryFinder._dictionaries.entries()
     )) {
       dictionary.dictionaryScanProgressReporter.on(
@@ -40,8 +40,8 @@ export class DictionaryFinder extends EventEmitter {
 
   private _dictMapList: DictMap[];
 
-  static register(dictName: string, Dictionary: new () => Dictionary): void {
-    let dictionary = new Dictionary();
+  public static register(dictName: string, Dictionary: new () => Dictionary): void {
+    const dictionary = new Dictionary();
     this._dictionaries.set(dictName, new Dictionary());
   }
 
@@ -49,29 +49,29 @@ export class DictionaryFinder extends EventEmitter {
    * dictionary definition files(e.g. dz, dsl), add it along with
    * its {@code Dictionary} and resourceHolder to the result array.
    */
-  async scan(
+  public async scan(
     dirs: string | string[],
     jsonDbPath: string,
     sqliteDbPath: string,
     wordFormsFolder: string
   ): Promise<DictMap[]> {
     // DictMap without resourceHolder
-    let dictMapList: DictMap[] = [];
+    const dictMapList: DictMap[] = [];
     let files: FileWithStats[] = [];
     for (const dir of Array.isArray(dirs) ? dirs : [dirs]) {
       files = files.concat(await readdirRecursivelyWithStat(dir));
     }
-    for (let file of files) {
-      if (file.stat.isDirectory()) continue;
+    for (const file of files) {
+      if (file.stat.isDirectory()) { continue; }
 
-      let ext = path.extname(file.filePath);
-      for (let [dictName, dictionary] of Array.from(
+      const ext = path.extname(file.filePath);
+      for (const [dictName, dictionary] of Array.from(
         DictionaryFinder._dictionaries.entries()
       )) {
         // we find a dictionary
         if (dictionary.dictionarySuffixes.indexOf(ext) > -1) {
           // get resourceHolder
-          let resource: Option<string> = await this.getResource(
+          const resource: Option<string> = await this.getResource(
             file.filePath,
             files.map(file => file.filePath),
             dictionary.resourceHolderSuffixes,
@@ -79,7 +79,7 @@ export class DictionaryFinder extends EventEmitter {
           );
 
           // build index
-          let dictStats: DictionaryStats = await dictionary.getDictionaryStats(
+          const dictStats: DictionaryStats = await dictionary.getDictionaryStats(
             file.filePath
           );
 
@@ -107,7 +107,7 @@ export class DictionaryFinder extends EventEmitter {
     });
 
     // build index for resource holders
-    for (let dictMap of dictMapList) {
+    for (const dictMap of dictMapList) {
       await this.buildResourceIndex(dictMap.dict.resourceHolder, sqliteDbPath);
     }
 
@@ -120,25 +120,25 @@ export class DictionaryFinder extends EventEmitter {
     wordFormsFolder: string
   ): Promise<void> {
     // word forms
-    let wordFormsFiles = await fse.readdir(wordFormsFolder);
+    const wordFormsFiles = await fse.readdir(wordFormsFolder);
     for (let i = 0; i < wordFormsFiles.length; i++) {
-      let wordFormsFile = path.join(wordFormsFolder, wordFormsFiles[i]);
+      const wordFormsFile = path.join(wordFormsFolder, wordFormsFiles[i]);
       if (!(await fse.pathExists(wordFormsFile))) {
         console.log(`${wordFormsFile} doesn't exist, skip`);
         continue;
       }
-      let lineReader = ReadLine.createInterface({
+      const lineReader = ReadLine.createInterface({
         input: fse.createReadStream(wordFormsFile)
       });
       lineReader.on("line", line => {
-        let words: string[] = line.split(/[\s,:]+/);
+        const words: string[] = line.split(/[\s,:]+/);
 
-        let originalWord = words[0];
-        let transformedWords = words.slice(1);
+        const originalWord = words[0];
+        const transformedWords = words.slice(1);
 
-        for (let transformedWord of transformedWords) {
+        for (const transformedWord of transformedWords) {
           // check each dictionary
-          for (let dictMap of dictMapList) {
+          for (const dictMap of dictMapList) {
             if (
               dictMap.originalWords.hasOwnProperty(originalWord) &&
               !dictMap.transformedWords.hasOwnProperty(transformedWord)
@@ -185,28 +185,29 @@ export class DictionaryFinder extends EventEmitter {
     resourceHolderSuffixes: string[],
     resourceFileSuffixes: string[]
   ): Promise<Option<string>> {
-    let candidates: { file: string; priority: number }[] = [];
+    const candidates: Array<{ file: string; priority: number }> = [];
 
-    let dictFileBaseName: string = path.basename(dictFilePath).split(".")[0];
-    let baseDir: string = path.dirname(dictFilePath);
+    const dictFileBaseName: string = path.basename(dictFilePath).split(".")[0];
+    const baseDir: string = path.dirname(dictFilePath);
 
-    for (let resourceFile of resourceFiles) {
-      if (resourceFile == dictFilePath) continue;
+    for (const resourceFile of resourceFiles) {
+      if (resourceFile == dictFilePath) { continue; }
 
-      let isDir: boolean = (await fse.stat(resourceFile)).isDirectory();
-      let isSameDir: boolean =
+      const isDir: boolean = (await fse.stat(resourceFile)).isDirectory();
+      const isSameDir: boolean =
         path.dirname(dictFilePath) == path.dirname(resourceFile);
-      let isSameBaseName: boolean =
+      const isSameBaseName: boolean =
         path.basename(resourceFile).split(".")[0] == dictFileBaseName;
-      let isResourceHolder: boolean =
+      const isResourceHolder: boolean =
         !isDir &&
         resourceHolderSuffixes.indexOf(path.extname(resourceFile)) > -1;
-      let isResourceFile: boolean = await (async (): Promise<boolean> => {
-        if (!isDir) return false;
-        let files: string[] = await fse.readdir(resourceFile);
-        for (let file of files) {
-          if (resourceFileSuffixes.indexOf(path.extname(file)) > -1)
+      const isResourceFile: boolean = await (async (): Promise<boolean> => {
+        if (!isDir) { return false; }
+        const files: string[] = await fse.readdir(resourceFile);
+        for (const file of files) {
+          if (resourceFileSuffixes.indexOf(path.extname(file)) > -1) {
             return true;
+          }
         }
         return false;
       })();

@@ -21,26 +21,26 @@ export class DSLDictionary extends Dictionary {
 
   protected _dictionarySuffixes: string[] = ['.dsl', '.dz'];
 
-  async getWordTree(dictMap: DictMap, wordPosition: WordPosition): Promise<WordTree> {
-    let input: string = await this.getFileContents(dictMap.dict.dictPath, wordPosition);
-    let stateMachine: StateMachine = new DSLStateMachine(input);
+  public async getWordTree(dictMap: DictMap, wordPosition: WordPosition): Promise<WordTree> {
+    const input: string = await this.getFileContents(dictMap.dict.dictPath, wordPosition);
+    const stateMachine: StateMachine = new DSLStateMachine(input);
     return stateMachine.run();
   }
 
-  async getWordTreeHTML(dictMap: DictMap, wordPosition: WordPosition, sqliteDbPath: string): Promise<WordTreeHTML> {
-    let wordTree: WordTree = await this.getWordTree(dictMap, wordPosition);
+  public async getWordTreeHTML(dictMap: DictMap, wordPosition: WordPosition, sqliteDbPath: string): Promise<WordTreeHTML> {
+    const wordTree: WordTree = await this.getWordTree(dictMap, wordPosition);
     return await new DSLWordTreeToHTMLConverter(dictMap, sqliteDbPath).convertWordTreeToHTML(wordTree);
   }
 
-  async getDictionaryStats(dictFile: string): Promise<DictionaryStats> {
+  public async getDictionaryStats(dictFile: string): Promise<DictionaryStats> {
     return new Promise<DictionaryStats>((resolve, reject) => {
-      let originalWords: IndexMap = {};
-      let transformedWords: IndexMap = {};
-      let meta: Meta = {};
+      const originalWords: IndexMap = {};
+      const transformedWords: IndexMap = {};
+      const meta: Meta = {};
       let isInDefinition = false;
       let isDictionaryReported = false;
 
-      let lineReader = new LineReader(dictFile);
+      const lineReader = new LineReader(dictFile);
       let previousLine: string;
 
       // used to track the bytes of the current entry + definition block
@@ -50,14 +50,14 @@ export class DSLDictionary extends Dictionary {
       let entryList: string[] = [];
 
       lineReader.on('line', (lineStats: LineStats) => {
-        let line = lineStats.line;
+        const line = lineStats.line;
 
         if (!isInDefinition && line.startsWith('#')) {
           // meta data
-          let header: string[] = line.substring(1).split(/\s(.+)/);
+          const header: string[] = line.substring(1).split(/\s(.+)/);
 
-          let key = header[0];
-          let value = header[1].substring(1, header[1].length - 1);
+          const key = header[0];
+          const value = header[1].substring(1, header[1].length - 1);
           meta[key] = value;
 
           if (key == 'NAME' && !isDictionaryReported) {
@@ -75,7 +75,7 @@ export class DSLDictionary extends Dictionary {
             entryList = [];
           }
           wordTreeLength += lineStats.len;
-          let word: string = this.getIndexableWord(lineStats.line.trim());
+          const word: string = this.getIndexableWord(lineStats.line.trim());
           entryList.push(word);
           originalWords[word] = { pos: lineStats.pos, len: -1 };
 
@@ -92,7 +92,7 @@ export class DSLDictionary extends Dictionary {
         previousLine = line;
       });
       lineReader.on('end', () => {
-        resolve({ meta: meta, indexMap: originalWords });
+        resolve({ meta, indexMap: originalWords });
       });
       lineReader.process();
     });
@@ -127,7 +127,7 @@ export class DSLDictionary extends Dictionary {
 
   private async getBufferReader(dictFile: string): Promise<BufferReader> {
     let bufferReader: BufferReader;
-    let ext = path.extname(dictFile);
+    const ext = path.extname(dictFile);
     if (ext == '.dsl') {
       bufferReader = new SimpleBufferReader();
     } else if (ext == '.dz') {
@@ -139,10 +139,10 @@ export class DSLDictionary extends Dictionary {
     return bufferReader;
   }
   private async getFileContents(dictFile: string, wordPosition: WordPosition): Promise<string> {
-    let bufferReader: BufferReader = await this.getBufferReader(dictFile);
+    const bufferReader: BufferReader = await this.getBufferReader(dictFile);
 
-    let buffer: Buffer = await bufferReader.read(wordPosition.pos, wordPosition.len);
-    let encoding = (await bufferReader.getEncodingStat()).encoding;
+    const buffer: Buffer = await bufferReader.read(wordPosition.pos, wordPosition.len);
+    const encoding = (await bufferReader.getEncodingStat()).encoding;
     await bufferReader.close();
 
     return buffer.toString(encoding);

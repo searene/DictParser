@@ -6,13 +6,13 @@ import * as fse from 'fs-extra';
 
 describe('DictZipParser test', () => {
 
-    let simpleDictFile = path.join(TEST_RESOURCE_PATH, 'dz/simple_dict_file.txt.dz');
+    const simpleDictFile = path.join(TEST_RESOURCE_PATH, 'dz/simple_dict_file.txt.dz');
 
     it("#parse", async () => {
-        let fd: number = await fse.open("/home/searene/Public/dz/longman.dsl.dz", 'r');
-        let dictZipParser = new DictZipParser(fd);
-        let parsedBuffer = await dictZipParser.parse(120000, 10000);
-        let parsedString = parsedBuffer.toString('utf16le');
+        const fd: number = await fse.open("/home/searene/Public/dz/longman.dsl.dz", 'r');
+        const dictZipParser = new DictZipParser(fd);
+        const parsedBuffer = await dictZipParser.parse(120000, 10000);
+        const parsedString = parsedBuffer.toString('utf16le');
         console.log(parsedString);
     });
 });

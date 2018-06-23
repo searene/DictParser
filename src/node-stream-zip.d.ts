@@ -4,9 +4,9 @@ declare interface StreamZipOptions {
 }
 declare class StreamZip {
   constructor(streamZipOptions: StreamZipOptions);
-  on(event: string, callback: Function): void;
-  stream(fileName: string, callback: Function): void;
-  close(): void;
+  public on(event: string, callback: Function): void;
+  public stream(fileName: string, callback: Function): void;
+  public close(): void;
 }
 declare module 'node-stream-zip' {
   export = StreamZip

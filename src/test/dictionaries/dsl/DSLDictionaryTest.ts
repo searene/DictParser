@@ -7,16 +7,16 @@ import * as path from 'path';
 describe('DSLDictionaryTest', () => {
 
     it("#getIndexableWord", () => {
-        let word = "abc{de}f\\{g\\}h";
-        let dictionary: Dictionary = new DSLDictionary();
-        let indexableWord = (dictionary as any).getIndexableWord(word);
+        const word = "abc{de}f\\{g\\}h";
+        const dictionary: Dictionary = new DSLDictionary();
+        const indexableWord = (dictionary as any).getIndexableWord(word);
 
         assert.equal(indexableWord, "abcf{g}h");
     });
     it("#getDictionaryStats", async () => {
-        let dzFile: string = path.join(TEST_RESOURCE_PATH, 'dsl/sample.dsl');
-        let dictionary: Dictionary = new DSLDictionary();
-        let dictionaryStats: DictionaryStats = await dictionary.getDictionaryStats(dzFile);
+        const dzFile: string = path.join(TEST_RESOURCE_PATH, 'dsl/sample.dsl');
+        const dictionary: Dictionary = new DSLDictionary();
+        const dictionaryStats: DictionaryStats = await dictionary.getDictionaryStats(dzFile);
 
         assert.deepEqual(dictionaryStats, {
             meta: {

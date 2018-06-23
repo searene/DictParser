@@ -16,8 +16,8 @@ describe("Test DSLStateMachine", () => {
 		let typicalEntryContents: string;
 
 		before(async () => {
-			let dslFile: string = path.join(TEST_RESOURCE_PATH, 'dsl/sample.dsl');
-			let encoding = (await getEncodingInFile(dslFile));
+			const dslFile: string = path.join(TEST_RESOURCE_PATH, 'dsl/sample.dsl');
+			const encoding = (await getEncodingInFile(dslFile));
 			simpleEntryContents = await readFile(dslFile, encoding.encoding, 5, 6);
 			mediumEntryContents = await readFile(dslFile, encoding.encoding, 214, 216);
 			complexEntryContents = await readFile(dslFile, encoding.encoding, 8, 190);
@@ -26,41 +26,41 @@ describe("Test DSLStateMachine", () => {
 
         it("Simple entry test", () => {
 
-            let stateMachine: StateMachine = new DSLStateMachine(simpleEntryContents);
-            let wordTree: WordTree = stateMachine.run();
+            const stateMachine: StateMachine = new DSLStateMachine(simpleEntryContents);
+            const wordTree: WordTree = stateMachine.run();
 
-			let s = wordTree.toString();
+			const s = wordTree.toString();
         });
         it("Medium entry test", () => {
 
-            let stateMachine: StateMachine = new DSLStateMachine(mediumEntryContents);
-            let wordTree: WordTree = stateMachine.run();
+            const stateMachine: StateMachine = new DSLStateMachine(mediumEntryContents);
+            const wordTree: WordTree = stateMachine.run();
 
-			let s = wordTree.toString();
+			const s = wordTree.toString();
 
         });
         it("Complex entry test", () => {
 
-            let stateMachine: StateMachine = new DSLStateMachine(complexEntryContents);
-            let wordTree: WordTree = stateMachine.run();
-			let s = wordTree.toString();
+            const stateMachine: StateMachine = new DSLStateMachine(complexEntryContents);
+            const wordTree: WordTree = stateMachine.run();
+			const s = wordTree.toString();
 
         });
         it("Typical entry test", () => {
 
-            let stateMachine: StateMachine = new DSLStateMachine(typicalEntryContents);
-            let wordTree: WordTree = stateMachine.run();
+            const stateMachine: StateMachine = new DSLStateMachine(typicalEntryContents);
+            const wordTree: WordTree = stateMachine.run();
 
         });
     });
 });
 
 async function readFile(filePath: string, encoding: string, startLine: number, endLine: number): Promise<string> {
-	let fileContents: string = await fse.readFile(filePath, {encoding: encoding});
+	let fileContents: string = await fse.readFile(filePath, {encoding});
 
 	// replace \r\n with \n so we won't deal with \r any more
 	fileContents = fileContents.replace(/\r?\n|\r/g, "\n");
 
-	let lines = fileContents.split(/\n/);
+	const lines = fileContents.split(/\n/);
 	return lines.slice(startLine - 1, endLine).join("\n");
 }

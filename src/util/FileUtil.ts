@@ -8,11 +8,11 @@ export interface FileWithStats {
 }
 
 async function readdirRecursivelyInternal(dir: string): Promise<string[]> {
-    let stat = await fse.stat(dir);
-    let files: string[] = [];
+    const stat = await fse.stat(dir);
+    const files: string[] = [];
     if(stat.isDirectory()) {
         files.push(dir);
-        let subFiles: string[] = await fse.readdir(dir);
+        const subFiles: string[] = await fse.readdir(dir);
         for(let subFile of subFiles) {
             subFile = path.join(dir, subFile);
             (await readdirRecursivelyInternal(subFile)).forEach((file) => {
@@ -25,8 +25,8 @@ async function readdirRecursivelyInternal(dir: string): Promise<string[]> {
     return files;
 }
 async function readdirRecursively(dir: string): Promise<string[]> {
-    let files: string[] = [];
-    let subFiles: string[] = await fse.readdir(dir);
+    const files: string[] = [];
+    const subFiles: string[] = await fse.readdir(dir);
     for(let subFile of subFiles) {
         subFile = path.join(dir, subFile);
         (await readdirRecursivelyInternal(subFile)).forEach(file => files.push(file));
@@ -35,11 +35,11 @@ async function readdirRecursively(dir: string): Promise<string[]> {
 }
 
 export async function readdirRecursivelyWithStat(dir: string): Promise<FileWithStats[]> {
-    let result: {filePath: string, stat: fse.Stats}[] = [];
-    let files: string[] = await readdirRecursively(dir);
-    for(let file of files) {
-        let stat = await fse.stat(file);
-        result.push({filePath: file, stat: stat});
+    const result: Array<{filePath: string, stat: fse.Stats}> = [];
+    const files: string[] = await readdirRecursively(dir);
+    for(const file of files) {
+        const stat = await fse.stat(file);
+        result.push({filePath: file, stat});
     }
     return result;
 }

@@ -6,12 +6,12 @@ import * as path from 'path';
 
 describe('LineReaderTest', () => {
 
-    let dslFile = path.join(TEST_RESOURCE_PATH, 'simpleDSL/simple.dsl');
-    let dzFile = path.join(TEST_RESOURCE_PATH, 'simpleDSL/simple.dsl.dz');
+    const dslFile = path.join(TEST_RESOURCE_PATH, 'simpleDSL/simple.dsl');
+    const dzFile = path.join(TEST_RESOURCE_PATH, 'simpleDSL/simple.dsl.dz');
 
     it("#run with dsl", (done) => {
-        let result: LineStats[] = [];
-        let simpleLineReader = new LineReader(dslFile, 10);
+        const result: LineStats[] = [];
+        const simpleLineReader = new LineReader(dslFile, 10);
         simpleLineReader.on('line', (data: LineStats) => {
             result.push(data);
         });
@@ -30,8 +30,8 @@ describe('LineReaderTest', () => {
     });
 
     it("#run with dz", (done) => {
-        let result: LineStats[] = [];
-        let dzLineReader = new LineReader(dzFile, 3);
+        const result: LineStats[] = [];
+        const dzLineReader = new LineReader(dzFile, 3);
         dzLineReader.on('line', (data: LineStats) => {
             result.push(data);
         });

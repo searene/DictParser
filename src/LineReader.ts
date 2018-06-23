@@ -22,7 +22,7 @@ export class LineReader extends EventEmitter {
         this._len = len;
     }
 
-    process() {
+    public process() {
         process.nextTick(() => {
             this.run();
         });
@@ -30,16 +30,16 @@ export class LineReader extends EventEmitter {
 
     private async run(): Promise<void> {
 
-        let ext: string = path.extname(this._filePath);
-        let bufferReader = LineReader._bufferReaders.get(ext);
+        const ext: string = path.extname(this._filePath);
+        const bufferReader = LineReader._bufferReaders.get(ext);
         if(bufferReader == undefined) {
             throw new Error(`No BufferReader is not registered for ${ext}.`);
         }
 
         await bufferReader.open(this._filePath);
 
-        let encodingStat = await bufferReader.getEncodingStat();
-        let encoding: string = encodingStat.encoding;
+        const encodingStat = await bufferReader.getEncodingStat();
+        const encoding: string = encodingStat.encoding;
 
         let dataProcessTotally: number = encodingStat.posAfterBom;
 
@@ -76,7 +76,7 @@ export class LineReader extends EventEmitter {
     }
 
     private emitLines(buffer: Buffer, encoding: string, previousBytesRead: number): number {
-        let s = buffer.toString(encoding);
+        const s = buffer.toString(encoding);
         let pos = 0;
         let line: string = "";
         for(let i = 0; i < s.length; i++) {
@@ -84,19 +84,19 @@ export class LineReader extends EventEmitter {
             if(s[i] == '\r' && i + 1 < s.length && s[i + 1] == '\n') {
                 i++;
                 line = line + '\n';
-                this.emit('line', <LineStats> {
-                    line: line, 
+                this.emit('line', {
+                    line, 
                     pos: pos + previousBytesRead,
                     len: Buffer.from(line, encoding).length
-                });
+                } as LineStats);
                 pos += Buffer.from(line, encoding).length;
                 line = "";
             } else if((s[i] == '\r' && i + 1 < s.length && s[i + 1] != '\n') || s[i] == '\n') {
-                this.emit('line', <LineStats> {
-                    line: line, 
+                this.emit('line', {
+                    line, 
                     pos: pos + previousBytesRead,
                     len: Buffer.from(line, encoding).length
-                });
+                } as LineStats);
                 pos += Buffer.from(line, encoding).length;
                 line = "";
             }
@@ -104,7 +104,7 @@ export class LineReader extends EventEmitter {
         return pos;
     }
 
-    static register(ext: string, BufferReaderConstructor: new () => BufferReader): void {
+    public static register(ext: string, BufferReaderConstructor: new () => BufferReader): void {
         this._bufferReaders.set(ext, new BufferReaderConstructor());
     }
 }

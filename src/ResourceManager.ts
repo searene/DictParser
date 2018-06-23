@@ -1,10 +1,10 @@
 import { WordTree } from './Tree';
 
 export abstract class ResourceManager {
-  static commonResourceDirectory: string;
-  audioExtensions = [".wav", ".mp3"];
-  imageExtensions = [".jpg", ".png"];
-  ResourceType = {
+  public static commonResourceDirectory: string;
+  public audioExtensions = [".wav", ".mp3"];
+  public imageExtensions = [".jpg", ".png"];
+  public ResourceType = {
     AUDIO: 'AUDIO',
     IMAGE: 'IMAGE',
     UNKNOWN: 'UNKNOWN'
@@ -16,7 +16,7 @@ export interface ResourceContents {
   resourceBuffer: Buffer
 }
 
-let resourceManagers: { [index: string]: ResourceManager } = {};
+const resourceManagers: { [index: string]: ResourceManager } = {};
 
 export function registerResourceManager(dictType: string, resourceManager: ResourceManager) {
   resourceManagers[dictType] = resourceManager;

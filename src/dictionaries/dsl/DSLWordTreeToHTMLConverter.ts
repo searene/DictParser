@@ -26,7 +26,7 @@ export class DSLWordTreeToHTMLConverter {
     this._sqliteDbPath = sqliteDbPath;
   }
 
-  async convertWordTreeToHTML(wordTree: WordTree): Promise<WordTreeHTML> {
+  public async convertWordTreeToHTML(wordTree: WordTree): Promise<WordTreeHTML> {
     return {
       entry: this.convertEntryToHTML(wordTree.entry),
       definition: await this.convertRootNodeToHTML(wordTree.root)
@@ -43,8 +43,8 @@ export class DSLWordTreeToHTMLConverter {
 
   private async convertNodesToHTML(nodes: Node[]): Promise<string> {
     let html = "";
-    for (let node of nodes) {
-      let htmlOfChildren: string = await this.convertNodesToHTML(node.children);
+    for (const node of nodes) {
+      const htmlOfChildren: string = await this.convertNodesToHTML(node.children);
       switch (node.type) {
         case Node.ROOT_NODE:
           html += `<div class="dsl-definition">${htmlOfChildren}</div>`;
@@ -116,17 +116,17 @@ export class DSLWordTreeToHTMLConverter {
               node
             )}"/>`;
           } else if (node.name == "'") {
-            let stressedText =
+            const stressedText =
               node.children.length > 0 ? node.children[0].contents : "";
             html += `<span class="dsl-stress"><span class="dsl-stress-without-accent">stressedText</span><span class="dsl-stress-with-accent">${AccentConverter.removeAccent(
               stressedText
             )}</span></span>`;
           } else if (node.name == "url") {
-            let url: string =
+            const url: string =
               node.children.length == 1 ? node.children[0].contents : "";
             html += `<a class="dsl-url" href=${url}>${url}</a>`;
           } else if (node.name == "c") {
-            let color: string =
+            const color: string =
               node.properties.size > 0
                 ? node.properties.entries().next().value[0]
                 : "green";
@@ -136,7 +136,7 @@ export class DSLWordTreeToHTMLConverter {
           }
           break;
         case Node.REF_NODE:
-          let refWord: string = node.contents.replace(/'/g, `\'`);
+          const refWord: string = node.contents.replace(/'/g, `\'`);
           html += `<a class="dsl-ref" href="#" data-ref='${refWord}' onClick="{var button=document.getElementById('refer-word-search-button'); button.innerHTML='${refWord}'; button.click();}">${refWord}</a>`;
           break;
         case Node.TEXT_NODE:

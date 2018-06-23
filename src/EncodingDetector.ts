@@ -29,7 +29,7 @@ export async function getEncodingInBuffer(fileContents: Buffer): Promise<Encodin
     if(fileContents.length < 4) {
         throw new Error("at least 4 bytes are needed");
     }
-    let bom: Buffer = fileContents.slice(0, 4);
+    const bom: Buffer = fileContents.slice(0, 4);
 
     if(bom.equals(Buffer.from("0000FEFF", "hex"))) {
         return {encoding: UTF_32_BE, posAfterBom: 4};
@@ -45,9 +45,9 @@ export async function getEncodingInBuffer(fileContents: Buffer): Promise<Encodin
 }
 
 export async function getEncodingInFile(filePath: string): Promise<EncodingStat> {
-    let fd: number = await fse.open(filePath, 'r');
-    let buffer = Buffer.alloc(4);
-    let bytesRead = (await fse.read(fd, buffer, 0, 4, 0)).bytesRead;
+    const fd: number = await fse.open(filePath, 'r');
+    const buffer = Buffer.alloc(4);
+    const bytesRead = (await fse.read(fd, buffer, 0, 4, 0)).bytesRead;
     if(bytesRead < 4) {
         throw new Error(`at least 4 bytes are required to detect encoding in file ${filePath}`);
     }

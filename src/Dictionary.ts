@@ -24,16 +24,16 @@ export abstract class Dictionary {
   protected _resourceFileSuffixes: string[] = ['.jpg', '.wmv', '.bmp', '.mp3'];
 
   // get meta data and index
-  async abstract getDictionaryStats(dictFile: string): Promise<DictionaryStats>;
+  public async abstract getDictionaryStats(dictFile: string): Promise<DictionaryStats>;
 
   // get the definition of the word, represented by a WordTree
-  async abstract getWordTree(dictMap: DictMap, wordPosition: WordPosition): Promise<WordTree>;
+  public async abstract getWordTree(dictMap: DictMap, wordPosition: WordPosition): Promise<WordTree>;
 
-  async abstract getWordTreeHTML(dictMap: DictMap, wordPosition: WordPosition, sqliteDbPath: string): Promise<WordTreeHTML>;
+  public async abstract getWordTreeHTML(dictMap: DictMap, wordPosition: WordPosition, sqliteDbPath: string): Promise<WordTreeHTML>;
 
-  async getHTML(dictMap: DictMap, wordPosition: WordPosition, sqliteDbPath: string): Promise<string> {
-    let wordTreeHTML: WordTreeHTML = await this.getWordTreeHTML(dictMap, wordPosition, sqliteDbPath);
-    return `<div class="dp-container"><div class="dp-title">${dictMap.meta['NAME']}</div><div class="dp-entry">${wordTreeHTML.entry}</div><div class="dp-definition">${wordTreeHTML.definition}</div></div>`;
+  public async getHTML(dictMap: DictMap, wordPosition: WordPosition, sqliteDbPath: string): Promise<string> {
+    const wordTreeHTML: WordTreeHTML = await this.getWordTreeHTML(dictMap, wordPosition, sqliteDbPath);
+    return `<div class="dp-container"><div class="dp-title">${dictMap.meta.NAME}</div><div class="dp-entry">${wordTreeHTML.entry}</div><div class="dp-definition">${wordTreeHTML.definition}</div></div>`;
   }
 
   // get resourceHolder contents

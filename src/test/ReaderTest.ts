@@ -4,8 +4,8 @@ import {assert} from "chai";
 describe('test Reader', () => {
 
     it("#consumeTo", () => {
-        let reader = new Reader("ab[d");
-        let consumedString = reader.consumeTo('[', false, true);
+        const reader = new Reader("ab[d");
+        const consumedString = reader.consumeTo('[', false, true);
         assert.deepEqual(consumedString, {isFound: true, value: "ab"});
     })
 });

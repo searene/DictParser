@@ -36,12 +36,12 @@ export class DSLStateMachine extends StateMachine {
             return { next: this.states.inEntry };
         },
         inEntry: (param?: any): StateValue => {
-            let currentChar = this._reader.consumeOneChar();
-            if(!currentChar.valid) return { next: this.states.completed };
+            const currentChar = this._reader.consumeOneChar();
+            if(!currentChar.valid) { return { next: this.states.completed }; }
             switch(currentChar.value) {
                 case '\n':
                     this._wordTree.entry = this._currentEntry;
-                    let c = this._reader.consumeOneChar();
+                    const c = this._reader.consumeOneChar();
                     if(c.valid && (c.value == ' ' || c.value == '\t')) {
                         return { next: this.states.defLineStart };
                     } else if(c.valid) {
@@ -49,10 +49,10 @@ export class DSLStateMachine extends StateMachine {
                         // we are in another entry, read on until we
                         // find definition
                         while(true) {
-                            let consumed = this._reader.consumeTo("\n", true, false);
-                            if(!consumed.isFound) return { next: this.states.completed };
+                            const consumed = this._reader.consumeTo("\n", true, false);
+                            if(!consumed.isFound) { return { next: this.states.completed }; }
 
-                            let c = this._reader.consumeOneChar();
+                            const c = this._reader.consumeOneChar();
                             if(!c.valid) {
                                 return { next: this.states.completed };
                             } else if([' ', '\t'].indexOf(c.value) > -1) {
@@ -63,7 +63,7 @@ export class DSLStateMachine extends StateMachine {
                         return { next: this.states.completed };
                     }
                 case '\\':
-                    let escapedChar = this._reader.consumeOneChar();
+                    const escapedChar = this._reader.consumeOneChar();
                     if(escapedChar.valid) {
                         this._currentEntry += escapedChar;
                         return { next: this.states.inEntry };
@@ -78,8 +78,8 @@ export class DSLStateMachine extends StateMachine {
             }
         },
         defLineStart: (param?: any): StateValue => {
-            let currentChar = this._reader.consumeOneChar();
-            if(!currentChar.valid) return { next: this.states.completed };
+            const currentChar = this._reader.consumeOneChar();
+            if(!currentChar.valid) { return { next: this.states.completed }; }
             switch(currentChar.value) {
                 case ' ':
                 case '\t':
@@ -93,8 +93,8 @@ export class DSLStateMachine extends StateMachine {
             }
         },
         inDefinition: (param?: any): StateValue => {
-            let currentChar = this._reader.consumeOneChar();
-            if(!currentChar.valid) return { next: this.states.completed };
+            const currentChar = this._reader.consumeOneChar();
+            if(!currentChar.valid) { return { next: this.states.completed }; }
             switch(currentChar.value) {
                 case '{':
                     return { next: this.states.enterComments, param: this.states.inDefinition };
@@ -104,8 +104,8 @@ export class DSLStateMachine extends StateMachine {
                     if(this._currentNode.type == Node.TEXT_NODE) {
                         this._currentNode = this._currentNode.parent;
                     }
-                    let c = this._reader.peakNextChar();
-                    if(!c.valid) return { next: this.states.completed };
+                    const c = this._reader.peakNextChar();
+                    if(!c.valid) { return { next: this.states.completed }; }
                     if(c.value == '/') {
                         this._reader.consumeOneChar();
                         return { next: this.states.inNodeEnd };
@@ -125,15 +125,15 @@ export class DSLStateMachine extends StateMachine {
         inEscape: (previousFunc?: any): StateValue => {
             this.assertFunc(previousFunc);
             previousFunc = previousFunc as Function;
-            let currentChar = this._reader.consumeOneChar();
-            if(!currentChar.valid) return { next: this.states.completed };
+            const currentChar = this._reader.consumeOneChar();
+            if(!currentChar.valid) { return { next: this.states.completed }; }
             if(currentChar.value == '\n' && previousFunc == this.states.defLineStart) {
                 this.initNewNode(this._wordTree.root, Node.NEW_LINE_NODE);
                 return { next: previousFunc };
             } else if(currentChar.value == '\n') {
                 return { next: this.states.defLineStart };
             } else if(['{', '}', '<', '>'].indexOf(currentChar.value) > -1) {
-                let nextChar = this._reader.consumeOneChar();
+                const nextChar = this._reader.consumeOneChar();
                 if(!nextChar.valid) {
                     this.consume(previousFunc, currentChar.value);
                     return { next: this.states.completed };
@@ -152,8 +152,8 @@ export class DSLStateMachine extends StateMachine {
         },
         enterComments: (previousFucntion?: any): StateValue => {
             this.assertFunc(previousFucntion);
-            let currentChar = this._reader.consumeOneChar();
-            if (!currentChar.valid) return { next: this.states.completed };
+            const currentChar = this._reader.consumeOneChar();
+            if (!currentChar.valid) { return { next: this.states.completed }; }
             switch (currentChar.value) {
                 case '{':
                     return { next: this.states.inComments, param: previousFucntion };
@@ -162,12 +162,12 @@ export class DSLStateMachine extends StateMachine {
             }
         },
         inComments: (functionBeforeComments?: any): StateValue => {
-            let currentChar = this._reader.consumeOneChar();
-            if (!currentChar.valid) return { next: this.states.completed };
+            const currentChar = this._reader.consumeOneChar();
+            if (!currentChar.valid) { return { next: this.states.completed }; }
             switch (currentChar.value) {
                 case '}':
-                    let nextChar = this._reader.consumeOneChar();
-                    if(!nextChar.valid) return { next: this.states.completed };
+                    const nextChar = this._reader.consumeOneChar();
+                    if(!nextChar.valid) { return { next: this.states.completed }; }
                     if(nextChar.value == '}') {
                         // the end of comments is found
                         return { next: functionBeforeComments };
@@ -179,7 +179,7 @@ export class DSLStateMachine extends StateMachine {
             }
         },
         enterRef: (previousFunction?: any): StateValue => {
-            let currentChar = this._reader.consumeOneChar();
+            const currentChar = this._reader.consumeOneChar();
             if(!currentChar.valid) {
                 this.consume(previousFunction, '<');
                 return { next: this.states.completed };
@@ -195,14 +195,14 @@ export class DSLStateMachine extends StateMachine {
         },
         inRef: (functionBeforeRef?: any): StateValue => {
             this.assertFunc(functionBeforeRef);
-            let currentChar = this._reader.consumeOneChar();
-            if(!currentChar.valid) return { next: this.states.completed };
+            const currentChar = this._reader.consumeOneChar();
+            if(!currentChar.valid) { return { next: this.states.completed }; }
             switch(currentChar.value) {
                 case '\\':
                     return { next: this.states.inEscape, param: this.states.inRef }
                 case '>':
-                    let nextChar = this._reader.consumeOneChar();
-                    if(!nextChar.valid) return { next: this.states.completed };
+                    const nextChar = this._reader.consumeOneChar();
+                    if(!nextChar.valid) { return { next: this.states.completed }; }
                     if(nextChar.value == '>') {
                         this._currentNode = this._currentNode.parent;
                         return { next: functionBeforeRef };
@@ -216,15 +216,15 @@ export class DSLStateMachine extends StateMachine {
             }
         },
         inNodeStart: (param?: any): StateValue => {
-            let currentChar = this._reader.consumeOneChar();
-            if(!currentChar.valid) this.states.completed;
+            const currentChar = this._reader.consumeOneChar();
+            if(!currentChar.valid) { this.states.completed; }
             switch (currentChar.value) {
                 case ']':
                     // split name and properties
-                    let propertyList: string[] = this._currentNode.name.split(/\s+/);
+                    const propertyList: string[] = this._currentNode.name.split(/\s+/);
                     this._currentNode.name = propertyList[0];
                     propertyList.slice(1).forEach((property) => {
-                        let keyAndValue: string[] = property.split('=');
+                        const keyAndValue: string[] = property.split('=');
                         this._currentNode.properties.set(keyAndValue[0], keyAndValue.slice(1).join('='));
                     });
                     return { next: this.states.inDefinition };
@@ -238,8 +238,8 @@ export class DSLStateMachine extends StateMachine {
             }
         },
         inNodeEnd: (param?: any): StateValue => {
-            let currentChar = this._reader.consumeOneChar();
-            if(!currentChar.valid) return { next: this.states.completed };
+            const currentChar = this._reader.consumeOneChar();
+            if(!currentChar.valid) { return { next: this.states.completed }; }
             switch(currentChar.value) {
                 case ']':
                     this._currentNode = this._currentNode.parent;
@@ -266,8 +266,8 @@ export class DSLStateMachine extends StateMachine {
         while(parentOfTheNewNode.type == Node.TEXT_NODE) {
             parentOfTheNewNode = parentOfTheNewNode.parent;
         }
-        let previousNode: Node = parentOfTheNewNode;
-        let newNode: Node = new Node(nodeTypeForNewNode);
+        const previousNode: Node = parentOfTheNewNode;
+        const newNode: Node = new Node(nodeTypeForNewNode);
         previousNode.appendChild(newNode);
         return newNode;
     }

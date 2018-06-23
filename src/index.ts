@@ -40,18 +40,18 @@ export class DictParser extends EventEmitter {
     this._wordFormsFolder = wordFormsFolder;
   }
 
-  init = async (): Promise<void> => {
+  public init = async (): Promise<void> => {
     await this.buildWordList();
   };
 
-  buildWordList = async (dictMapList?: DictMap[]) => {
+  public buildWordList = async (dictMapList?: DictMap[]) => {
     if(dictMapList === undefined) {
       this._dictMapList = await this.readDictMapListFromFile();
     }
     this._wordMap = this.getWordMap(this._dictMapList);
   };
 
-  async scan(scanFolder: string | string[]): Promise<DictMap[]> {
+  public async scan(scanFolder: string | string[]): Promise<DictMap[]> {
     this._dictionaryFinder.on('name', (dictionaryName: string) => {
       this.emit('name', dictionaryName);
     });
@@ -67,9 +67,9 @@ export class DictParser extends EventEmitter {
   /**
    * Guess what word the user wants based on the word input
    */
-  async getWordCandidates(input: string, resultCount = 30): Promise<string[]> {
+  public async getWordCandidates(input: string, resultCount = 30): Promise<string[]> {
 
-    let result: Set<string> = new Set<string>();
+    const result: Set<string> = new Set<string>();
     input = this.normalize(input);
 
     if(input === '') {
@@ -96,12 +96,12 @@ export class DictParser extends EventEmitter {
     return Array.from(result).slice(0, resultCount);
   }
 
-  async getWordDefinitions(word: string): Promise<WordDefinition[]> {
-    let wordDefinitionList: WordDefinition[] = [];
+  public async getWordDefinitions(word: string): Promise<WordDefinition[]> {
+    const wordDefinitionList: WordDefinition[] = [];
     if (this._dictMapList === undefined) {
       this._dictMapList = await this.readDictMapListFromFile();
     }
-    for (let dictMap of this._dictMapList) {
+    for (const dictMap of this._dictMapList) {
       let wordPosition: WordPosition;
       if (dictMap.originalWords.hasOwnProperty(word)) {
         wordPosition = dictMap.originalWords[word];
@@ -110,27 +110,27 @@ export class DictParser extends EventEmitter {
       } else {
         continue;
       }
-      let dictionary = this._dictionaries.get(dictMap.dict.dictType);
+      const dictionary = this._dictionaries.get(dictMap.dict.dictType);
       if (dictionary == undefined) {
         continue;
       }
-      let wordTree: WordTree = await dictionary.getWordTree(dictMap, wordPosition);
+      const wordTree: WordTree = await dictionary.getWordTree(dictMap, wordPosition);
       // const resourceManager = getResourceManagerByDictType(dictMap.dict.dictType);
-      let html: string = await dictionary.getHTML(dictMap, wordPosition, this._sqliteDbPath);
-      let dictName = dictMap.meta['NAME'];
+      const html: string = await dictionary.getHTML(dictMap, wordPosition, this._sqliteDbPath);
+      const dictName = dictMap.meta.NAME;
       wordDefinitionList.push({
-        word: word,
-        wordTree: wordTree,
-        html: html,
+        word,
+        wordTree,
+        html,
         dict: dictMap.dict,
       });
     }
     return wordDefinitionList;
   }
 
-  async readDictMapListFromFile(): Promise<DictMap[]> {
+  public async readDictMapListFromFile(): Promise<DictMap[]> {
     if(await fse.pathExists(this._jsonDbPath)) {
-      let dbContents = await fse.readFile(this._jsonDbPath, {encoding: 'utf8'});
+      const dbContents = await fse.readFile(this._jsonDbPath, {encoding: 'utf8'});
       const dictMapList = JSON.parse(dbContents) as DictMap[];
       return dictMapList;
     } else {
@@ -138,13 +138,13 @@ export class DictParser extends EventEmitter {
     }
   }
 
-  setDictMapList = (dictMapList: DictMap[]): void => {
+  public setDictMapList = (dictMapList: DictMap[]): void => {
     this._dictMapList = dictMapList;
   };
 
   private normalize(word: string): string {
     let normalizedWord: string = "";
-    for (let c of word) {
+    for (const c of word) {
       normalizedWord += AccentConverter.removeAccent(c).toLowerCase();
     }
     return normalizedWord.trim();

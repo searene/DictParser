@@ -26,13 +26,13 @@ export class Reader {
      *          value: consumed character, it exists only if {@code isFound}
      *                is set true
      */
-    peakNextChar(): {valid: boolean, value: string} {
+    public peakNextChar(): {valid: boolean, value: string} {
         return this._pos < this._input.length ?
             {valid: true, value: this._input[this._pos]}:
             {valid: false, value: ""};
     }
 
-    getLastReadChar(): {valid: boolean, value: string} {
+    public getLastReadChar(): {valid: boolean, value: string} {
         return this._pos >= 1 ?
             {valid: true, value: this._input[this._pos - 2]}:
             {valid: false, value: ""};
@@ -45,8 +45,8 @@ export class Reader {
      *          value: consumed character, it exists only if {@code isFound}
      *                is set true
      */
-    consumeOneChar(): {valid: boolean, value: string} {
-        let nextChar = this.peakNextChar();
+    public consumeOneChar(): {valid: boolean, value: string} {
+        const nextChar = this.peakNextChar();
         if(nextChar.valid) {
             this._pos++;
             return {valid: true, value: nextChar.value};
@@ -77,7 +77,7 @@ export class Reader {
      * If we cannot go back(i.e. the position we are in is less or
      * equal to 0, the {@code isFound} in the return value would be false)
      */
-    goBackOneCharacter(): {valid: boolean, value: string} {
+    public goBackOneCharacter(): {valid: boolean, value: string} {
         if(this._pos <= 0) {
             // return empty string if we cannot go back
             return {valid: false, value: ""};
@@ -86,7 +86,7 @@ export class Reader {
         }
     }
 
-    consumeNChars(n: number): {valid: boolean, value: string} {
+    public consumeNChars(n: number): {valid: boolean, value: string} {
         let c = this.peakNextChar();
         let consumedCount = 0;
         let consumedString = "";
@@ -98,7 +98,7 @@ export class Reader {
         return consumedString == "" ? {valid: false, value: ""} : {valid: true, value: consumedString};
     }
 
-    consumeTo(s: string, isSearchedStringIncluded: boolean, considerEscape: boolean): {isFound: boolean, value: string} {
+    public consumeTo(s: string, isSearchedStringIncluded: boolean, considerEscape: boolean): {isFound: boolean, value: string} {
         if(this._pos >= this._input.length) {
             return {isFound: false, value: ""};
         }
@@ -118,14 +118,14 @@ export class Reader {
             // not found
             return {isFound: false, value: ""};
         } else {
-            let nextPos = isSearchedStringIncluded ? index + s.length : index;
-            let consumedString = this._input.substring(this._pos, nextPos);
+            const nextPos = isSearchedStringIncluded ? index + s.length : index;
+            const consumedString = this._input.substring(this._pos, nextPos);
             this._pos = nextPos;
             return {isFound: true, value: consumedString};
         }
     }
 
-    consumeEmptySpaces(): void {
+    public consumeEmptySpaces(): void {
         while(this._input[this._pos] in [' ', '\t']) {
             this._pos++;
         }

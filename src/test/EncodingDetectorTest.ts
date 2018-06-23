@@ -6,20 +6,20 @@ import * as fse from 'fs-extra';
 
 describe('get encoding test', () => {
 
-    let pathToEncodingsDirectory = path.join(TEST_RESOURCE_PATH, 'encodings');
+    const pathToEncodingsDirectory = path.join(TEST_RESOURCE_PATH, 'encodings');
     
-    let utf32be_file = path.join(pathToEncodingsDirectory, 'utf32be.txt');
-    let utf32le_file = path.join(pathToEncodingsDirectory, 'utf32le.txt');
-    let utf16be_file = path.join(pathToEncodingsDirectory, 'utf16be.txt');
-    let utf16le_file = path.join(pathToEncodingsDirectory, 'utf16le.txt');
-    let utf8_file = path.join(pathToEncodingsDirectory, 'utf8.txt');
+    const utf32be_file = path.join(pathToEncodingsDirectory, 'utf32be.txt');
+    const utf32le_file = path.join(pathToEncodingsDirectory, 'utf32le.txt');
+    const utf16be_file = path.join(pathToEncodingsDirectory, 'utf16be.txt');
+    const utf16le_file = path.join(pathToEncodingsDirectory, 'utf16le.txt');
+    const utf8_file = path.join(pathToEncodingsDirectory, 'utf8.txt');
 
     it("#getEncodingInBuffer", async () => {
-        let utf32be_encoding = await getEncodingInBuffer(await fse.readFile(utf32be_file));
-        let utf32le_encoding = await getEncodingInBuffer(await fse.readFile(utf32le_file));
-        let utf16be_encoding = await getEncodingInBuffer(await fse.readFile(utf16be_file));
-        let utf16le_encoding = await getEncodingInBuffer(await fse.readFile(utf16le_file));
-        let utf8_encoding = await getEncodingInBuffer(await fse.readFile(utf8_file));
+        const utf32be_encoding = await getEncodingInBuffer(await fse.readFile(utf32be_file));
+        const utf32le_encoding = await getEncodingInBuffer(await fse.readFile(utf32le_file));
+        const utf16be_encoding = await getEncodingInBuffer(await fse.readFile(utf16be_file));
+        const utf16le_encoding = await getEncodingInBuffer(await fse.readFile(utf16le_file));
+        const utf8_encoding = await getEncodingInBuffer(await fse.readFile(utf8_file));
         
         assert.deepEqual(utf32be_encoding, {encoding: UTF_32_BE, posAfterBom: 4});
         assert.deepEqual(utf32le_encoding, {encoding: UTF_32_LE, posAfterBom: 4});

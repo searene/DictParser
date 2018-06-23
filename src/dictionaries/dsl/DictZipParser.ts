@@ -13,19 +13,19 @@ export class DictZipParser {
         this._fd = fd;
     }
 
-    async parse(pos: number, len: number): Promise<Buffer> {
+    public async parse(pos: number, len: number): Promise<Buffer> {
         // console.log(`parsing file from pos ${pos}, len: ${len}`);
         if(this._header == undefined) {
             this._header = await this.getHeader();
         }
-        let headerLength = this.getHeaderLen(this._header);
+        const headerLength = this.getHeaderLen(this._header);
 
-        let CHLEN: number = this._header.FEXTRA.FIELD.SUBFIELD.CHLEN.readUInt16LE(0);
-        let CHCNT: number = this._header.FEXTRA.FIELD.SUBFIELD.CHCNT.readUInt16LE(0);
-        let CHUNKS: Buffer = this._header.FEXTRA.FIELD.SUBFIELD.CHUNKS;
+        const CHLEN: number = this._header.FEXTRA.FIELD.SUBFIELD.CHLEN.readUInt16LE(0);
+        const CHCNT: number = this._header.FEXTRA.FIELD.SUBFIELD.CHCNT.readUInt16LE(0);
+        const CHUNKS: Buffer = this._header.FEXTRA.FIELD.SUBFIELD.CHUNKS;
 
-        let startChunkIndex = ~~(pos / CHLEN);
-        let endChunkIndex = ~~((pos + len) / CHLEN);
+        const startChunkIndex = ~~(pos / CHLEN);
+        const endChunkIndex = ~~((pos + len) / CHLEN);
 
         // startDecompressPos: headerLength + CHUNKS.readUInt16LE(0) + CHUNKS.readUInt16LE(1) + ... + CHUNKS.readUInt16LE(pos / CHLEN - 1)
         // endDecompressPos: headerLength + CHUNKS.readUInt16LE(0) + CHUNKS.readUInt16LE(1) + ... + CHUNKS.readUInt16LE((pos + len) / CHLEN)
@@ -45,18 +45,18 @@ export class DictZipParser {
         }
 
 
-        let compressedData: Buffer = Buffer.alloc(endDecompressPos - startDecompressPos);
+        const compressedData: Buffer = Buffer.alloc(endDecompressPos - startDecompressPos);
         await fse.read(this._fd, compressedData, 0, compressedData.length, startDecompressPos);
 
-        let decompressedData = inflateBuffer(new Uint8Array(compressedData));
+        const decompressedData = inflateBuffer(new Uint8Array(compressedData));
         return decompressedData.slice(pos - ~~(pos / CHLEN) * CHLEN, pos + len - ~~(pos / CHLEN) * CHLEN);
     }
     
     private async getHeader(): Promise<DzHeader> {
-        let header = <DzHeader> {};
+        const header = {} as DzHeader;
         
         // read the first 10 bytes
-        let buffer = Buffer.alloc(10);
+        const buffer = Buffer.alloc(10);
         await fse.read(this._fd, buffer, 0, buffer.length, 0);
         header.ID1 = buffer.slice(0, 1);
         header.ID2 = buffer.slice(1, 2);
@@ -74,34 +74,34 @@ export class DictZipParser {
         // read FEXTRA if exists
         if((header.FLG.readUInt8(0) & 4) != 0) {
             // FEXTRA bit is set 1
-            let XLEN = Buffer.alloc(2);
+            const XLEN = Buffer.alloc(2);
             await fse.read(this._fd, XLEN, 0, XLEN.length, pos);
 
             // read field in FEXTRA
-            let FIELD = Buffer.alloc(XLEN.readUInt16LE(0));
+            const FIELD = Buffer.alloc(XLEN.readUInt16LE(0));
             await fse.read(this._fd, FIELD, 0, FIELD.length, pos + 2);
-            let SI1 = FIELD.slice(0, 1);
-            let SI2 = FIELD.slice(1, 2);
-            let LEN = FIELD.slice(2, 4);
-            let SUBFIELD = FIELD.slice(4, 4 + LEN.readUInt16LE(0));
-            let VER = SUBFIELD.slice(0, 2);
-            let CHLEN = SUBFIELD.slice(2, 4);
-            let CHCNT = SUBFIELD.slice(4, 6);
-            let CHUNKS = SUBFIELD.slice(6, CHCNT.readUInt16LE(0) * 2 + 7);
+            const SI1 = FIELD.slice(0, 1);
+            const SI2 = FIELD.slice(1, 2);
+            const LEN = FIELD.slice(2, 4);
+            const SUBFIELD = FIELD.slice(4, 4 + LEN.readUInt16LE(0));
+            const VER = SUBFIELD.slice(0, 2);
+            const CHLEN = SUBFIELD.slice(2, 4);
+            const CHCNT = SUBFIELD.slice(4, 6);
+            const CHUNKS = SUBFIELD.slice(6, CHCNT.readUInt16LE(0) * 2 + 7);
             if(String.fromCharCode(SI1.readUInt8(0)) != 'R' || String.fromCharCode(SI2.readUInt8(0)) != 'A') {
                 throw new Error("Not a dictzip File, SI1 or SI2 doesn't match.");
             }
             header.FEXTRA = {
-                XLEN: XLEN,
+                XLEN,
                 FIELD: {
-                    SI1: SI1,
-                    SI2: SI2,
-                    LEN: LEN,
+                    SI1,
+                    SI2,
+                    LEN,
                     SUBFIELD: {
-                        VER: VER,
-                        CHLEN: CHLEN,
-                        CHCNT: CHCNT,
-                        CHUNKS: CHUNKS
+                        VER,
+                        CHLEN,
+                        CHCNT,
+                        CHUNKS
                     }
                 }
             };
@@ -134,10 +134,10 @@ export class DictZipParser {
     }
 
     private async readToZero(fd: number, startPos: number): Promise<Buffer> {
-        let fnameStartPos = startPos;
+        const fnameStartPos = startPos;
         let buffer: Buffer = Buffer.alloc(0);
         while(true) {
-            let bytes = await fse.read(this._fd, Buffer.alloc(16 * 1024), 0, 16 * 1024, startPos);
+            const bytes = await fse.read(this._fd, Buffer.alloc(16 * 1024), 0, 16 * 1024, startPos);
             if(bytes.bytesRead == 0) {
                 throw new Error("Cannot find zero bit");
             }

@@ -43,14 +43,14 @@ export class Node {
      * @param childNode the child node to be appended
      * @returns the child node
      */
-    appendChild(childNode: Node): Node {
+    public appendChild(childNode: Node): Node {
         this._children.push(childNode);
         childNode.parent = this;
 
         return childNode;
     }
 
-    addProperty(name: string, value: string) {
+    public addProperty(name: string, value: string) {
         this._properties.set(name, value);
     }
 
@@ -99,20 +99,20 @@ export class Node {
         this._contents = value;
     }
 
-    toString(indent = 0) {
+    public toString(indent = 0) {
         let prefix = "";
         for(let i = 0; i < indent; i++) {
-            if(i == 0) prefix += "|";
-            else prefix += "-";
+            if(i == 0) { prefix += "|"; }
+            else { prefix += "-"; }
         }
         let properties = "";
         this._properties.forEach((value: string, key: string) => {
             properties += `{${key} => ${value}}`;
         })
-        let currentNodeToString = `${prefix}name:${this._name}, ${properties}, type:${this._type}, contents:${this._contents}.`;
+        const currentNodeToString = `${prefix}name:${this._name}, ${properties}, type:${this._type}, contents:${this._contents}.`;
         let childrenNodesToString = "";
         for(let i = 0; i < this._children.length; i++) {
-            let child: Node = this._children[i];
+            const child: Node = this._children[i];
             childrenNodesToString += "\n" + child.toString(indent + 2);
         }
     
@@ -144,7 +144,7 @@ export class WordTree {
         this._entry = entry;
     }
 
-    toString() {
+    public toString() {
         return `${this._entry}
 ${this._root.toString()}`;
     }
