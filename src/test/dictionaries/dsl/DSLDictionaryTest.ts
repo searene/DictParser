@@ -2,12 +2,9 @@ import { assert } from 'chai';
 import { TEST_RESOURCE_PATH } from '../../../Constant';
 import { DSLDictionary } from '../../../dictionaries/dsl/DSLDictionary';
 import { Dictionary, DictionaryStats } from '../../../Dictionary';
-import { Log } from '../../../util/log';
 import * as path from 'path';
 
 describe('DSLDictionaryTest', () => {
-
-    let logger = Log.getLogger();
 
     it("#getIndexableWord", () => {
         let word = "abc{de}f\\{g\\}h";

@@ -1,12 +1,9 @@
 import { Reader } from "../../Reader";
 import { Node, WordTree } from "../../Tree";
-import { Log } from "../../util/log";
 import { StateMachine, StateValue } from '../../StateMachine';
 /**
  * Created by searene on 5/13/17.
  */
-
-let logger = Log.getLogger();
 
 export class DSLStateMachine extends StateMachine {
 

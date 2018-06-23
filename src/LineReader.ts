@@ -1,4 +1,3 @@
-import { Log } from './util/log';
 import { BufferReader, SimpleBufferReader, DzBufferReader } from './BufferReader';
 import { getEncodingInBuffer, EncodingStat } from './EncodingDetector';
 import { DictZipParser } from './dictionaries/dsl/DictZipParser';
@@ -9,7 +8,6 @@ export class LineReader extends EventEmitter {
 
     private _filePath: string;
     private static _bufferReaders: Map<string, BufferReader> = new Map<string, BufferReader>();
-    private logger = Log.getLogger();
 
     // how many bytes to be read each time
     private _len: number;
@@ -38,7 +36,6 @@ export class LineReader extends EventEmitter {
             throw new Error(`No BufferReader is not registered for ${ext}.`);
         }
 
-        console.log(`LineReading is running, processing ${this._filePath}`);
         await bufferReader.open(this._filePath);
 
         let encodingStat = await bufferReader.getEncodingStat();

@@ -1,5 +1,4 @@
 import { TEST_RESOURCE_PATH } from '../../../Constant';
-import { Log } from '../../../util/log';
 import { WordTree } from '../../../Tree';
 import { DSLStateMachine } from '../../../dictionaries/dsl/DSLStateMachine';
 import { StateMachine } from "../../../StateMachine";
@@ -7,8 +6,6 @@ import { assert } from 'chai';
 import { getEncodingInFile } from '../../../EncodingDetector';
 import * as fse from 'fs-extra';
 import * as path from 'path';
-
-let logger = Log.getLogger();
 
 describe("Test DSLStateMachine", () => {
     describe("Test run", () => {
@@ -33,8 +30,6 @@ describe("Test DSLStateMachine", () => {
             let wordTree: WordTree = stateMachine.run();
 
 			let s = wordTree.toString();
-			// logger.info(s);
-
         });
         it("Medium entry test", () => {
 
@@ -42,7 +37,6 @@ describe("Test DSLStateMachine", () => {
             let wordTree: WordTree = stateMachine.run();
 
 			let s = wordTree.toString();
-			// logger.info(s);
 
         });
         it("Complex entry test", () => {
@@ -50,7 +44,6 @@ describe("Test DSLStateMachine", () => {
             let stateMachine: StateMachine = new DSLStateMachine(complexEntryContents);
             let wordTree: WordTree = stateMachine.run();
 			let s = wordTree.toString();
-			// logger.info(s);
 
         });
         it("Typical entry test", () => {

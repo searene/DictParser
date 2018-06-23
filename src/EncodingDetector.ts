@@ -1,4 +1,3 @@
-import { Log } from './util/log';
 import * as fse from 'fs-extra';
 import { ReadResult } from 'fs-extra';
 
@@ -7,8 +6,6 @@ export const UTF_16_BE: string = "utf16be";
 export const UTF_16_LE: string = "utf16le";
 export const UTF_32_BE: string = "utf32be";
 export const UTF_32_LE: string = "utf32le";
-
-let logger = Log.getLogger();
 
 /**
  * Detect file encoding using BOM(Byte Order Mark) at the beginning of the file,

@@ -1,6 +1,5 @@
 import {TEST_RESOURCE_PATH} from "../Constant";
 import {assert} from 'chai';
-import {Log} from '../util/log';
 import {DictZipParser} from '../dictionaries/dsl/DictZipParser';
 import * as path from 'path';
 import {DictParser} from "../index";
@@ -8,8 +7,6 @@ import * as fse from "fs-extra";
 import * as os from 'os';
 
 describe('Test DictParser', () => {
-
-  let logger = Log.getLogger();
 
   let scanFolder1 = path.join(TEST_RESOURCE_PATH, 'scan');
   let scanFolder2 = path.join('/home/searene/Public/dictionaries');
@@ -19,7 +16,7 @@ describe('Test DictParser', () => {
   it("#scanAndGetWordDefinition", async () => {
     let dictParser = new DictParser(dbPath);
     dictParser.on('name', (dictionaryName: string) => {
-      logger.info(`scanning ${dictionaryName}...`);
+      console.log(`scanning ${dictionaryName}...`);
     });
     await dictParser.scan([scanFolder2]);
     // let wordDefinitionList = await dictParser.getWordDefinition('trivial card');
@@ -29,7 +26,7 @@ describe('Test DictParser', () => {
   it("#scan only", async () => {
     const dictParser = new DictParser(dbPath);
     dictParser.on('name', (dictionaryName: string) => {
-      logger.info(`scanning ${dictionaryName}...`);
+      console.log(`scanning ${dictionaryName}...`);
     });
     await dictParser.scan([scanFolder2]);
   });

@@ -1,6 +1,5 @@
 import { EventEmitter } from 'events';
 import { SRC_RESOURCE_PATH } from './Constant';
-import { Log } from './util/log';
 import { WordTree, Node } from './Tree';
 import {Meta, IndexMap, DictMap} from "./DictionaryFinder";
 import * as fse from 'fs-extra';
@@ -10,8 +9,6 @@ import { WriteStream } from 'tty';
 /**
  * Created by searene on 17-1-23.
  */
-
-let logger = Log.getLogger();
 
 export abstract class Dictionary {
 

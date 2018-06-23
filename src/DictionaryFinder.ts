@@ -2,13 +2,11 @@ import { ResourceManager } from "./ResourceManager";
 import { DSLDictionary } from "./dictionaries/dsl/DSLDictionary";
 import { DictionaryStats } from "./Dictionary";
 import { JSON_DB_PATH, ROOT_PATH, WORD_FORMS_PATH } from "./Constant";
-import { Log } from "./util/log";
 import { Dictionary, WordPosition } from "./Dictionary";
 import { readdirRecursivelyWithStat, FileWithStats } from "./util/FileUtil";
 import { Option, option, some, none } from "ts-option";
 import * as fse from "fs-extra";
 import * as path from "path";
-import * as log4js from "log4js";
 import * as ReadLine from "readline";
 import { EventEmitter } from "events";
 import {ZipReader} from "./util/ZipReader";
@@ -16,8 +14,6 @@ import {ZipReader} from "./util/ZipReader";
 /**
  * Created by searene on 17-1-23.
  */
-
-let logger = Log.getLogger();
 
 export class DictionaryFinder extends EventEmitter {
   constructor() {
@@ -36,7 +32,6 @@ export class DictionaryFinder extends EventEmitter {
     }
   }
 
-  private logger = Log.getLogger();
 
   private static _dictionaries: Map<string, Dictionary> = new Map<
     string,

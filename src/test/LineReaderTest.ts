@@ -1,13 +1,11 @@
 import { assert } from 'chai';
 import { TEST_RESOURCE_PATH } from '../Constant';
-import { Log } from '../util/log';
 import { LineReader, LineStats } from '../LineReader';
 import * as mocha from 'mocha';
 import * as path from 'path';
 
 describe('LineReaderTest', () => {
 
-    let logger = Log.getLogger();
     let dslFile = path.join(TEST_RESOURCE_PATH, 'simpleDSL/simple.dsl');
     let dzFile = path.join(TEST_RESOURCE_PATH, 'simpleDSL/simple.dsl.dz');
 

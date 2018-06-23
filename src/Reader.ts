@@ -1,10 +1,6 @@
-import {LOG_CONFIG_LOCATION} from "./Constant";
-import {Log} from "./util/log";
 /**
  * Created by searene on 17-1-22.
  */
-
-let logger = Log.getLogger();
 
 export class Reader {
 

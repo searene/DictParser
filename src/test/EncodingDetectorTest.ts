@@ -1,13 +1,10 @@
 import { UTF_8, UTF_16_LE, UTF_16_BE, UTF_32_BE, UTF_32_LE, getEncodingInBuffer } from '../EncodingDetector';
 import { TEST_RESOURCE_PATH } from '../Constant';
-import { Log } from '../util/log';
 import { assert } from "chai";
 import * as path from 'path';
 import * as fse from 'fs-extra';
 
 describe('get encoding test', () => {
-
-    let logger = Log.getLogger();
 
     let pathToEncodingsDirectory = path.join(TEST_RESOURCE_PATH, 'encodings');
     

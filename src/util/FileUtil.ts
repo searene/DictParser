@@ -1,8 +1,6 @@
-import { Log } from './log';
 import * as EventEmitter from 'events';
 import * as fse from 'fs-extra';
 import * as path from 'path';
-import * as log4js from 'log4js';
 
 export interface FileWithStats {
   filePath: string,
@@ -48,16 +46,15 @@ export async function readdirRecursivelyWithStat(dir: string): Promise<FileWithS
 
 export class FSHelper {
     public static removeFileIfExists(filename: string): Promise<void> {
-        let logger = Log.getLogger();
         return new Promise<void>((resolve, reject) => {
             fse.unlink(filename)
                 .then(() => {
-                    logger.debug(`File ${filename} is removed`);
+                    console.log(`File ${filename} is removed`);
                 })
                 .catch((err) => {
                     if (err.code == 'ENOENT') {
                         // file doesn't exist, ignore the error.
-                        logger.debug(`File ${filename} doesn't exist, won't remove it.`);
+                        console.log(`File ${filename} doesn't exist, won't remove it.`);
                     } else {
                         // maybe we don't have enough permission
                         reject(`Error occurred while trying to remove file ${filename}: ${err.message}`);

@@ -1,4 +1,3 @@
-import { Log } from './../../util/log';
 import { ROOT_PATH } from '../../Constant';
 import { DictionaryFinder } from '../../DictionaryFinder';
 import { Option, some } from 'ts-option';
@@ -21,8 +20,6 @@ import { Node } from '../../Tree';
 export class DSLDictionary extends Dictionary {
 
   protected _dictionarySuffixes: string[] = ['.dsl', '.dz'];
-
-  private logger = Log.getLogger();
 
   async getWordTree(dictMap: DictMap, wordPosition: WordPosition): Promise<WordTree> {
     let input: string = await this.getFileContents(dictMap.dict.dictPath, wordPosition);

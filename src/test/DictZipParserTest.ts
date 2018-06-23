@@ -1,13 +1,10 @@
 import { TEST_RESOURCE_PATH } from './../Constant';
 import { assert } from 'chai';
-import { Log } from '../util/log';
 import { DictZipParser } from '../dictionaries/dsl/DictZipParser';
 import * as path from 'path';
 import * as fse from 'fs-extra';
 
 describe('DictZipParser test', () => {
-
-    let logger = Log.getLogger();
 
     let simpleDictFile = path.join(TEST_RESOURCE_PATH, 'dz/simple_dict_file.txt.dz');
 
