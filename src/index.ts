@@ -29,8 +29,6 @@ export class DictParser extends EventEmitter {
   private _dictionaries: Map<string, Dictionary> =
     DictionaryFinder.dictionaries;
 
-  private _wordformsMap: { [lang: string]: WordForms } = {};
-  private _resourcePath: string;
   private _vocabulary: Set<string>;
 
   constructor(
@@ -159,7 +157,7 @@ export class DictParser extends EventEmitter {
   };
   private loadVocabulary = (dictMapList: DictMap[]) => {
     const vocabulary = new Set<string>();
-    for (let dictMap of dictMapList) {
+    for (const dictMap of dictMapList) {
       this.loadAllWordsFromIndexMap(dictMap.originalWords, vocabulary);
       this.loadAllWordsFromIndexMap(dictMap.transformedWords, vocabulary);
     }
@@ -169,7 +167,7 @@ export class DictParser extends EventEmitter {
     indexMap: IndexMap,
     vocabulary: Set<string>
   ) => {
-    for (let word in indexMap) {
+    for (const word in indexMap) {
       if (indexMap.hasOwnProperty(word)) {
         vocabulary.add(word);
       }
@@ -181,7 +179,7 @@ export class DictParser extends EventEmitter {
     resultCount: number,
     result: Set<string>
   ) => {
-    for (let word of Array.from(vocabulary.values())) {
+    for (const word of Array.from(vocabulary.values())) {
       if (word.startsWith(input)) {
         result.add(word);
         if (result.size > resultCount) {
