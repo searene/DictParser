@@ -19,6 +19,7 @@ import { Dictionary, WordPosition } from "./Dictionary";
 import { ResourceManager } from "./ResourceManager";
 import { registerResourceManagers } from "./DictionaryRegister";
 import { IWordDefinition } from "./model/IWordDefinition";
+import { Trie } from "./Trie";
 
 export class DictParser extends EventEmitter {
   private _jsonDbPath: string;
@@ -29,7 +30,7 @@ export class DictParser extends EventEmitter {
   private _dictionaries: Map<string, Dictionary> =
     DictionaryFinder.dictionaries;
 
-  private _vocabulary: Set<string>;
+  private _vocabulary: Trie;
 
   constructor(
     jsonDbPath: string = JSON_DB_PATH,
@@ -72,21 +73,18 @@ export class DictParser extends EventEmitter {
     input: string,
     resultCount = 30
   ): Promise<string[]> {
-    const result: Set<string> = new Set<string>();
-    input = this.normalize(input);
+    // input = this.normalize(input);
 
-    if (input === "") {
+    if (input.trim() === "") {
       return [];
     }
 
     // first add the input word if it exists in dictionaries
-    if (this._vocabulary.has(input)) {
-      result.add(input);
-    }
+    // if (this._vocabulary.contains(input)) {
+    //   result.add(input);
+    // }
 
-    // check other candidates
-    this.addSimilarWords(input, this._vocabulary, resultCount, result);
-    return Array.from(result).slice(0, resultCount);
+    return Array.from(this._vocabulary.findWordsStartWith(input, resultCount));
   }
 
   public async getWordDefinitions(word: string): Promise<IWordDefinition[]> {
@@ -155,8 +153,8 @@ export class DictParser extends EventEmitter {
   private loadDictMapList = async () => {
     return await this.readDictMapListFromFile();
   };
-  private loadVocabulary = (dictMapList: DictMap[]) => {
-    const vocabulary = new Set<string>();
+  private loadVocabulary = (dictMapList: DictMap[]): Trie => {
+    const vocabulary = new Trie();
     for (const dictMap of dictMapList) {
       this.loadAllWordsFromIndexMap(dictMap.originalWords, vocabulary);
       this.loadAllWordsFromIndexMap(dictMap.transformedWords, vocabulary);
@@ -165,7 +163,7 @@ export class DictParser extends EventEmitter {
   };
   private loadAllWordsFromIndexMap = (
     indexMap: IndexMap,
-    vocabulary: Set<string>
+    vocabulary: Trie
   ) => {
     for (const word in indexMap) {
       if (indexMap.hasOwnProperty(word)) {
@@ -173,19 +171,19 @@ export class DictParser extends EventEmitter {
       }
     }
   };
-  private addSimilarWords = (
-    input: string,
-    vocabulary: Set<string>,
-    resultCount: number,
-    result: Set<string>
-  ) => {
-    for (const word of Array.from(vocabulary.values())) {
-      if (word.startsWith(input)) {
-        result.add(word);
-        if (result.size > resultCount) {
-          return;
-        }
-      }
-    }
-  };
+  // private addSimilarWords = (
+  //   input: string,
+  //   vocabulary: Trie,
+  //   resultCount: number,
+  //   result: Set<string>
+  // ) => {
+  //   for (const word of Array.from(vocabulary.values())) {
+  //     if (word.startsWith(input)) {
+  //       result.add(word);
+  //       if (result.size > resultCount) {
+  //         return;
+  //       }
+  //     }
+  //   }
+  // };
 }

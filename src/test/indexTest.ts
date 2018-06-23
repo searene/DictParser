@@ -5,6 +5,7 @@ import * as path from 'path';
 import {DictParser} from "../index";
 import * as fse from "fs-extra";
 import * as os from 'os';
+import { describe, it } from "mocha";
 
 describe('Test DictParser', () => {
 

@@ -4,7 +4,7 @@ export class Trie {
   private root = new TrieNode("");
 
   // key -> Trie
-  public insert = (word: string): void => {
+  public add = (word: string): void => {
     let node = this.root;
     for (const c of word) {
       if (!node.children.has(c)) {

@@ -4,9 +4,9 @@ import { describe, it } from "mocha";
 describe("#TrieTest", () => {
   it("#contains", () => {
     const trie = new Trie();
-    trie.insert("word");
-    trie.insert("words");
-    trie.insert("long");
+    trie.add("word");
+    trie.add("words");
+    trie.add("long");
 
     assert.isTrue(trie.contains("word"));
     assert.isFalse(trie.contains("wor"));
@@ -14,9 +14,9 @@ describe("#TrieTest", () => {
 
   it("#findWordsStartWith", () => {
     const trie = new Trie();
-    trie.insert("word");
-    trie.insert("words");
-    trie.insert("long");
+    trie.add("word");
+    trie.add("words");
+    trie.add("long");
 
     const words = trie.findWordsStartWith("word", 10);
     assert.isTrue(words.size === 2);
