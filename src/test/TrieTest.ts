@@ -11,7 +11,6 @@ describe("#TrieTest", () => {
     assert.isTrue(trie.contains("word"));
     assert.isFalse(trie.contains("wor"));
   });
-
   it("#findWordsStartWith", () => {
     const trie = new Trie();
     trie.add("word");

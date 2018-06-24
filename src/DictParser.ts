@@ -1,8 +1,6 @@
 import { EventEmitter } from "events";
 import { AccentConverter } from "./AccentConverter";
-import {
-  DictionaryFinder,
-} from "./DictionaryFinder";
+import { DictionaryFinder } from "./DictionaryFinder";
 import {
   JSON_DB_PATH,
   WORD_FORMS_PATH,
@@ -17,6 +15,7 @@ import { IWordDefinition } from "./model/IWordDefinition";
 import { Trie } from "./Trie";
 import { Sqlite } from "./util/Sqlite";
 import { IWordIndex } from "./model/IWordIndex";
+import { IgnorableTrie } from "./IgnorableTrie";
 
 export class DictParser extends EventEmitter {
   private _jsonDbPath: string;
@@ -26,7 +25,7 @@ export class DictParser extends EventEmitter {
   private _dictionaries: Map<string, Dictionary> =
     DictionaryFinder.dictionaries;
 
-  private _vocabulary: Trie;
+  private _vocabulary: IgnorableTrie;
 
   constructor(
     sqliteDbPath: string = SQLITE_DB_PATH,
@@ -53,10 +52,8 @@ export class DictParser extends EventEmitter {
     this._dictionaryFinder.on("name", (dictionaryName: string) => {
       this.emit("name", dictionaryName);
     });
-    await this._dictionaryFinder.scan(
-      scanFolder,
-      this._wordFormsFolder
-    );
+    await this._dictionaryFinder.scan(scanFolder, this._wordFormsFolder);
+    await this.init();
   }
 
   /**
@@ -72,12 +69,16 @@ export class DictParser extends EventEmitter {
       return [];
     }
 
-    // first add the input word if it exists in dictionaries
-    // if (this._vocabulary.contains(input)) {
-    //   result.add(input);
-    // }
-
-    return Array.from(this._vocabulary.findWordsStartWith(input, resultCount));
+    const candidates = this._vocabulary.findWordsStartWith(
+      input,
+      resultCount
+    );
+    this._vocabulary.findWordsStartWithExcludeIgnoreCharacters(
+      input,
+      resultCount,
+      candidates
+    );
+    return Array.from(candidates);
   }
 
   public async getWordDefinitions(word: string): Promise<IWordDefinition[]> {
@@ -144,9 +145,11 @@ export class DictParser extends EventEmitter {
   // private loadDictMapList = async () => {
   //   return await this.readDictMapListFromFile();
   // };
-  private loadVocabulary = async (): Promise<Trie> => {
-    const vocabulary = new Trie();
-    const queryResultList = await Sqlite.db.all("SELECT DISTINCT word FROM word_index");
+  private loadVocabulary = async (): Promise<IgnorableTrie> => {
+    const vocabulary = new IgnorableTrie();
+    const queryResultList = await Sqlite.db.all(
+      "SELECT DISTINCT word FROM word_index"
+    );
     for (const queryResult of queryResultList) {
       vocabulary.add(queryResult.word);
     }
@@ -163,7 +166,8 @@ export class DictParser extends EventEmitter {
   //   }
   // };
   private queryWordIndexes = async (word: string): Promise<IWordIndex[]> => {
-    const queryResultList = await Sqlite.db.all(`
+    const queryResultList = await Sqlite.db.all(
+      `
       SELECT
         word_index.id               AS id,
         word_index.word             AS word,            
@@ -177,7 +181,9 @@ export class DictParser extends EventEmitter {
       FROM word_index INNER JOIN dictionary
         ON word_index.dictionary_id = dictionary.id
       WHERE word = ?
-    `, [word]);
+    `,
+      [word]
+    );
     const wordIndexList: IWordIndex[] = [];
     for (const queryResult of queryResultList) {
       wordIndexList.push({
@@ -192,10 +198,10 @@ export class DictParser extends EventEmitter {
         word: queryResult.word,
         len: queryResult.len,
         pos: queryResult.pos
-      })
+      });
     }
     return wordIndexList;
-  }
+  };
   // private addSimilarWords = (
   //   input: string,
   //   vocabulary: Trie,

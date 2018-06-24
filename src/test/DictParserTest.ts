@@ -39,7 +39,7 @@ describe('Test DictParser', () => {
   it("#guessWord", async () => {
     const dictParser = new DictParser(dbPath);
     await dictParser.init();
-    // await dictParser.scan([scanFolder2]);
+    await dictParser.scan([scanFolder2]);
     const wordCandidates = await dictParser.getWordCandidates('trivi');
     console.log(wordCandidates);
   });

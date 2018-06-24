@@ -1,14 +1,14 @@
 import { TrieNode } from "./model/TrieNode";
 
 export class Trie {
-  private root = new TrieNode("");
+  protected root = new TrieNode("");
 
   // key -> Trie
   public add = (word: string): void => {
     let node = this.root;
     for (const c of word) {
       if (!node.children.has(c)) {
-        node.children.set(c, new TrieNode(c));
+        node.children.set(c, new TrieNode(c, node));
       }
       node = node.children.get(c) as TrieNode;
     }
@@ -44,6 +44,55 @@ export class Trie {
     this.findAllWords(node, maxReturnSize, prefix, result);
     return result;
   };
+
+  // include startNode if it's an endNode
+  protected findAllEndNodesStartWith = (startNode: TrieNode, maxCount: number, result: Set<TrieNode>) => {
+    if (result.size >= maxCount) {
+      return;
+    }
+    if (startNode.end) {
+      result.add(startNode);
+    }
+    for (const childNode of startNode.children.values()) {
+      this.findAllEndNodesStartWith(childNode, maxCount, result);
+    }
+    return result;
+  }
+
+  protected getWordByEndNode = (endNode: TrieNode): string => {
+    let result = endNode.key;
+    if (endNode.parent === undefined) {
+      // endNode is the root node
+      return result;
+    }
+    result = this.getWordByEndNode(endNode.parent) + result;
+    return result;
+  }
+
+  protected getEndNodeByWord = (word: string): TrieNode => {
+    let currentNode = this.root;
+    for (const c of word) {
+      currentNode = currentNode.children.get(c) as TrieNode;
+    }
+    return currentNode;
+  };
+
+  protected getEndNodesFromWords = (words: Set<string>): Set<TrieNode> => {
+    const endNodes: Set<TrieNode> = new Set();
+    for (const word of words) {
+      endNodes.add(this.getEndNodeByWord(word));
+    }
+    return endNodes;
+  };
+
+  protected getWordsFromEndNodes = (nodes: Set<TrieNode>): Set<string> => {
+    const words = new Set<string>();
+    for (const node of nodes) {
+      words.add(this.getWordByEndNode(node))
+    }
+    return words;
+  };
+
 
   /**
    * Find all words starting with the given {@code node}.
