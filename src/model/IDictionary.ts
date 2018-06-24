@@ -1,7 +1,8 @@
 export interface IDictionary {
   id: number;
   name: string;
-  resourceHolder: string;
+  indexPath: string;
+  resourcePath: string;
   dictPath: string;
   type: string;
 }

@@ -21,7 +21,7 @@ export class DSLResourceManager extends ResourceManager {
         return this.ResourceType.UNKNOWN;
       }
     } else {
-      throw new Error("Not a resourceHolder node");
+      throw new Error("Not a resourcePath node");
     }
   }
   public isResourceNode(node: Node): boolean {
@@ -31,7 +31,7 @@ export class DSLResourceManager extends ResourceManager {
     if (this.isResourceNode(node)) {
       return node.children[0].contents;
     } else {
-      throw new Error("Not a resourceHolder node");
+      throw new Error("Not a resourcePath node");
     }
   }
   public getResourceHolderType = async (resourceHolderPath: string): Promise<string> => {

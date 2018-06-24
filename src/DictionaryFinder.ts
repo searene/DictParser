@@ -50,13 +50,13 @@ export class DictionaryFinder extends EventEmitter {
 
   /** Walk through all files in <i>dir</i> recursively, and look for
    * dictionary definition files(e.g. dz, dsl), add it along with
-   * its {@code Dictionary} and resourceHolder to the result array.
+   * its {@code Dictionary} and resourcePath to the result array.
    */
   public async scan(
     dirs: string | string[],
     wordFormsFolder: string
   ): Promise<void> {
-    // DictMap without resourceHolder
+    // DictMap without resourcePath
     let files: FileWithStats[] = [];
     for (const dir of Array.isArray(dirs) ? dirs : [dirs]) {
       files = files.concat(await readdirRecursivelyWithStat(dir));
@@ -72,7 +72,7 @@ export class DictionaryFinder extends EventEmitter {
       )) {
         // we find a dictionary
         if (dictionary.dictionarySuffixes.indexOf(ext) > -1) {
-          // get resourceHolder
+          // get resourcePath
           const resource: Option<string> = await this.getResource(
             file.filePath,
             files.map(f => f.filePath),
@@ -100,7 +100,7 @@ export class DictionaryFinder extends EventEmitter {
           //   dict: {
           //     dictPath: file.filePath,
           //     dictType: dictName,
-          //     resourceHolder: resource.isEmpty ? "" : resource.get
+          //     resourcePath: resource.isEmpty ? "" : resource.get
           //   },
           //   meta: dictStats.meta,
           //   originalWords: dictStats.indexMap,
@@ -166,10 +166,10 @@ export class DictionaryFinder extends EventEmitter {
     return DictionaryFinder._dictionaries;
   }
 
-  /** <p>Look for resourceHolder file/directory in <i>baseDirectory</i>, the rules are as follows.</p>
+  /** <p>Look for resourcePath file/directory in <i>baseDirectory</i>, the rules are as follows.</p>
    * 1. If we find a file whose extension is in <i>resourceHolderSuffixes</i>
    *    and its basename(filename without extension) is the same as
-   *    <i>dictFileName</i>'s basename, this is exactly the resourceHolder
+   *    <i>dictFileName</i>'s basename, this is exactly the resourcePath
    *    we need, return it.
    * 2. If we cannot find such a file mentioned above, try to find the first file
    *    whose extension is in <i>resourceHolderSuffixes</i>, return it.
@@ -180,9 +180,9 @@ export class DictionaryFinder extends EventEmitter {
    * @param dictFilePath absolute path to the dictionary file
    * @param baseDirectory the directory where the dictionary definition file
    *        (such as .dsl) lies
-   * @param resourceHolderSuffixes extensions of the archived resourceHolder file(e.g. zip)
-   * @param resourceFileSuffixes resourceHolder extensions(e.g. wmv)
-   * @returns path to the resourceHolder archive/directory represented in string
+   * @param resourceHolderSuffixes extensions of the archived resourcePath file(e.g. zip)
+   * @param resourceFileSuffixes resourcePath extensions(e.g. wmv)
+   * @returns path to the resourcePath archive/directory represented in string
    */
   private async getResource(
     dictFilePath: string,
@@ -250,7 +250,7 @@ export class DictionaryFinder extends EventEmitter {
     dictType: string
   ): Promise<number> => {
    await Sqlite.db.run(`
-     INSERT INTO dictionary (name, resource_holder, dict_path, type)
+     INSERT INTO dictionary (name, resource_path, dict_path, type)
      VALUES (?, ?, ?, ?)
    `, [dictName, resourceHolder, dictPath, dictType]);
    const queryResult = await Sqlite.db.get(`SELECT id FROM dictionary WHERE dict_path = ?`, [dictPath]);

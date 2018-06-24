@@ -19,7 +19,7 @@ export abstract class Dictionary {
   // e.g. zip, dz, containing all the resources such as images/audios
   protected _resourceHolderSuffixes: string[] = [".zip"];
 
-  // e.g. jpg, wmv, which are the actual resourceHolder files
+  // e.g. jpg, wmv, which are the actual resourcePath files
   protected _resourceFileSuffixes: string[] = [".jpg", ".wmv", ".bmp", ".mp3"];
 
   // get meta data and index
@@ -55,7 +55,7 @@ export abstract class Dictionary {
     }</div><div class="dp-definition">${wordTreeHTML.definition}</div></div>`;
   }
 
-  // get resourceHolder contents
+  // get resourcePath contents
 
   get dictionarySuffixes(): string[] {
     return this._dictionarySuffixes;

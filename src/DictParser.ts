@@ -104,7 +104,7 @@ export class DictParser extends EventEmitter {
       const html: string = await dictionary.getHTML(
         wordIndex.dictionary.name,
         wordIndex.dictionary.dictPath,
-        wordIndex.dictionary.resourceHolder,
+        wordIndex.dictionary.resourcePath,
         wordPosition
       );
       // const dictName = dictMap.meta.NAME;
@@ -175,7 +175,7 @@ export class DictParser extends EventEmitter {
         word_index.len              AS len,             
         dictionary.id               AS dictionary_id,   
         dictionary.name             AS name,            
-        dictionary.resource_holder  AS resource_holder, 
+        dictionary.resource_path    AS resource_path, 
         dictionary.dict_path        AS dict_path,       
         dictionary.type             AS type
       FROM word_index INNER JOIN dictionary
@@ -191,7 +191,8 @@ export class DictParser extends EventEmitter {
         dictionary: {
           id: queryResult.dictionary_id,
           name: queryResult.name,
-          resourceHolder: queryResult.resource_holder,
+          indexPath: queryResult.index_path,
+          resourcePath: queryResult.resource_path,
           dictPath: queryResult.dict_path,
           type: queryResult.type
         },

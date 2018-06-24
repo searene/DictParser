@@ -39,7 +39,7 @@ export class Sqlite {
     return Promise.all([
       Sqlite._db.run(`
           CREATE TABLE IF NOT EXISTS zip_entry (
-            resource_holder TEXT,
+            resource_path TEXT,
             flags INTEGER,
             method INTEGER,
             compressed_size INTEGER,
@@ -55,7 +55,8 @@ export class Sqlite {
           CREATE TABLE IF NOT EXISTS dictionary (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
-            resource_holder TEXT,
+            index_path TEXT,
+            resource_path TEXT,
             dict_path TEXT,
             type TEXT
           )`),
