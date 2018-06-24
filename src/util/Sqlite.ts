@@ -1,32 +1,15 @@
 import * as sqlite from "sqlite";
+import * as fse from "fs-extra";
+import * as path from "path";
 
 export class Sqlite {
-  private _dbPath: string;
-  private _db: sqlite.Database;
-  private _initialized = false;
-  constructor(dbPath: string) {
-    this._dbPath = dbPath;
-  }
-  private init = async () => {
-    this._db = await sqlite.open(this._dbPath);
-    await Promise.all([
-      this._db.run(`
-          CREATE TABLE IF NOT EXISTS zip_entry (
-            resource_holder TEXT,
-            flags INTEGER,
-            method INTEGER,
-            compressed_size INTEGER,
-            size INTEGER,
-            fname_len INTEGER,
-            extra_len INTEGER,
-            com_len INTEGER,
-            offset INTEGER,
-            name TEXT,
-            is_directory INTEGER
-          )`),
-    ]);
+  public static init = async (dbPath: string) => {
+    if (!await fse.pathExists(dbPath)) {
+      await fse.createFile(dbPath);
+    }
+    Sqlite._db = await sqlite.open(dbPath);
+    await Sqlite.createAllTables();
   };
-
   /**
    * Used in INSERT and DELETE
    */
@@ -45,10 +28,62 @@ export class Sqlite {
       throw new Error(`type ${typeof v} is not supported`);
     }
   };
-  public getDb = async () => {
-    if (!this._initialized) {
-      await this.init();
-    }
-    return this._db;
+  public static get db() {
+    return Sqlite._db;
+  }
+  public static reset = async () => {
+    await Sqlite.dropAllTables();
+    await Sqlite.createAllTables();
+  }
+  public static createAllTables = async () => {
+    return Promise.all([
+      Sqlite._db.run(`
+          CREATE TABLE IF NOT EXISTS zip_entry (
+            resource_holder TEXT,
+            flags INTEGER,
+            method INTEGER,
+            compressed_size INTEGER,
+            size INTEGER,
+            fname_len INTEGER,
+            extra_len INTEGER,
+            com_len INTEGER,
+            offset INTEGER,
+            name TEXT,
+            is_directory INTEGER
+          )`),
+      Sqlite._db.run(`
+          CREATE TABLE IF NOT EXISTS dictionary (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            resource_holder TEXT,
+            dict_path TEXT,
+            type TEXT
+          )`),
+      Sqlite._db.run(`
+          CREATE TABLE IF NOT EXISTS word_index (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            dictionary_id INTEGER,
+            word TEXT,
+            pos INTEGER,
+            len INTEGER
+          )`),
+      Sqlite._db.run(`
+          CREATE TABLE IF NOT EXISTS word_form (
+            transformed_word TEXT,
+            original_word TEXT
+          )`)
+    ]);
   };
+  public static dropAllTables = async () => {
+    return Promise.all([
+      Sqlite.dropTableIfExists("zip_entry"),
+      Sqlite.dropTableIfExists("dictionary"),
+      Sqlite.dropTableIfExists("word_index"),
+      Sqlite.dropTableIfExists("word_form")
+    ]);
+  };
+  public static dropTableIfExists = async (tableName: string): Promise<void> => {
+    await Sqlite._db.run(`DROP TABLE IF EXISTS ${tableName}`, );
+  }
+  private static _db: sqlite.Database;
 }

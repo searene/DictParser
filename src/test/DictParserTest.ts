@@ -7,14 +7,17 @@ import * as fse from "fs-extra";
 import * as os from 'os';
 import { describe, it } from "mocha";
 
+// tslint:disable:no-console
+
 describe('Test DictParser', () => {
 
   const scanFolder1 = path.join(TEST_RESOURCE_PATH, 'scan');
   const scanFolder2 = path.join('/home/searene/Public/dictionaries');
-  // let dbPath = path.join(TEST_RESOURCE_PATH, 'dictParser.db');
-  const dbPath = "/tmp/dict-parser.db";
+  const dbPath = path.join(TEST_RESOURCE_PATH, 'dictParser.db');
+  // const dbPath = "/tmp/dict-parser.db";
 
   it("#scanAndGetWordDefinition", async () => {
+    await fse.remove(dbPath);
     const dictParser = new DictParser(dbPath);
     await dictParser.init();
     dictParser.on('name', (dictionaryName: string) => {
@@ -43,6 +46,7 @@ describe('Test DictParser', () => {
 
   it("#getWordDefinition", async () => {
     const dictParser = new DictParser(dbPath);
+    await dictParser.init();
     const wordDefinitionList = await dictParser.getWordDefinitions('long');
     console.log(wordDefinitionList);
   });

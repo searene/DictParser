@@ -1,35 +1,47 @@
-import { ROOT_PATH } from '../../Constant';
-import { DictionaryFinder } from '../../DictionaryFinder';
-import { Option, some } from 'ts-option';
-import { DictMap, IndexMap, Meta } from '../../DictionaryFinder';
-import { DSLWordTreeToHTMLConverter } from './DSLWordTreeToHTMLConverter';
-import { LineReader, LineStats } from '../../LineReader';
-import { BufferReader, DzBufferReader, SimpleBufferReader } from '../../BufferReader';
-import { DSLStateMachine } from './DSLStateMachine';
-import { StateMachine } from '../../StateMachine';
-import { WordTree, getAllChildNodes } from '../../Tree';
-import { Dictionary, WordPosition, DictionaryStats, WordTreeHTML } from "../../Dictionary";
-import { DictZipParser } from "./DictZipParser";
-import { getEncodingInFile, getEncodingInBuffer } from "../../EncodingDetector";
-import * as path from 'path';
-import { Node } from '../../Tree';
+import { IndexMap, Meta } from "../../DictionaryFinder";
+import { DSLWordTreeToHTMLConverter } from "./DSLWordTreeToHTMLConverter";
+import { LineReader, LineStats } from "../../LineReader";
+import {
+  BufferReader,
+  DzBufferReader,
+  SimpleBufferReader
+} from "../../BufferReader";
+import { DSLStateMachine } from "./DSLStateMachine";
+import { StateMachine } from "../../StateMachine";
+import { WordTree } from "../../Tree";
+import {
+  Dictionary,
+  WordPosition,
+  DictionaryStats,
+  WordTreeHTML
+} from "../../Dictionary";
+import * as path from "path";
 
 /**
  * Created by searene on 17-1-23.
  */
 export class DSLDictionary extends Dictionary {
+  protected _dictionarySuffixes: string[] = [".dsl", ".dz"];
 
-  protected _dictionarySuffixes: string[] = ['.dsl', '.dz'];
-
-  public async getWordTree(dictMap: DictMap, wordPosition: WordPosition): Promise<WordTree> {
-    const input: string = await this.getFileContents(dictMap.dict.dictPath, wordPosition);
+  public async getWordTree(
+    dictPath: string,
+    wordPosition: WordPosition
+  ): Promise<WordTree> {
+    const input: string = await this.getFileContents(dictPath, wordPosition);
     const stateMachine: StateMachine = new DSLStateMachine(input);
     return stateMachine.run();
   }
 
-  public async getWordTreeHTML(dictMap: DictMap, wordPosition: WordPosition, sqliteDbPath: string): Promise<WordTreeHTML> {
-    const wordTree: WordTree = await this.getWordTree(dictMap, wordPosition);
-    return await new DSLWordTreeToHTMLConverter(dictMap, sqliteDbPath).convertWordTreeToHTML(wordTree);
+  public async getWordTreeHTML(
+    dictPath: string,
+    resourceHolder: string,
+    wordPosition: WordPosition
+  ): Promise<WordTreeHTML> {
+    const wordTree: WordTree = await this.getWordTree(dictPath, wordPosition);
+    return await new DSLWordTreeToHTMLConverter(
+      dictPath,
+      resourceHolder
+    ).convertWordTreeToHTML(wordTree);
   }
 
   public async getDictionaryStats(dictFile: string): Promise<DictionaryStats> {
@@ -49,10 +61,10 @@ export class DSLDictionary extends Dictionary {
       // word list of the current block
       let entryList: string[] = [];
 
-      lineReader.on('line', (lineStats: LineStats) => {
+      lineReader.on("line", (lineStats: LineStats) => {
         const line = lineStats.line;
 
-        if (!isInDefinition && line.startsWith('#')) {
+        if (!isInDefinition && line.startsWith("#")) {
           // meta data
           const header: string[] = line.substring(1).split(/\s(.+)/);
 
@@ -60,15 +72,15 @@ export class DSLDictionary extends Dictionary {
           const value = header[1].substring(1, header[1].length - 1);
           meta[key] = value;
 
-          if (key == 'NAME' && !isDictionaryReported) {
-            this._dictionaryScanProgressReporter.emit('name', value);
+          if (key === "NAME" && !isDictionaryReported) {
+            this._dictionaryScanProgressReporter.emit("name", value);
             isDictionaryReported = true;
           }
-        } else if (!isInDefinition && !line.startsWith('#')) {
+        } else if (!isInDefinition && !line.startsWith("#")) {
           isInDefinition = true;
         } else if (isInDefinition && !/^\s/.test(line)) {
           // entry
-          if (previousLine.trim() == '' || /^\s/.test(previousLine)) {
+          if (previousLine.trim() === "" || /^\s/.test(previousLine)) {
             // previous line is empty or definition,
             // which means the current line is the beginning of a new entry
             wordTreeLength = 0;
@@ -80,18 +92,21 @@ export class DSLDictionary extends Dictionary {
           originalWords[word] = { pos: lineStats.pos, len: -1 };
 
           // check if the word exists in transformedWords, if so, remove it.
-          if (transformedWords[word] != undefined) {
+          if (transformedWords[word] !== undefined) {
             delete transformedWords[word];
           }
         } else if (isInDefinition && /^\s/.test(line)) {
           wordTreeLength += lineStats.len;
-          entryList.forEach((entry) => {
-            originalWords[entry].len = wordTreeLength + originalWords[entryList[0]].pos - originalWords[entry].pos;
+          entryList.forEach(entry => {
+            originalWords[entry].len =
+              wordTreeLength +
+              originalWords[entryList[0]].pos -
+              originalWords[entry].pos;
           });
         }
         previousLine = line;
       });
-      lineReader.on('end', () => {
+      lineReader.on("end", () => {
         resolve({ meta, indexMap: originalWords });
       });
       lineReader.process();
@@ -106,17 +121,17 @@ export class DSLDictionary extends Dictionary {
     let isInUnindexablePart = false;
     let indexableWord = "";
     for (let i = 0; i < line.length; i++) {
-      if (line.charAt(i) == '\\') {
-        if (i == line.length - 1) {
+      if (line.charAt(i) === "\\") {
+        if (i === line.length - 1) {
           indexableWord += "\\";
           break;
-        } else if (['{', '}'].indexOf(line.charAt(i + 1)) > -1) {
+        } else if (["{", "}"].indexOf(line.charAt(i + 1)) > -1) {
           indexableWord += line.charAt(i + 1);
           i++;
         }
-      } else if (line.charAt(i) == '{') {
+      } else if (line.charAt(i) === "{") {
         isInUnindexablePart = true;
-      } else if (line.charAt(i) == '}') {
+      } else if (line.charAt(i) === "}") {
         isInUnindexablePart = false;
       } else if (!isInUnindexablePart) {
         indexableWord += line.charAt(i);
@@ -128,9 +143,9 @@ export class DSLDictionary extends Dictionary {
   private async getBufferReader(dictFile: string): Promise<BufferReader> {
     let bufferReader: BufferReader;
     const ext = path.extname(dictFile);
-    if (ext == '.dsl') {
+    if (ext === ".dsl") {
       bufferReader = new SimpleBufferReader();
-    } else if (ext == '.dz') {
+    } else if (ext === ".dz") {
       bufferReader = new DzBufferReader();
     } else {
       throw new Error(`${ext} file is not supported`);
@@ -138,10 +153,16 @@ export class DSLDictionary extends Dictionary {
     await bufferReader.open(dictFile);
     return bufferReader;
   }
-  private async getFileContents(dictFile: string, wordPosition: WordPosition): Promise<string> {
+  private async getFileContents(
+    dictFile: string,
+    wordPosition: WordPosition
+  ): Promise<string> {
     const bufferReader: BufferReader = await this.getBufferReader(dictFile);
 
-    const buffer: Buffer = await bufferReader.read(wordPosition.pos, wordPosition.len);
+    const buffer: Buffer = await bufferReader.read(
+      wordPosition.pos,
+      wordPosition.len
+    );
     const encoding = (await bufferReader.getEncodingStat()).encoding;
     await bufferReader.close();
 

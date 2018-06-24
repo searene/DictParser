@@ -9,13 +9,27 @@ import * as fse from "fs-extra";
 import * as path from "path";
 import * as ReadLine from "readline";
 import { EventEmitter } from "events";
-import {ZipReader} from "./util/ZipReader";
+import { ZipReader } from "./util/ZipReader";
+import { Sqlite } from "./util/Sqlite";
 
 /**
  * Created by searene on 17-1-23.
  */
 
 export class DictionaryFinder extends EventEmitter {
+  public static register(
+    dictName: string,
+    Dictionary: new () => Dictionary
+  ): void {
+    const dictionary = new Dictionary();
+    this._dictionaries.set(dictName, new Dictionary());
+  }
+
+  private static _dictionaries: Map<string, Dictionary> = new Map<
+    string,
+    Dictionary
+    >();
+
   constructor() {
     super();
 
@@ -33,17 +47,6 @@ export class DictionaryFinder extends EventEmitter {
   }
 
 
-  private static _dictionaries: Map<string, Dictionary> = new Map<
-    string,
-    Dictionary
-  >();
-
-  private _dictMapList: DictMap[];
-
-  public static register(dictName: string, Dictionary: new () => Dictionary): void {
-    const dictionary = new Dictionary();
-    this._dictionaries.set(dictName, new Dictionary());
-  }
 
   /** Walk through all files in <i>dir</i> recursively, and look for
    * dictionary definition files(e.g. dz, dsl), add it along with
@@ -51,18 +54,17 @@ export class DictionaryFinder extends EventEmitter {
    */
   public async scan(
     dirs: string | string[],
-    jsonDbPath: string,
-    sqliteDbPath: string,
     wordFormsFolder: string
-  ): Promise<DictMap[]> {
+  ): Promise<void> {
     // DictMap without resourceHolder
-    const dictMapList: DictMap[] = [];
     let files: FileWithStats[] = [];
     for (const dir of Array.isArray(dirs) ? dirs : [dirs]) {
       files = files.concat(await readdirRecursivelyWithStat(dir));
     }
     for (const file of files) {
-      if (file.stat.isDirectory()) { continue; }
+      if (file.stat.isDirectory()) {
+        continue;
+      }
 
       const ext = path.extname(file.filePath);
       for (const [dictName, dictionary] of Array.from(
@@ -73,7 +75,7 @@ export class DictionaryFinder extends EventEmitter {
           // get resourceHolder
           const resource: Option<string> = await this.getResource(
             file.filePath,
-            files.map(file => file.filePath),
+            files.map(f => f.filePath),
             dictionary.resourceHolderSuffixes,
             dictionary.resourceFileSuffixes
           );
@@ -82,80 +84,83 @@ export class DictionaryFinder extends EventEmitter {
           const dictStats: DictionaryStats = await dictionary.getDictionaryStats(
             file.filePath
           );
+          const dictId = await this.saveDictToDb(
+            dictStats.meta.NAME,
+            resource.isEmpty ? "" : resource.get,
+            file.filePath,
+            dictName
+          );
+          await this.saveWordsToDb(dictId, dictStats.indexMap);
+          if (!resource.isEmpty) {
+            await this.buildResourceIndex(resource.get);
+          }
 
           // add it to dictMapList
-          dictMapList.push({
-            dict: {
-              dictPath: file.filePath,
-              dictType: dictName,
-              resourceHolder: resource.isEmpty ? "" : resource.get
-            },
-            meta: dictStats.meta,
-            originalWords: dictStats.indexMap,
-            transformedWords: {}
-          });
+          // dictMapList.push({
+          //   dict: {
+          //     dictPath: file.filePath,
+          //     dictType: dictName,
+          //     resourceHolder: resource.isEmpty ? "" : resource.get
+          //   },
+          //   meta: dictStats.meta,
+          //   originalWords: dictStats.indexMap,
+          //   transformedWords: {}
+          // });
         }
       }
     }
 
     // add word transformations
-    await this.addTransformedWords(dictMapList, wordFormsFolder);
+    // await this.addTransformedWords(dictMapList, wordFormsFolder);
 
     // save to db
-    await fse.writeFile(jsonDbPath, JSON.stringify(dictMapList), {
-      encoding: "utf8"
-    });
+    // await fse.writeFile(jsonDbPath, JSON.stringify(dictMapList), {
+    //   encoding: "utf8"
+    // });
 
-    // build index for resource holders
-    for (const dictMap of dictMapList) {
-      await this.buildResourceIndex(dictMap.dict.resourceHolder, sqliteDbPath);
-    }
-
-    this._dictMapList = dictMapList;
-    return dictMapList;
   }
 
-  private async addTransformedWords(
-    dictMapList: DictMap[],
-    wordFormsFolder: string
-  ): Promise<void> {
-    // word forms
-    const wordFormsFiles = await fse.readdir(wordFormsFolder);
-    for (let i = 0; i < wordFormsFiles.length; i++) {
-      const wordFormsFile = path.join(wordFormsFolder, wordFormsFiles[i]);
-      if (!(await fse.pathExists(wordFormsFile))) {
-        console.log(`${wordFormsFile} doesn't exist, skip`);
-        continue;
-      }
-      const lineReader = ReadLine.createInterface({
-        input: fse.createReadStream(wordFormsFile)
-      });
-      lineReader.on("line", line => {
-        const words: string[] = line.split(/[\s,:]+/);
-
-        const originalWord = words[0];
-        const transformedWords = words.slice(1);
-
-        for (const transformedWord of transformedWords) {
-          // check each dictionary
-          for (const dictMap of dictMapList) {
-            if (
-              dictMap.originalWords.hasOwnProperty(originalWord) &&
-              !dictMap.transformedWords.hasOwnProperty(transformedWord)
-            ) {
-              dictMap.transformedWords[transformedWord] =
-                dictMap.originalWords[originalWord];
-            }
-          }
-        }
-      });
-      return new Promise<void>((resolve, reject) => {
-        lineReader.on("close", () => {
-          resolve();
-        });
-      });
-    }
-  }
+  // private async addTransformedWords(
+  //   dictMapList: DictMap[],
+  //   wordFormsFolder: string
+  // ): Promise<void> {
+  //   // word forms
+  //   const wordFormsFiles = await fse.readdir(wordFormsFolder);
+  //   for (let i = 0; i < wordFormsFiles.length; i++) {
+  //     const wordFormsFile = path.join(wordFormsFolder, wordFormsFiles[i]);
+  //     if (!(await fse.pathExists(wordFormsFile))) {
+  //       console.log(`${wordFormsFile} doesn't exist, skip`);
+  //       continue;
+  //     }
+  //     const lineReader = ReadLine.createInterface({
+  //       input: fse.createReadStream(wordFormsFile)
+  //     });
+  //     lineReader.on("line", line => {
+  //       const words: string[] = line.split(/[\s,:]+/);
+  //
+  //       const originalWord = words[0];
+  //       const transformedWords = words.slice(1);
+  //
+  //       for (const transformedWord of transformedWords) {
+  //         // check each dictionary
+  //         for (const dictMap of dictMapList) {
+  //           if (
+  //             dictMap.originalWords.hasOwnProperty(originalWord) &&
+  //             !dictMap.transformedWords.hasOwnProperty(transformedWord)
+  //           ) {
+  //             dictMap.transformedWords[transformedWord] =
+  //               dictMap.originalWords[originalWord];
+  //           }
+  //         }
+  //       }
+  //     });
+  //     return new Promise<void>((resolve, reject) => {
+  //       lineReader.on("close", () => {
+  //         resolve();
+  //       });
+  //     });
+  //   }
+  // }
 
   static get dictionaries(): Map<string, Dictionary> {
     return DictionaryFinder._dictionaries;
@@ -191,18 +196,22 @@ export class DictionaryFinder extends EventEmitter {
     const baseDir: string = path.dirname(dictFilePath);
 
     for (const resourceFile of resourceFiles) {
-      if (resourceFile == dictFilePath) { continue; }
+      if (resourceFile === dictFilePath) {
+        continue;
+      }
 
       const isDir: boolean = (await fse.stat(resourceFile)).isDirectory();
       const isSameDir: boolean =
-        path.dirname(dictFilePath) == path.dirname(resourceFile);
+        path.dirname(dictFilePath) === path.dirname(resourceFile);
       const isSameBaseName: boolean =
-        path.basename(resourceFile).split(".")[0] == dictFileBaseName;
+        path.basename(resourceFile).split(".")[0] === dictFileBaseName;
       const isResourceHolder: boolean =
         !isDir &&
         resourceHolderSuffixes.indexOf(path.extname(resourceFile)) > -1;
       const isResourceFile: boolean = await (async (): Promise<boolean> => {
-        if (!isDir) { return false; }
+        if (!isDir) {
+          return false;
+        }
         const files: string[] = await fse.readdir(resourceFile);
         for (const file of files) {
           if (resourceFileSuffixes.indexOf(path.extname(file)) > -1) {
@@ -224,42 +233,48 @@ export class DictionaryFinder extends EventEmitter {
     candidates.sort((a, b) => {
       return a.priority - b.priority;
     });
-    return candidates.length == 0 ? none : option(candidates[0].file);
+    return candidates.length === 0 ? none : option(candidates[0].file);
   }
-  private buildResourceIndex = async (resourceHolder: string, sqliteDbPath: string) => {
+  private buildResourceIndex = async (
+    resourceHolder: string,
+  ) => {
     if (path.extname(resourceHolder) === ".zip") {
-      const zipReader = new ZipReader(sqliteDbPath, resourceHolder);
-      await zipReader.buildZipIndex()
+      const zipReader = new ZipReader(resourceHolder);
+      await zipReader.buildZipIndex();
     }
   };
+  private saveDictToDb = async (
+    dictName: string,
+    resourceHolder: string,
+    dictPath: string,
+    dictType: string
+  ): Promise<number> => {
+   await Sqlite.db.run(`
+     INSERT INTO dictionary (name, resource_holder, dict_path, type)
+     VALUES (?, ?, ?, ?)
+   `, [dictName, resourceHolder, dictPath, dictType]);
+   const queryResult = await Sqlite.db.get(`SELECT id FROM dictionary WHERE dict_path = ?`, [dictPath]);
+   return queryResult.id;
+  };
+  private saveWordsToDb = async (dictId: number, indexMap: IndexMap): Promise<void> => {
+    let insertStatement = `INSERT INTO word_index (dictionary_id, word, pos, len) VALUES`;
+    const parameters = [];
+    for (const word in indexMap) {
+      if (indexMap.hasOwnProperty(word)) {
+        parameters.push(`(
+                       ${Sqlite.getSQLParam(dictId)},
+                       ${Sqlite.getSQLParam(word)},
+                       ${Sqlite.getSQLParam(indexMap[word].pos)},
+                       ${Sqlite.getSQLParam(indexMap[word].len)}
+        )`);
+      }
+    }
+    insertStatement = insertStatement + parameters.join(",\n");
+    await Sqlite.db.exec(insertStatement);
+  }
 }
 
 DictionaryFinder.register("dsl", DSLDictionary);
-
-export interface IDictionary {
-  // absolute path to main dictionary file
-  dictPath: string;
-
-  // e.g. dsl
-  dictType: string;
-
-  // path to resourceHolder file
-  resourceHolder: string;
-}
-
-export interface DictMap {
-  // basic dictionary information
-  dict: IDictionary;
-
-  // meta data
-  meta: Meta;
-
-  // pos of words in the dictionary
-  originalWords: IndexMap;
-
-  // pos of transformed words in the dictionary
-  transformedWords: IndexMap;
-}
 
 export interface IndexMap {
   [word: string]: WordPosition;

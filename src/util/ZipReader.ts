@@ -2,12 +2,8 @@ import { StreamZip, ZipEntry } from "../js/node-stream-zip";
 import { Sqlite } from "./Sqlite";
 
 export class ZipReader {
-  private _sqlite: Sqlite;
-  private _sqliteDbPath: string;
   private _zipFilePath: string;
-  constructor(sqliteDbPath: string, zipFilePath: string) {
-    this._sqliteDbPath = sqliteDbPath;
-    this._sqlite = new Sqlite(sqliteDbPath);
+  constructor(zipFilePath: string) {
     this._zipFilePath = zipFilePath;
   }
   public async extractFileFromZip(fileName: string): Promise<Buffer> {
@@ -52,8 +48,7 @@ export class ZipReader {
     });
   }
   public saveEntriesToDb = async (entries: ZipEntry[]): Promise<void> => {
-    const db = await this._sqlite.getDb();
-    await db.exec(`DELETE FROM zip_entry WHERE resource_holder = ${Sqlite.getSQLParam(this._zipFilePath)}`);
+    await Sqlite.db.exec(`DELETE FROM zip_entry WHERE resource_holder = ${Sqlite.getSQLParam(this._zipFilePath)}`);
     let insertStatement = `
               INSERT INTO zip_entry (
                 resource_holder, flags, method, compressed_size, size,
@@ -75,15 +70,14 @@ export class ZipReader {
                        ${Sqlite.getSQLParam(entry.isDirectory)})`);
     }
     insertStatement = insertStatement + parameters.join(",\n");
-    await db.exec(insertStatement);
+    await Sqlite.db.exec(insertStatement);
   };
   public buildZipIndex = async (): Promise<void> => {
     const zipEntries = await this.getZipEntries();
     await this.saveEntriesToDb(zipEntries);
   };
   public getEntry = async (fileName: string): Promise<ZipEntry | undefined> => {
-    const db = await this._sqlite.getDb();
-    const result = await db.get(
+    const result = await Sqlite.db.get(
       `SELECT * FROM zip_entry WHERE resource_holder = ? AND name = ?`,
       [this._zipFilePath, fileName]
     );

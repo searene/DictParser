@@ -1,5 +1,5 @@
 import { WordTree } from "../Tree";
-import { IDictionary } from "../DictionaryFinder";
+import { IDictionary } from "./IDictionary";
 
 export interface IWordDefinition {
   word: string;

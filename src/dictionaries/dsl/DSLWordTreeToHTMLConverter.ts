@@ -10,7 +10,6 @@ import { SRC_RESOURCE_PATH } from "../../Constant";
 import * as fse from "fs-extra";
 import { Node } from "../../Tree";
 import * as path from "path";
-import { DictMap } from "../../DictionaryFinder";
 import { ZipReader } from "../../util/ZipReader";
 
 export class DSLWordTreeToHTMLConverter {
@@ -18,12 +17,12 @@ export class DSLWordTreeToHTMLConverter {
    * Resource types
    */
   private _dslResourceManager = new DSLResourceManager();
-  private _dictMap: DictMap;
-  private _sqliteDbPath: string;
+  private _dictPath: string;
+  private _resourceHolder: string;
 
-  constructor(dictMap: DictMap, sqliteDbPath: string) {
-    this._dictMap = dictMap;
-    this._sqliteDbPath = sqliteDbPath;
+  constructor(dictPath: string, resourceHolder: string) {
+    this._dictPath = dictPath;
+    this._resourceHolder = resourceHolder;
   }
 
   public async convertWordTreeToHTML(wordTree: WordTree): Promise<WordTreeHTML> {
@@ -56,7 +55,7 @@ export class DSLWordTreeToHTMLConverter {
             }">${htmlOfChildren}</${node.name}>`;
           } else if (node.name === "p") {
             html += `<span class="dsl-p">${htmlOfChildren}</span>`;
-          } else if (node.name == "u") {
+          } else if (node.name === "u") {
             html += `<span class="dsl-u">${htmlOfChildren}</span>`;
           } else if (["sub", "sup"].indexOf(node.name) > -1) {
             html += `<${node.name}>${htmlOfChildren}</${node.name}>`;
@@ -75,13 +74,13 @@ export class DSLWordTreeToHTMLConverter {
             ].indexOf(node.name) > -1
           ) {
             html += `<div class="dsl-${node.name}">${htmlOfChildren}</div>`;
-          } else if (node.name == "*") {
+          } else if (node.name === "*") {
             html += htmlOfChildren;
-          } else if (node.name == "ex") {
+          } else if (node.name === "ex") {
             html += `<div class="dsl-opt"><span class="dsl-ex">${htmlOfChildren}</span></div>`;
           } else if (
-            node.name == "s" &&
-            this._dslResourceManager.getResourceType(node) ==
+            node.name === "s" &&
+            this._dslResourceManager.getResourceType(node) ===
               this._dslResourceManager.ResourceType.AUDIO
           ) {
             const audioType = path
@@ -99,11 +98,11 @@ export class DSLWordTreeToHTMLConverter {
                         align="absmiddle" 
                         alt="Play"/>`;
           } else if (
-            node.name == "s" &&
-            this._dslResourceManager.getResourceType(node) ==
+            node.name === "s" &&
+            this._dslResourceManager.getResourceType(node) ===
               this._dslResourceManager.ResourceType.IMAGE
           ) {
-            const resourceHolder = this._dictMap.dict.resourceHolder;
+            const resourceHolder = this._resourceHolder;
             const resourceHolderType = await this._dslResourceManager.getResourceHolderType(
               resourceHolder
             );
@@ -115,23 +114,23 @@ export class DSLWordTreeToHTMLConverter {
             html += `<img src=${completeResourcePath} alt="${this._dslResourceManager.getResourceName(
               node
             )}"/>`;
-          } else if (node.name == "'") {
+          } else if (node.name === "'") {
             const stressedText =
               node.children.length > 0 ? node.children[0].contents : "";
             html += `<span class="dsl-stress"><span class="dsl-stress-without-accent">stressedText</span><span class="dsl-stress-with-accent">${AccentConverter.removeAccent(
               stressedText
             )}</span></span>`;
-          } else if (node.name == "url") {
+          } else if (node.name === "url") {
             const url: string =
-              node.children.length == 1 ? node.children[0].contents : "";
+              node.children.length === 1 ? node.children[0].contents : "";
             html += `<a class="dsl-url" href=${url}>${url}</a>`;
-          } else if (node.name == "c") {
+          } else if (node.name === "c") {
             const color: string =
               node.properties.size > 0
                 ? node.properties.entries().next().value[0]
                 : "green";
             html += `<span style="color: ${color}">${htmlOfChildren}</span>`;
-          } else if (node.name == "lang") {
+          } else if (node.name === "lang") {
             html += `<span class="dsl-lang">${htmlOfChildren}</span>`;
           }
           break;
@@ -163,7 +162,7 @@ export class DSLWordTreeToHTMLConverter {
     return await this.base64Encode(filePath);
   };
   private getResourceAsBase64 = async (resourceNode: Node): Promise<string> => {
-    const resourceHolder = this._dictMap.dict.resourceHolder;
+    const resourceHolder = this._resourceHolder;
     const resourceHolderType = await this._dslResourceManager.getResourceHolderType(
       resourceHolder
     );
@@ -172,7 +171,7 @@ export class DSLWordTreeToHTMLConverter {
       const filePath = path.join(resourceHolder, resourceName);
       return await this.base64Encode(filePath);
     } else if (resourceHolderType === "zip") {
-      const zipReader = new ZipReader(this._sqliteDbPath, resourceHolder);
+      const zipReader = new ZipReader(resourceHolder);
       const buffer = await zipReader.extractFileFromZip(resourceName);
       return buffer.toString("base64");
     } else {
