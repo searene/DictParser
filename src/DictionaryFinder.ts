@@ -3,7 +3,7 @@ import { DSLDictionary } from "./dictionaries/dsl/DSLDictionary";
 import { DictionaryStats } from "./Dictionary";
 import { JSON_DB_PATH, ROOT_PATH, WORD_FORMS_PATH } from "./Constant";
 import { Dictionary, WordPosition } from "./Dictionary";
-import { readdirRecursivelyWithStat, FileWithStats } from "./util/FileUtil";
+import { readdirRecursivelyWithStat, IFileWithStats } from "./util/FileUtil";
 import { Option, option, some, none } from "ts-option";
 import * as fse from "fs-extra";
 import * as path from "path";
@@ -11,33 +11,26 @@ import * as ReadLine from "readline";
 import { EventEmitter } from "events";
 import { ZipReader } from "./util/ZipReader";
 import { Sqlite } from "./util/Sqlite";
+import { IFileCategory } from "./model/IFileCategory";
+import { StarDict } from "./dictionaries/stardict/StarDict";
 
 /**
  * Created by searene on 17-1-23.
  */
 
 export class DictionaryFinder extends EventEmitter {
-  public static register(
-    dictName: string,
-    Dictionary: new () => Dictionary
-  ): void {
-    const dictionary = new Dictionary();
-    this._dictionaries.set(dictName, new Dictionary());
-  }
 
-  private static _dictionaries: Map<string, Dictionary> = new Map<
-    string,
-    Dictionary
-    >();
+  private _dictionaries: Dictionary[] = [
+    new DSLDictionary(),
+    new StarDict()
+  ];
 
   constructor() {
     super();
 
     // emit dictionary name being scanned
-    for (const [dictName, dictionary] of Array.from(
-      DictionaryFinder._dictionaries.entries()
-    )) {
-      dictionary.dictionaryScanProgressReporter.on(
+    for (const dict of this._dictionaries) {
+      dict.dictionaryScanProgressReporter.on(
         "name",
         (dictionaryName: string) => {
           this.emit("name", dictionaryName);
@@ -46,7 +39,25 @@ export class DictionaryFinder extends EventEmitter {
     }
   }
 
+  public scan = async (dirs: string[]): Promise<void> => {
+    for (const dir of dirs) {
+      const files = (await fse.readdir(dir)).map(f => path.resolve(dir, f));
+      if (files.length === 0) {
+        continue;
+      }
 
+      // split files into dirs and normal files
+      const fileCategory = await this.categorizeFiles(files);
+
+      const directories = fileCategory.dirs;
+      const normalFiles = fileCategory.normalFiles;
+
+      for (const dict of this._dictionaries) {
+        const mainDictFiles = dict.getMainDictFiles(normalFiles);
+        await this.addDictionaries(dict, mainDictFiles);
+      }
+    }
+  };
 
   /** Walk through all files in <i>dir</i> recursively, and look for
    * dictionary definition files(e.g. dz, dsl), add it along with
@@ -57,7 +68,7 @@ export class DictionaryFinder extends EventEmitter {
     wordFormsFolder: string
   ): Promise<void> {
     // DictMap without resourcePath
-    let files: FileWithStats[] = [];
+    let files: IFileWithStats[] = [];
     for (const dir of Array.isArray(dirs) ? dirs : [dirs]) {
       files = files.concat(await readdirRecursivelyWithStat(dir));
     }
@@ -271,6 +282,23 @@ export class DictionaryFinder extends EventEmitter {
     }
     insertStatement = insertStatement + parameters.join(",\n");
     await Sqlite.db.exec(insertStatement);
+  }
+  private categorizeFiles = async (files: string[]): Promise<IFileCategory> => {
+    const result = { dirs: [], normalFiles: [] } as IFileCategory;
+    for (const f of files) {
+      const isDir = (await fse.lstat(f)).isDirectory();
+      if (isDir) {
+        result.dirs.push(f);
+      } else {
+        result.normalFiles.push(f);
+      }
+    }
+    return result;
+  };
+  private addDictionaries = async (dict: Dictionary, mainDictFiles: string[]) => {
+    for (const mainDictFile of mainDictFiles) {
+      await dict.addDictionary(mainDictFile);
+    }
   }
 }
 

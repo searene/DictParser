@@ -55,6 +55,8 @@ export class Sqlite {
           CREATE TABLE IF NOT EXISTS dictionary (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
+            word_count INTEGER,
+            syn_path TEXT,
             index_path TEXT,
             resource_path TEXT,
             dict_path TEXT,

@@ -175,6 +175,9 @@ export class DictParser extends EventEmitter {
         word_index.len              AS len,             
         dictionary.id               AS dictionary_id,   
         dictionary.name             AS name,            
+        dictionary.word_count       AS word_count;
+        dictionary.syn_path         AS syn_path,
+        dictionary.index_path       AS index_path,
         dictionary.resource_path    AS resource_path, 
         dictionary.dict_path        AS dict_path,       
         dictionary.type             AS type
@@ -191,6 +194,8 @@ export class DictParser extends EventEmitter {
         dictionary: {
           id: queryResult.dictionary_id,
           name: queryResult.name,
+          wordCount: queryResult.word_count,
+          synPath: queryResult.syn_path,
           indexPath: queryResult.index_path,
           resourcePath: queryResult.resource_path,
           dictPath: queryResult.dict_path,

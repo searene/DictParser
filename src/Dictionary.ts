@@ -55,7 +55,18 @@ export abstract class Dictionary {
     }</div><div class="dp-definition">${wordTreeHTML.definition}</div></div>`;
   }
 
-  // get resourcePath contents
+  public getMainDictFiles = (normalFiles: string[]): string[] => {
+    const result = [];
+    for (const f of normalFiles) {
+      if (this.isFileEndsWith(f, this._dictionarySuffixes)) {
+        result.push(f);
+      }
+    }
+    return result;
+  }
+
+  // mainDictFile has to be an absolute path
+  public abstract async addDictionary(mainDictFile: string): Promise<boolean>;
 
   get dictionarySuffixes(): string[] {
     return this._dictionarySuffixes;
@@ -68,6 +79,14 @@ export abstract class Dictionary {
   }
   get dictionaryScanProgressReporter(): EventEmitter {
     return this._dictionaryScanProgressReporter;
+  }
+  protected isFileEndsWith = (f: string, suffixes: string[]): boolean => {
+    for (const suffix of suffixes) {
+      if (f.endsWith(suffix)) {
+        return true;
+      }
+    }
+    return false;
   }
 }
 

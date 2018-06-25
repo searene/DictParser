@@ -21,7 +21,7 @@ import * as path from "path";
  * Created by searene on 17-1-23.
  */
 export class DSLDictionary extends Dictionary {
-  protected _dictionarySuffixes: string[] = [".dsl", ".dz"];
+  protected _dictionarySuffixes: string[] = [".dsl", ".dsl.dz"];
 
   public async getWordTree(
     dictPath: string,
