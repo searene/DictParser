@@ -40,14 +40,14 @@ export abstract class StateMachine {
      */
     protected _wordTree: WordTree;
 
-    // function name of the initial state
+    // function contents of the initial state
     protected _initialState: string = 'initial';
 
-    // function name of the completed state
+    // function contents of the completed state
     protected _completedState: string = 'completed';
 
-    /** states are a list of functions, the name of each function
-     * is the state name, each function has a return value, which
+    /** states are a list of functions, the contents of each function
+     * is the state contents, each function has a return value, which
      * represents the next state's function
      */
     protected abstract states: {[state: string]: (addition?: any) => StateValue}

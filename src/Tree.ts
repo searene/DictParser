@@ -19,7 +19,7 @@ export class Node {
     // new line
     public static NEW_LINE_NODE: string = 'NEW_LINE_NODE';
 
-    // node name, i.e. tag name, like m1, m2, etc.
+    // node contents, i.e. tag contents, like m1, m2, etc.
     // for text/root node, this field remains empty
     private _name: string = "";
 

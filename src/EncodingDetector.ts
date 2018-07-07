@@ -23,7 +23,7 @@ export const UTF_32_LE: string = "utf32le";
  * @param fileContents file contents represented as Buffer, at least 4 bytes are needed
  * @return an object, containing two keys: 
  *          {@code encoding: string}
- *          {@code posAfterBom: pos of the real contents, excluding the bom at the beginning}
+ *          {@code posAfterBom: offset of the real contents, excluding the bom at the beginning}
  */
 export async function getEncodingInBuffer(fileContents: Buffer): Promise<EncodingStat> {
     if(fileContents.length < 4) {

@@ -321,28 +321,28 @@ ZStream.prototype.inflateSetDictionary = function(dictionary, dictLength){
   // to avoid allocating a large strm->next_out buffer and copying into it.
   // (See also read_buf()).
   void flush_pending(){
-    int len=dstate.pending;
+    int size=dstate.pending;
 
-    if(len>avail_out) len=avail_out;
-    if(len==0) return;
+    if(size>avail_out) size=avail_out;
+    if(size==0) return;
 
     if(dstate.pending_buf.length<=dstate.pending_out ||
        next_out.length<=next_out_index ||
-       dstate.pending_buf.length<(dstate.pending_out+len) ||
-       next_out.length<(next_out_index+len)){
+       dstate.pending_buf.length<(dstate.pending_out+size) ||
+       next_out.length<(next_out_index+size)){
       System.out.println(dstate.pending_buf.length+", "+dstate.pending_out+
-			 ", "+next_out.length+", "+next_out_index+", "+len);
+			 ", "+next_out.length+", "+next_out_index+", "+size);
       System.out.println("avail_out="+avail_out);
     }
 
     System.arraycopy(dstate.pending_buf, dstate.pending_out,
-		     next_out, next_out_index, len);
+		     next_out, next_out_index, size);
 
-    next_out_index+=len;
-    dstate.pending_out+=len;
-    total_out+=len;
-    avail_out-=len;
-    dstate.pending-=len;
+    next_out_index+=size;
+    dstate.pending_out+=size;
+    total_out+=size;
+    avail_out-=size;
+    dstate.pending-=size;
     if(dstate.pending==0){
       dstate.pending_out=0;
     }
@@ -354,20 +354,20 @@ ZStream.prototype.inflateSetDictionary = function(dictionary, dictLength){
   // allocating a large strm->next_in buffer and copying from it.
   // (See also flush_pending()).
   int read_buf(byte[] buf, int start, int size) {
-    int len=avail_in;
+    int size=avail_in;
 
-    if(len>size) len=size;
-    if(len==0) return 0;
+    if(size>size) size=size;
+    if(size==0) return 0;
 
-    avail_in-=len;
+    avail_in-=size;
 
     if(dstate.noheader==0) {
-      adler=_adler.adler32(adler, next_in, next_in_index, len);
+      adler=_adler.adler32(adler, next_in, next_in_index, size);
     }
-    System.arraycopy(next_in, next_in_index, buf, start, len);
-    next_in_index  += len;
-    total_in += len;
-    return len;
+    System.arraycopy(next_in, next_in_index, buf, start, size);
+    next_in_index  += size;
+    total_in += size;
+    return size;
   }
 
   public void free(){

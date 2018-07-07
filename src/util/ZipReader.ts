@@ -48,7 +48,7 @@ export class ZipReader {
     });
   }
   public saveEntriesToDb = async (entries: ZipEntry[]): Promise<void> => {
-    await Sqlite.db.exec(`DELETE FROM zip_entry WHERE resource_path = ${Sqlite.getSQLParam(this._zipFilePath)}`);
+    await Sqlite.db.exec(`DELETE FROM zip_entry WHERE resource_path = ${Sqlite.getSQLParam(this._zipFilePath, Sqlite.PARAM_TYPE_STRING)}`);
     let insertStatement = `
               INSERT INTO zip_entry (
                 resource_path, flags, method, compressed_size, size,
@@ -57,17 +57,17 @@ export class ZipReader {
               ) VALUES `;
     const parameters = [];
     for (const entry of entries) {
-      parameters.push(`(${Sqlite.getSQLParam(this._zipFilePath)},
-                       ${Sqlite.getSQLParam(entry.flags)},
-                       ${Sqlite.getSQLParam(entry.method)},
-                       ${Sqlite.getSQLParam(entry.compressedSize)},
-                       ${Sqlite.getSQLParam(entry.size)},
-                       ${Sqlite.getSQLParam(entry.fnameLen)},
-                       ${Sqlite.getSQLParam(entry.extraLen)},
-                       ${Sqlite.getSQLParam(entry.comLen)},
-                       ${Sqlite.getSQLParam(entry.offset)},
-                       ${Sqlite.getSQLParam(entry.name)},
-                       ${Sqlite.getSQLParam(entry.isDirectory)})`);
+      parameters.push(`(${Sqlite.getSQLParam(this._zipFilePath, Sqlite.PARAM_TYPE_STRING)},
+                       ${Sqlite.getSQLParam(entry.flags, Sqlite.PARAM_TYPE_NUMBER)},
+                       ${Sqlite.getSQLParam(entry.method, Sqlite.PARAM_TYPE_NUMBER)},
+                       ${Sqlite.getSQLParam(entry.compressedSize, Sqlite.PARAM_TYPE_NUMBER)},
+                       ${Sqlite.getSQLParam(entry.size, Sqlite.PARAM_TYPE_NUMBER)},
+                       ${Sqlite.getSQLParam(entry.fnameLen, Sqlite.PARAM_TYPE_NUMBER)},
+                       ${Sqlite.getSQLParam(entry.extraLen, Sqlite.PARAM_TYPE_NUMBER)},
+                       ${Sqlite.getSQLParam(entry.comLen, Sqlite.PARAM_TYPE_NUMBER)},
+                       ${Sqlite.getSQLParam(entry.offset, Sqlite.PARAM_TYPE_NUMBER)},
+                       ${Sqlite.getSQLParam(entry.name, Sqlite.PARAM_TYPE_STRING)},
+                       ${Sqlite.getSQLParam(entry.isDirectory, Sqlite.PARAM_TYPE_BOOLEAN)})`);
     }
     insertStatement = insertStatement + parameters.join(",\n");
     await Sqlite.db.exec(insertStatement);

@@ -6,5 +6,8 @@ export interface IDictionary {
   indexPath: string;
   resourcePath: string;
   dictPath: string;
+  annPath: string;
+  bmpPath: string;
+  sameTypeSequence: string;
   type: string;
 }

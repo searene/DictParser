@@ -9,7 +9,7 @@ async function convertWordFormsFile(wordFormsFolder: string = WORD_FORMS_PATH) {
     const files = await fse.readdir(wordFormsFolder);
     for(const file of files) {
         const result: WordForms = {};
-        if(path.extname(file) == '.json') { continue; }
+        if(path.extname(file) === '.json') { continue; }
         const convertedFileName = path.basename(file) + '.json';
         if(files.indexOf(convertedFileName) > -1) {
             // the file has already been converted

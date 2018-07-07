@@ -6,6 +6,7 @@ import { assert } from 'chai';
 import { getEncodingInFile } from '../../../EncodingDetector';
 import * as fse from 'fs-extra';
 import * as path from 'path';
+import { before, describe, it } from "mocha";
 
 describe("Test DSLStateMachine", () => {
     describe("Test run", () => {

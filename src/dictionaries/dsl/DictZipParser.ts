@@ -14,8 +14,8 @@ export class DictZipParser {
     }
 
     public async parse(pos: number, len: number): Promise<Buffer> {
-        // console.log(`parsing file from pos ${pos}, len: ${len}`);
-        if(this._header == undefined) {
+        // console.log(`parsing file from offset ${offset}, size: ${size}`);
+        if(this._header === undefined) {
             this._header = await this.getHeader();
         }
         const headerLength = this.getHeaderLen(this._header);
@@ -27,8 +27,8 @@ export class DictZipParser {
         const startChunkIndex = ~~(pos / CHLEN);
         const endChunkIndex = ~~((pos + len) / CHLEN);
 
-        // startDecompressPos: headerLength + CHUNKS.readUInt16LE(0) + CHUNKS.readUInt16LE(1) + ... + CHUNKS.readUInt16LE(pos / CHLEN - 1)
-        // endDecompressPos: headerLength + CHUNKS.readUInt16LE(0) + CHUNKS.readUInt16LE(1) + ... + CHUNKS.readUInt16LE((pos + len) / CHLEN)
+        // startDecompressPos: headerLength + CHUNKS.readUInt16LE(0) + CHUNKS.readUInt16LE(1) + ... + CHUNKS.readUInt16LE(offset / CHLEN - 1)
+        // endDecompressPos: headerLength + CHUNKS.readUInt16LE(0) + CHUNKS.readUInt16LE(1) + ... + CHUNKS.readUInt16LE((offset + size) / CHLEN)
         // include startDecompressPos, exclude endDecompressPos
         let startDecompressPos = headerLength;
         let endDecompressPos = headerLength;

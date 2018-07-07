@@ -1,8 +1,9 @@
 import { assert } from 'chai';
 import { TEST_RESOURCE_PATH } from '../Constant';
-import { LineReader, LineStats } from '../LineReader';
-import * as mocha from 'mocha';
+import { LineReader } from '../LineReader';
 import * as path from 'path';
+import { IBaseIndex } from "../model/IBaseIndex";
+import { describe, it } from "mocha";
 
 describe('LineReaderTest', () => {
 
@@ -10,19 +11,19 @@ describe('LineReaderTest', () => {
     const dzFile = path.join(TEST_RESOURCE_PATH, 'simpleDSL/simple.dsl.dz');
 
     it("#run with dsl", (done) => {
-        const result: LineStats[] = [];
+        const result: IBaseIndex[] = [];
         const simpleLineReader = new LineReader(dslFile, 10);
-        simpleLineReader.on('line', (data: LineStats) => {
+        simpleLineReader.on('line', (data: IBaseIndex) => {
             result.push(data);
         });
         simpleLineReader.on('end', () => {
             assert.deepEqual(result, [
-                {line: '#NAME "Sample DSL Dictionary"\n', pos: 2, len: 60},
-                {line: '#INDEX_LANGUAGE "English"\n', pos: 62, len: 52},
-                {line: '#CONTENTS_LANGUAGE  "English"\n', pos: 114, len: 60},
-                {line: '\n', pos: 174, len: 2},
-                {line: 'trivial card\n', pos: 176, len: 26},
-                {line: '  Trivially simple card. The body of the card starts with spaces or TABs, that\'s all.\n', pos: 202, len: 172}
+                {contents: '#NAME "Sample DSL Dictionary"\n', offset: 2, size: 60},
+                {contents: '#INDEX_LANGUAGE "English"\n', offset: 62, size: 52},
+                {contents: '#CONTENTS_LANGUAGE  "English"\n', offset: 114, size: 60},
+                {contents: '\n', offset: 174, size: 2},
+                {contents: 'trivial card\n', offset: 176, size: 26},
+                {contents: '  Trivially simple card. The body of the card starts with spaces or TABs, that\'s all.\n', offset: 202, size: 172}
             ]);
             done();
         });
@@ -30,19 +31,19 @@ describe('LineReaderTest', () => {
     });
 
     it("#run with dz", (done) => {
-        const result: LineStats[] = [];
+        const result: IBaseIndex[] = [];
         const dzLineReader = new LineReader(dzFile, 3);
-        dzLineReader.on('line', (data: LineStats) => {
+        dzLineReader.on('line', (data: IBaseIndex) => {
             result.push(data);
         });
         dzLineReader.on('end', () => {
             assert.deepEqual(result, [
-                {line: '#NAME "Sample DSL Dictionary"\n', pos: 2, len: 60},
-                {line: '#INDEX_LANGUAGE "English"\n', pos: 62, len: 52},
-                {line: '#CONTENTS_LANGUAGE  "English"\n', pos: 114, len: 60},
-                {line: '\n', pos: 174, len: 2},
-                {line: 'trivial card\n', pos: 176, len: 26},
-                {line: '  Trivially simple card. The body of the card starts with spaces or TABs, that\'s all.\n', pos: 202, len: 172}
+                {contents: '#NAME "Sample DSL Dictionary"\n', offset: 2, size: 60},
+                {contents: '#INDEX_LANGUAGE "English"\n', offset: 62, size: 52},
+                {contents: '#CONTENTS_LANGUAGE  "English"\n', offset: 114, size: 60},
+                {contents: '\n', offset: 174, size: 2},
+                {contents: 'trivial card\n', offset: 176, size: 26},
+                {contents: '  Trivially simple card. The body of the card starts with spaces or TABs, that\'s all.\n', offset: 202, size: 172}
             ]);
             done();
         });

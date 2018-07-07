@@ -220,9 +220,9 @@ export class DSLStateMachine extends StateMachine {
             if(!currentChar.valid) { this.states.completed; }
             switch (currentChar.value) {
                 case ']':
-                    // split name and properties
+                    // split contents and properties
                     const propertyList: string[] = this._currentNode.name.split(/\s+/);
-                    this._currentNode.name = propertyList[0];
+                    this._currentNode.contents = propertyList[0];
                     propertyList.slice(1).forEach((property) => {
                         const keyAndValue: string[] = property.split('=');
                         this._currentNode.properties.set(keyAndValue[0], keyAndValue.slice(1).join('='));
@@ -291,7 +291,7 @@ export class DSLStateMachine extends StateMachine {
                 if(this._currentNode.type != Node.TAG_NODE) {
                     this._currentNode = this.initNewNode(this._currentNode, Node.TAG_NODE);
                 }
-                this._currentNode.name += value;
+                this._currentNode.contents += value;
                 break;
             case this.states.inRef:
                 if(this._currentNode.type != Node.REF_NODE) {

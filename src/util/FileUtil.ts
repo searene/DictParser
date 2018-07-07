@@ -1,6 +1,9 @@
 import * as EventEmitter from "events";
 import * as fse from "fs-extra";
 import * as path from "path";
+import * as readline from "readline";
+import * as zlib from "zlib";
+import { IFileCategory } from "../model/IFileCategory";
 
 export interface IFileWithStats {
   filePath: string;
@@ -72,3 +75,58 @@ export class FSHelper {
     });
   }
 }
+
+export const readFileAsLines = async (filename: string): Promise<string[]> => {
+  return new Promise<string[]>((resolve, reject) => {
+    if (this.fileCache.has(filename)) {
+      resolve(this.fileCache.get(filename));
+      return;
+    }
+    const lines: string[] = [];
+    readline.createInterface({
+      input: fse.createReadStream(filename),
+      terminal: false
+    }).on("line", line => {
+      lines.push(line);
+    }).on("close", () => {
+      this.fileCache.set(filename, lines);
+      resolve(lines);
+      return;
+    });
+  });
+};
+
+export const decompressGzFile = async (gzFile: string): Promise<Buffer> => {
+  return new Promise<Buffer>((resolve, reject) => {
+    let buffer = Buffer.alloc(0);
+    const gunzip = zlib.createGunzip();
+    fse.createReadStream(gzFile).pipe(gunzip);
+    gunzip.on("data", (data: Buffer) => {
+      buffer = Buffer.concat([buffer, data]);
+    }).on("end", () => {
+      resolve(buffer);
+    }).on("error", e => {
+      reject(e);
+    });
+  });
+};
+
+export const classifyFiles = async (files: string[]): Promise<IFileCategory> => {
+  const result = { dirs: [], normalFiles: [] } as IFileCategory;
+  for (const f of files) {
+    const isDir = (await fse.lstat(f)).isDirectory();
+    if (isDir) {
+      result.dirs.push(f);
+    } else {
+      result.normalFiles.push(f);
+    }
+  }
+  return result;
+};
+
+export const getNormalFiles = async (files: string[]): Promise<string[]> => {
+  const normalFiles = [];
+  const dirsAndNormalFiles = await classifyFiles(files);
+  return dirsAndNormalFiles.normalFiles;
+}
+

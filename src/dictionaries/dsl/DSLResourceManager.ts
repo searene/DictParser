@@ -25,7 +25,7 @@ export class DSLResourceManager extends ResourceManager {
     }
   }
   public isResourceNode(node: Node): boolean {
-    return node.name == 's' && node.children.length == 1 && node.children[0].type == Node.TEXT_NODE;
+    return node.name === 's' && node.children.length === 1 && node.children[0].type === Node.TEXT_NODE;
   }
   public getResourceName(node: Node): string {
     if (this.isResourceNode(node)) {

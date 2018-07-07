@@ -1,6 +1,6 @@
 import { IDictionary } from "./IDictionary";
 
-export interface IWordIndex {
+export interface IIndex {
   id: number;
   dictionary: IDictionary;
   word: string;
