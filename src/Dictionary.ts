@@ -15,7 +15,7 @@ export abstract class Dictionary {
   ): Promise<string>;
 
   // all the files have to be absolute paths
-  public abstract async addDictionary(files: string[]): Promise<string[]>;
+  public abstract async addDictionary(absoluteFiles: string[]): Promise<string[]>;
 
   get dictionaryScanProgressReporter(): EventEmitter {
     return this._dictionaryScanProgressReporter;

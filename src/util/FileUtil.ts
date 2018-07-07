@@ -4,11 +4,7 @@ import * as path from "path";
 import * as readline from "readline";
 import * as zlib from "zlib";
 import { IFileCategory } from "../model/IFileCategory";
-
-export interface IFileWithStats {
-  filePath: string;
-  stat: fse.Stats;
-}
+import { IFileWithStats } from "../model/IFileWithStats";
 
 async function readdirRecursivelyInternal(dir: string): Promise<string[]> {
   const stat = await fse.stat(dir);
@@ -76,25 +72,30 @@ export class FSHelper {
   }
 }
 
-export const readFileAsLines = async (filename: string): Promise<string[]> => {
-  return new Promise<string[]>((resolve, reject) => {
-    if (this.fileCache.has(filename)) {
-      resolve(this.fileCache.get(filename));
-      return;
-    }
-    const lines: string[] = [];
-    readline.createInterface({
-      input: fse.createReadStream(filename),
-      terminal: false
-    }).on("line", line => {
-      lines.push(line);
-    }).on("close", () => {
-      this.fileCache.set(filename, lines);
-      resolve(lines);
-      return;
+export class FileUtil {
+  public static readFileAsLines = async (filename: string): Promise<string[]> => {
+    return new Promise<string[]>((resolve, reject) => {
+      if (FileUtil.fileCache.has(filename)) {
+        resolve(FileUtil.fileCache.get(filename));
+        return;
+      }
+      const lines: string[] = [];
+      readline.createInterface({
+        input: fse.createReadStream(filename),
+        terminal: false
+      }).on("line", line => {
+        lines.push(line);
+      }).on("close", () => {
+        FileUtil.fileCache.set(filename, lines);
+        resolve(lines);
+        return;
+      });
     });
-  });
-};
+  };
+  // absoluteFilePath -> file contents in lines
+  private static fileCache: Map<string, string[]> = new Map<string, string[]>();
+}
+
 
 export const decompressGzFile = async (gzFile: string): Promise<Buffer> => {
   return new Promise<Buffer>((resolve, reject) => {
@@ -124,9 +125,8 @@ export const classifyFiles = async (files: string[]): Promise<IFileCategory> => 
   return result;
 };
 
-export const getNormalFiles = async (files: string[]): Promise<string[]> => {
-  const normalFiles = [];
-  const dirsAndNormalFiles = await classifyFiles(files);
+export const getNormalFiles = async (absoluteFiles: string[]): Promise<string[]> => {
+  const dirsAndNormalFiles = await classifyFiles(absoluteFiles);
   return dirsAndNormalFiles.normalFiles;
 }
 

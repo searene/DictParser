@@ -2,7 +2,7 @@ import { Dictionary, WordPosition } from "../../Dictionary";
 import * as path from "path";
 import * as fse from "fs-extra";
 import { Sqlite } from "../../util/Sqlite";
-import { decompressGzFile, getNormalFiles, readFileAsLines } from "../../util/FileUtil";
+import { decompressGzFile, FileUtil, getNormalFiles } from "../../util/FileUtil";
 import { none, option, Option } from "ts-option";
 import { DictionaryType } from "../../model/DictionaryType";
 import { readUInt64BE } from "../../util/BufferUtil";
@@ -35,31 +35,28 @@ export class StarDict extends Dictionary {
   private STAR_DICT_WORD_DATA_TYPE_WORD_NET = "n";
   private STAR_DICT_WORD_DATA_TYPE_RESOURCE = "r";
 
-  // absoluteFilePath -> file contents in lines
-  private fileCache: Map<string, string[]> = new Map<string, string[]>();
-
   public async getDefinition(dictionary: IDictionary, pos: number, len: number): Promise<string> {
     const sameTypeSequence = dictionary.sameTypeSequence === "" ? none : option(dictionary.sameTypeSequence);
     const fields = await this.getDefinitionFields(dictionary.dictPath, sameTypeSequence, pos, len);
-    return this.parseDefinitionFields(fields);
+    return await this.parseDefinitionFields(fields);
   }
 
   /**
-   * Return files which are used by StarDict.
+   * Return filePaths which are used by StarDict.
    */
-  public async addDictionary(files: string[]): Promise<string[]> {
+  public async addDictionary(filePaths: string[]): Promise<string[]> {
     const dictionaryFiles: string[] = [];
-    const ifoFiles = await this.getIfoFiles(files);
-    for (const ifoFile of ifoFiles) {
-      const currentDictionaryFiles = await this.addDictionaryByIfoFile(ifoFile);
+    const ifoFilePaths = await this.getIfoFilePaths(filePaths);
+    for (const ifoFilePath of ifoFilePaths) {
+      const currentDictionaryFiles = await this.addDictionaryByIfoFile(ifoFilePath);
       currentDictionaryFiles.forEach((f: string) => dictionaryFiles.push(f));
     }
     return dictionaryFiles;
   }
-  private parseDefinitionFields = (fields: IStarDictDefinitionField[]): string => {
+  private parseDefinitionFields = async (fields: IStarDictDefinitionField[]): Promise<string> => {
     let result = "";
     for (const field of fields) {
-      result += this.parseDefinitionField(field) + "\n";
+      result += (await this.parseDefinitionField(field)) + "\n";
     }
     return result;
   };
@@ -146,35 +143,35 @@ export class StarDict extends Dictionary {
     }
     return result;
   };
-  private addDictionaryByIfoFile = async (ifoFile: string): Promise<string[]> => {
-    const dir = path.dirname(ifoFile);
+  private addDictionaryByIfoFile = async (ifoFilePath: string): Promise<string[]> => {
+    const dir = path.dirname(ifoFilePath);
     const files = await fse.readdir(dir);
-    const dictName = path.basename(ifoFile, path.extname(ifoFile));
-    const indexFile = this.getIndexFile(dictName, files);
-    const dictFile = this.getDictFile(dictName, files);
-    const resourceFiles = this.getResourceFiles(dictName, dir, files); // could be [] if not found
-    const synFile = this.getSynFile(dictName, files);
-    const wordCount = await this.getWordCount(dir, ifoFile);
-    const idxOffsetBits = await this.getIdxOffsetBits(ifoFile);
-    const sameTypeSequence = await this.getSameTypeSequence(dir, ifoFile);
-    if (!this.isDictionaryValid(dictFile, indexFile)) {
+    const dictName = path.basename(ifoFilePath, path.extname(ifoFilePath));
+    const indexFilePath = this.getIndexFilePath(dictName, dir, files);
+    const dictFilePath = this.getDictFile(dictName, dir, files);
+    const resourceFilePaths = this.getResourceFiles(dictName, dir, files); // could be [] if not found
+    const synFilePath = this.getSynFilePath(dictName, dir, files);
+    const wordCount = await this.getWordCount(dir, ifoFilePath);
+    const idxOffsetBits = await this.getIdxOffsetBits(ifoFilePath);
+    const sameTypeSequence = await this.getSameTypeSequence(dir, ifoFilePath);
+    if (!this.isDictionaryValid(dictFilePath, indexFilePath)) {
       return [];
     }
     const dictionaryId = await Sqlite.addDictionary(
       dictName,
       wordCount,
-      synFile,
-      indexFile,
-      resourceFiles,
-      dictFile,
+      synFilePath,
+      indexFilePath,
+      resourceFilePaths,
+      dictFilePath,
       none,
       none,
       sameTypeSequence,
       DictionaryType.STAR_DICT
     );
-    await this.buildWordIndex(indexFile.get, dictionaryId, ifoFile, synFile, idxOffsetBits);
-    await this.buildResourceIndex(dictionaryId, resourceFiles, idxOffsetBits);
-    return this.getDictionaryFiles(indexFile, dictFile, resourceFiles, synFile);
+    await this.buildWordIndex(indexFilePath.get, dictionaryId, ifoFilePath, synFilePath, idxOffsetBits);
+    await this.buildResourceIndex(dictionaryId, resourceFilePaths, idxOffsetBits);
+    return this.getDictionaryFiles(indexFilePath, dictFilePath, resourceFilePaths, synFilePath);
   };
   private buildResourceIndex = async (
     dictionaryId: number,
@@ -202,7 +199,8 @@ export class StarDict extends Dictionary {
   };
   private getRawDefinitionText = async (dictFile: string, pos: number, len: number): Promise<Buffer> => {
     const bufferReader = path.extname(dictFile) === ".dz" ? new DzBufferReader() : new SimpleBufferReader();
-    const buffer: Buffer = await bufferReader.read(pos, len);
+    await bufferReader.open(dictFile);
+    const buffer = await bufferReader.read(pos, len);
     await bufferReader.close();
     return buffer;
   };
@@ -275,8 +273,8 @@ export class StarDict extends Dictionary {
     }
     return dictionaryFiles;
   };
-  private getIfoFiles = async (files: string[]): Promise<string[]> => {
-    const normalFiles = await getNormalFiles(files);
+  private getIfoFilePaths = async (filePaths: string[]): Promise<string[]> => {
+    const normalFiles = await getNormalFiles(filePaths);
     const result = [];
     for (const f of normalFiles) {
       if (f.endsWith(".ifo")) {
@@ -285,25 +283,25 @@ export class StarDict extends Dictionary {
     }
     return result;
   };
-  private getIdxFile = (dictName: string, files: string[]): Option<string> => {
-    return this.getFile(dictName, this.idxSuffixes, files);
+  private getIdxFilePath = (dictName: string, dir: string, fileNames: string[]): Option<string> => {
+    return this.getFilePath(dictName, dir, this.idxSuffixes, fileNames);
   };
-  private getTdxFile = (dictName: string, files: string[]): Option<string> => {
-    return this.getFile(dictName, this.tdxSuffixes, files);
+  private getTdxFilePath = (dictName: string, dir: string, fileNames: string[]): Option<string> => {
+    return this.getFilePath(dictName, dir, this.tdxSuffixes, fileNames);
   };
-  private getIndexFile = (dictName: string, files: string[]): Option<string> => {
-    const idxFile = this.getIdxFile(dictName, files);
+  private getIndexFilePath = (dictName: string, dir: string, fileNames: string[]): Option<string> => {
+    const idxFile = this.getIdxFilePath(dictName, dir, fileNames);
     if (idxFile.isDefined) {
       return idxFile;
     }
-    const tdxFile = this.getTdxFile(dictName, files);
+    const tdxFile = this.getTdxFilePath(dictName, dir, fileNames);
     if (tdxFile.isDefined) {
       return tdxFile;
     }
     return none;
   };
-  private getDictFile = (dictName: string, files: string[]): Option<string> => {
-    return this.getFile(dictName, this.dictSuffixes, files);
+  private getDictFile = (dictName: string, dir: string, files: string[]): Option<string> => {
+    return this.getFilePath(dictName, dir, this.dictSuffixes, files);
   };
   private getResourceFiles = (dictName: string, dir: string, files: string[]): string[] => {
     const resourceDbFiles = this.getResourceDbFiles(dictName, files);
@@ -315,21 +313,21 @@ export class StarDict extends Dictionary {
       return [];
     }
   };
-  private getFile = (fileBaseName: string, fileSuffixes: string[], files: string[]): Option<string> => {
-    const idxFileNames = fileSuffixes.map(suffix => fileBaseName + suffix);
-    for (const f of files) {
-      for (const idxFileName of idxFileNames) {
-        if (f === idxFileName) {
-          return option(f);
+  private getFilePath = (fileBaseName: string, dir: string, fileSuffixes: string[], fileNames: string[]): Option<string> => {
+    const possibleFileNames = fileSuffixes.map(suffix => fileBaseName + suffix);
+    for (const f of fileNames) {
+      for (const possibleFileName of possibleFileNames) {
+        if (f === possibleFileName) {
+          return option(path.resolve(dir, f));
         }
       }
     }
     return none;
   };
-  private getSynFile = (dictName: string, files: string[]): Option<string> => {
-    const synFile = dictName + ".syn";
-    if (files.indexOf(synFile) > -1) {
-      return option(synFile);
+  private getSynFilePath = (dictName: string, dir: string, files: string[]): Option<string> => {
+    const synFileName = dictName + ".syn";
+    if (files.indexOf(synFileName) > -1) {
+      return option(path.resolve(dir, synFileName));
     }
     return none;
   };
@@ -363,7 +361,7 @@ export class StarDict extends Dictionary {
     return await this.getValue(absoluteIfoFilePath, "sametypesequence");
   };
   private getValue = async (absoluteFilePath: string, key: string): Promise<Option<string>> => {
-    const lines = await readFileAsLines(absoluteFilePath);
+    const lines = await FileUtil.readFileAsLines(absoluteFilePath);
     for (const line of lines) {
       if (line.indexOf("=") === -1) {
         continue;
@@ -508,7 +506,7 @@ export class StarDict extends Dictionary {
     return option(nextOffset + 4);
   };
   private isIdxEntryExist = (idxFileContents: Buffer, offset: number): boolean => {
-    return offset >= idxFileContents.length;
+    return offset < idxFileContents.length;
   };
   private readWordDataOffset = (indexFileContents: Buffer, offset: number, len: number): number => {
     if (len === 32) {

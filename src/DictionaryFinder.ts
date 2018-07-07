@@ -43,16 +43,16 @@ export class DictionaryFinder extends EventEmitter {
     return this._dictionaries;
   }
   private scanSingleDir = async (dir: string): Promise<void> => {
-    let files = (await fse.readdir(dir)).map(f => path.resolve(dir, f));
-    if (files.length === 0) {
+    let absoluteFiles = (await fse.readdir(dir)).map(f => path.resolve(dir, f));
+    if (absoluteFiles.length === 0) {
       return;
     }
     for (const dict of this._dictionaries.values()) {
-      const dictionaryFiles = await dict.addDictionary(files);
-      files = files.filter(f => dictionaryFiles.indexOf(f) === -1)
+      const dictionaryFiles = await dict.addDictionary(absoluteFiles);
+      absoluteFiles = absoluteFiles.filter(f => dictionaryFiles.indexOf(f) === -1)
     }
     // scan other directories
-    const dirs = await this.getDirs(files);
+    const dirs = await this.getDirs(absoluteFiles);
     await this.scan(dirs);
   }
   private getDirs = async (files: string[]): Promise<string[]> => {
