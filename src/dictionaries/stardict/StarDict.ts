@@ -8,7 +8,6 @@ import { DictionaryType } from "../../model/DictionaryType";
 import { readUInt64BE } from "../../util/BufferUtil";
 import { IWordPos } from "../../model/IWordPos";
 import { DzBufferReader } from "../../DzBufferReader";
-import { SimpleBufferReader } from "../../../lib/BufferReader";
 import { IStarDictDefinitionField } from "../../model/IStarDictDefinitionField";
 import { IDictionary } from "../..";
 import { StarDictResource } from "../../model/StarDictResource";
@@ -18,6 +17,7 @@ import { IBaseIndex } from "../../model/IBaseIndex";
 import { Encoding } from "tslint/lib/utils";
 import { EncodingUtil } from "../../util/EncodingUtil";
 import { HTMLCreator } from "../../HTMLCreator";
+import { SimpleBufferReader } from "../../SimpleBufferReader";
 
 export class StarDict extends Dictionary {
   private idxSuffixes: string[] = [".idx", ".idx.gz"];

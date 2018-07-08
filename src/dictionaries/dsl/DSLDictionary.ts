@@ -2,7 +2,6 @@ import { DSLWordTreeToHTMLConverter } from "./DSLWordTreeToHTMLConverter";
 import { LineReader } from "../../LineReader";
 import { BufferReader } from "../../BufferReader";
 import { DSLStateMachine } from "./DSLStateMachine";
-import { StateMachine } from "../../StateMachine";
 import { WordTree } from "../../Tree";
 import { Dictionary, WordTreeHTML } from "../../Dictionary";
 import * as path from "path";
@@ -18,16 +17,26 @@ import { SimpleBufferReader } from "../../SimpleBufferReader";
 import { DzBufferReader } from "../../DzBufferReader";
 import { ZipReader } from "../../util/ZipReader";
 import { IBaseIndex } from "../../model/IBaseIndex";
+import { ListUtil } from "../../util/ListUtil";
 
 /**
  * Created by searene on 17-1-23.
  */
 export class DSLDictionary extends Dictionary {
-  public async getDefinition(
-    dictionary: IDictionary,
-    pos: number,
-    len: number
-  ): Promise<string> {
+  private readonly META_KEY_NAME = "NAME";
+  private readonly META_KEY_INDEX_LANGUAGE = "INDEX_LANGUAGE";
+  private readonly META_KEY_CONTENTS_LANGUAGE = "CONTENTS_LANGUAGE";
+  private readonly META_KEY_INCLUDE = "INCLUDE";
+  private readonly META_KEY_SOURCE_CODE_PAGE = "SOURCE_CODE_PAGE";
+  private readonly META_KEY_LIST = [
+    this.META_KEY_NAME,
+    this.META_KEY_INDEX_LANGUAGE,
+    this.META_KEY_CONTENTS_LANGUAGE,
+    this.META_KEY_INCLUDE,
+    this.META_KEY_SOURCE_CODE_PAGE
+  ];
+
+  public async getDefinition(dictionary: IDictionary, pos: number, len: number): Promise<string> {
     const wordTreeHTML: WordTreeHTML = await this.getWordTreeHTML(
       dictionary.dictPath,
       dictionary.resourcePath,
@@ -67,22 +76,19 @@ export class DSLDictionary extends Dictionary {
         dictName: "",
         wordIndex: []
       };
-      let isInDefinition = false;
       const lineReader = new LineReader(dictFile);
-      let previousLine: string;
       let entryIndex = 0;
+      let previousLine = "";
       lineReader.on("line", (lineIndex: IBaseIndex) => {
         const line = lineIndex.contents;
-        if (this.isMetaLine(isInDefinition, line)) {
+        if (this.isMetaLine(line)) {
           this.processMetaLine(line, result);
-        } else if (this.isBetweenMetaAndDefinition(isInDefinition, line)) {
-          isInDefinition = true;
-        } else if (this.isEntry(isInDefinition, line)) {
-          entryIndex = this.processEntry(lineIndex, result.wordIndex, previousLine, entryIndex);
-        } else if (this.isDefinitionBody(isInDefinition, line)) {
+        } else if (this.isEntry(line)) {
+          entryIndex = this.processEntry(lineIndex, result.wordIndex, entryIndex, previousLine);
+        } else if (this.isDefinitionBody(line)) {
           this.processDefinitionBody(lineIndex, result.wordIndex, entryIndex);
         }
-        previousLine = line;
+        previousLine = lineIndex.contents;
       });
       lineReader.on("end", () => {
         resolve(result);
@@ -90,24 +96,35 @@ export class DSLDictionary extends Dictionary {
       lineReader.process();
     });
   }
-  private isBetweenMetaAndDefinition = (isInDefinition: boolean, line: string): boolean => {
-    return !isInDefinition && !line.startsWith("#");
+  private isMetaLine = (line: string): boolean => {
+    return this.startsWithMetaKey(line);
   };
-  private isMetaLine = (isInDefinition: boolean, line: string): boolean => {
-    return !isInDefinition && line.startsWith("#");
+  private isDefinitionBody = (line: string): boolean => {
+    return this.startWithSpaceOrTab(line);
   };
-  private isDefinitionBody = (isInDefinition: boolean, line: string): boolean => {
-    return isInDefinition && /^\s/.test(line);
+  private processDefinitionBody = (lineIndexItem: IBaseIndex, wordIndex: IBaseIndex[], maxEntryIndex: number): void => {
+    const correspondingEntryIndexList = ListUtil.buildList(maxEntryIndex + 1, wordIndex.length - 1);
+    const startIndex = correspondingEntryIndexList[0];
+    const endIndex = correspondingEntryIndexList[correspondingEntryIndexList.length - 1];
+    this.addSize(
+      lineIndexItem.size,
+      wordIndex.slice(startIndex, endIndex + 1)
+    );
   };
-  private processDefinitionBody = (lineIndex: IBaseIndex, wordIndex: IBaseIndex[], maxEntryIndex: number): void => {
-    const indexList = this.getIndexList(maxEntryIndex + 1, wordIndex.length);
-    this.addLen(lineIndex.size, wordIndex, indexList);
+  private isEntry = (line: string): boolean => {
+    return !this.startWithSpaceOrTab(line) && !this.startsWithMetaKey(line);
   };
-  private isEntry = (isInDefinition: boolean, line: string): boolean => {
-    return isInDefinition && !/^\s/.test(line);
+  private startWithSpaceOrTab = (s: string): boolean => {
+    return s.startsWith(" ") || s.startsWith("\t");
   };
-  private isFirstEntry = (previousLine: string): boolean => {
-    return previousLine.trim() === "" || /^\s/.test(previousLine);
+  private startsWithMetaKey = (s: string): boolean => {
+    const metaKeyWithHashList = this.META_KEY_LIST.map(k => "#" + k);
+    for (const metaKeyWithHash of metaKeyWithHashList) {
+      if (s.startsWith(metaKeyWithHash)) {
+        return true;
+      }
+    }
+    return false;
   };
 
   /**
@@ -116,35 +133,30 @@ export class DSLDictionary extends Dictionary {
   private processEntry = (
     lineIndex: IBaseIndex,
     wordIndex: IBaseIndex[],
-    previousLine: string,
-    lastEntryIndex: number
+    lastEntryIndex: number,
+    previousLine: string
   ): number => {
     this.addEntryToWordIndex(lineIndex, wordIndex);
     if (this.isFirstEntry(previousLine)) {
       // entryIndex
       return 0;
     } else {
-      const indexList = this.getIndexList(lastEntryIndex + 1, wordIndex.length);
-      this.addLen(lineIndex.size, wordIndex, indexList);
+      const correspondingEntryIndexList = ListUtil.buildList(lastEntryIndex + 1, wordIndex.length - 1);
+      const startIndex = correspondingEntryIndexList[0];
+      const endIndex = correspondingEntryIndexList[correspondingEntryIndexList.length - 1];
+      this.addSize(
+        lineIndex.size,
+        wordIndex.slice(startIndex, endIndex + 1)
+      );
       return lastEntryIndex + 1;
     }
   };
-  /**
-   * Return indexes of last reversedStartIndex numbers.
-   *
-   * For example, if reversedStartIndex is 3, totalLength is 10,
-   * [7, 8, 9] will be returned.
-   */
-  private getIndexList = (reversedStartIndex: number, totalLength: number): number[] => {
-    const result: number[] = [];
-    for (let i = totalLength - reversedStartIndex; i < totalLength; i++) {
-      result.push(i);
-    }
-    return result;
-  };
-  private addLen = (len: number, wordIndex: IBaseIndex[], indexList: number[]): void => {
-    for (const i of indexList) {
-      wordIndex[i].size += len;
+  private isFirstEntry = (previousLine: string): boolean => {
+    return this.isEntry(previousLine);
+  }
+  private addSize = (size: number, wordIndexList: IBaseIndex[]): void => {
+    for (const wordIndex of wordIndexList) {
+      wordIndex.size += size;
     }
   };
   private addEntryToWordIndex = (lineIndex: IBaseIndex, wordIndex: IBaseIndex[]) => {
@@ -207,7 +219,7 @@ export class DSLDictionary extends Dictionary {
       throw new Error(`${ext} file is not supported`);
     }
     return bufferReader;
-  }
+  };
   private async getFileContents(dictFile: string, pos: number, len: number): Promise<string> {
     const bufferReader: BufferReader = this.getBufferReader(dictFile);
     await bufferReader.open(dictFile);
@@ -256,9 +268,7 @@ export class DSLDictionary extends Dictionary {
     await this.buildResourceIndex(resourceFile);
     return this.getUsedDictionaryFiles(dslFile, annFilePath, bmpFilePath, resourceFile);
   };
-  private buildResourceIndex = async (
-    resourceFile: Option<string>,
-  ) => {
+  private buildResourceIndex = async (resourceFile: Option<string>) => {
     if (resourceFile.isDefined && path.extname(resourceFile.get) === ".zip") {
       const zipReader = new ZipReader(resourceFile.get);
       await zipReader.buildZipIndex();
@@ -280,7 +290,7 @@ export class DSLDictionary extends Dictionary {
     if (opt.isDefined) {
       list.push(opt.get);
     }
-  }
+  };
   private getResourceFile = (dslFile: string, dirsAndNormalFiles: IFileCategory): Option<string> => {
     const dir = path.dirname(dslFile);
     const dslFileName = path.basename(dslFile);
@@ -300,7 +310,11 @@ export class DSLDictionary extends Dictionary {
     }
     return none;
   };
-  private getZipResourceFile = (dir: string, dslFileName: string, dirsAndNormalFiles: IFileCategory): Option<string> => {
+  private getZipResourceFile = (
+    dir: string,
+    dslFileName: string,
+    dirsAndNormalFiles: IFileCategory
+  ): Option<string> => {
     const resourceFilePrefixList = this.getResourceFilePrefixList(dslFileName);
     for (const resourceFilePrefix of resourceFilePrefixList) {
       const filename = resourceFilePrefix + ".files.zip";

@@ -12,7 +12,8 @@ import { describe, it } from "mocha";
 describe('Test DictParser', () => {
 
   const scanFolder1 = path.join(TEST_RESOURCE_PATH, 'scan');
-  const scanFolder2 = path.join('/home/searene/Public/dictionaries');
+  // const scanFolder2 = path.join('/home/searene/Public/dictionaries');
+  const scanFolder2 = path.join('/home/searene/Documents/dictionaries');
   // const dbPath = path.join(TEST_RESOURCE_PATH, 'dictParser.db');
   const dbPath = "/tmp/dict-parser.db";
 

@@ -1,6 +1,7 @@
-import { DzBufferReader, BufferReader, SimpleBufferReader } from './../BufferReader';
-import { assert } from 'chai';
-import * as path from 'path';
+import { DzBufferReader } from "../DzBufferReader";
+import { BufferReader } from "../BufferReader";
+import { SimpleBufferReader } from "../SimpleBufferReader";
+import { describe, it } from "mocha";
 
 describe('Test DzBufferReader', () => {
   it("#getEncodingStatsForDz", async () => {
