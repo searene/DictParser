@@ -70,7 +70,7 @@ export class DictParser extends EventEmitter {
         continue;
       }
       try {
-        const html = await dictionary.getDefinition(wordIndex.dictionary, wordIndex.pos, wordIndex.len);
+        const html = await dictionary.getDefinition(wordIndex.dictionary, wordIndex.word, wordIndex.pos, wordIndex.len);
         wordDefinitionList.push({ word, html, dict: wordIndex.dictionary });
       } catch (e) {
         wordDefinitionList.push({

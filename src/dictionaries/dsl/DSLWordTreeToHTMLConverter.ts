@@ -13,6 +13,7 @@ import * as path from "path";
 import { ZipReader } from "../../util/ZipReader";
 import { EncodingUtil } from "../../util/EncodingUtil";
 import { HTMLCreator } from "../../HTMLCreator";
+import { none, option, Option } from "ts-option";
 
 export class DSLWordTreeToHTMLConverter {
   /**
@@ -29,13 +30,9 @@ export class DSLWordTreeToHTMLConverter {
 
   public async convertWordTreeToHTML(wordTree: WordTree): Promise<WordTreeHTML> {
     return {
-      entry: this.convertEntryToHTML(wordTree.entry),
+      entry: HTMLCreator.convertEntryToHTML(wordTree.entry),
       definition: await this.convertRootNodeToHTML(wordTree.root)
     };
-  }
-
-  private convertEntryToHTML(entry: string) {
-    return `<div class="dsl-headwords"><p>${entry}</p></div>`;
   }
 
   private async convertRootNodeToHTML(rootNode: Node): Promise<string> {
@@ -71,7 +68,9 @@ export class DSLWordTreeToHTMLConverter {
           ) {
             const audioType = path.extname(this._dslResourceManager.getResourceName(node)).substr(1); // wav
             const resourceAsBase64 = await this.getResourceAsBase64(node);
-            html += HTMLCreator.getSoundHTML(audioType, resourceAsBase64);
+            if (resourceAsBase64.isDefined) {
+              html += await HTMLCreator.getSoundHTML(audioType, resourceAsBase64.get);
+            }
           } else if (
             node.name === "s" &&
             this._dslResourceManager.getResourceType(node) === this._dslResourceManager.ResourceType.IMAGE
@@ -115,19 +114,23 @@ export class DSLWordTreeToHTMLConverter {
     }
     return html;
   }
-  private getResourceAsBase64 = async (resourceNode: Node): Promise<string> => {
-    const resourceHolder = this._resourceHolder;
-    const resourceHolderType = await this._dslResourceManager.getResourceHolderType(resourceHolder);
-    const resourceName = this._dslResourceManager.getResourceName(resourceNode);
-    if (resourceHolderType === "dir") {
-      const filePath = path.join(resourceHolder, resourceName);
-      return await EncodingUtil.readBase64FromFile(filePath);
-    } else if (resourceHolderType === "zip") {
-      const zipReader = new ZipReader(resourceHolder);
-      const buffer = await zipReader.extractFileFromZip(resourceName);
-      return buffer.toString("base64");
-    } else {
-      throw new Error(`ResourceHolderType ${resourceHolderType} is not supported`);
+  private getResourceAsBase64 = async (resourceNode: Node): Promise<Option<string>> => {
+    try {
+      const resourceHolder = this._resourceHolder;
+      const resourceHolderType = await this._dslResourceManager.getResourceHolderType(resourceHolder);
+      const resourceName = this._dslResourceManager.getResourceName(resourceNode);
+      if (resourceHolderType === "dir") {
+        const filePath = path.join(resourceHolder, resourceName);
+        const base64 = await EncodingUtil.readBase64FromFile(filePath);
+        return option(base64);
+      } else if (resourceHolderType === "zip") {
+        const zipReader = new ZipReader(resourceHolder);
+        const buffer = await zipReader.extractFileFromZip(resourceName);
+        return option(buffer.toString("base64"));
+      }
+    } catch (e) {
+      console.error(e);
     }
+    return none;
   };
 }

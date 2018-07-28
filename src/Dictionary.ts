@@ -10,6 +10,7 @@ export abstract class Dictionary {
 
   public abstract async getDefinition(
     dictionary: IDictionary,
+    word: string,
     pos: number,
     len: number
   ): Promise<string>;

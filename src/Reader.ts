@@ -6,7 +6,7 @@ export class Reader {
 
     /** the position of the character in {@code this._input}
      *  that is going to be read, starts from 0
-    */
+     */
     private _pos: number;
 
     private _input: string;
@@ -95,7 +95,7 @@ export class Reader {
             consumedString += c.value;
             c = this.peakNextChar();
         }
-        return consumedString == "" ? {valid: false, value: ""} : {valid: true, value: consumedString};
+        return consumedString === "" ? {valid: false, value: ""} : {valid: true, value: consumedString};
     }
 
     public consumeTo(s: string, isSearchedStringIncluded: boolean, considerEscape: boolean): {isFound: boolean, value: string} {
@@ -104,17 +104,17 @@ export class Reader {
         }
         let startPos = this._pos;
         let index = this._input.indexOf(s, startPos);
-        while(index != -1) {
+        while(index !== -1) {
             if(!considerEscape) {
                 break;
-            } else if((index - 1 >= this._pos && this._input[index - 1] != '\\') || (index == this._pos)) {
+            } else if((index - 1 >= this._pos && this._input[index - 1] !== '\\') || (index === this._pos)) {
                 break;
             } else {
                 startPos = index + 1;
                 index = this._input.indexOf(s, startPos);
             }
         }
-        if(index == -1) {
+        if(index === -1) {
             // not found
             return {isFound: false, value: ""};
         } else {
@@ -124,10 +124,12 @@ export class Reader {
             return {isFound: true, value: consumedString};
         }
     }
-
     public consumeEmptySpaces(): void {
         while(this._input[this._pos] in [' ', '\t']) {
             this._pos++;
         }
+    }
+    public getContents(): string {
+        return this._input;
     }
 }

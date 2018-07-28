@@ -6,15 +6,11 @@ import { decompressGzFile, FileUtil, getNormalFiles } from "../../util/FileUtil"
 import { none, option, Option } from "ts-option";
 import { DictionaryType } from "../../model/DictionaryType";
 import { readUInt64BE } from "../../util/BufferUtil";
-import { IWordPos } from "../../model/IWordPos";
 import { DzBufferReader } from "../../DzBufferReader";
 import { IStarDictDefinitionField } from "../../model/IStarDictDefinitionField";
 import { IDictionary } from "../..";
 import { StarDictResource } from "../../model/StarDictResource";
-import { IFileIndex } from "../../model/IFileIndex";
-import { start } from "repl";
 import { IBaseIndex } from "../../model/IBaseIndex";
-import { Encoding } from "tslint/lib/utils";
 import { EncodingUtil } from "../../util/EncodingUtil";
 import { HTMLCreator } from "../../HTMLCreator";
 import { SimpleBufferReader } from "../../SimpleBufferReader";
@@ -35,10 +31,10 @@ export class StarDict extends Dictionary {
   private STAR_DICT_WORD_DATA_TYPE_WORD_NET = "n";
   private STAR_DICT_WORD_DATA_TYPE_RESOURCE = "r";
 
-  public async getDefinition(dictionary: IDictionary, pos: number, len: number): Promise<string> {
+  public async getDefinition(dictionary: IDictionary, word: string, pos: number, len: number): Promise<string> {
     const sameTypeSequence = dictionary.sameTypeSequence === "" ? none : option(dictionary.sameTypeSequence);
     const fields = await this.getDefinitionFields(dictionary.dictPath, sameTypeSequence, pos, len);
-    return await this.parseDefinitionFields(fields);
+    return await this.parseDefinitionFields(dictionary.name, word, fields);
   }
 
   /**
@@ -53,14 +49,14 @@ export class StarDict extends Dictionary {
     }
     return dictionaryFiles;
   }
-  private parseDefinitionFields = async (fields: IStarDictDefinitionField[]): Promise<string> => {
+  private parseDefinitionFields = async (dictName: string, word: string, fields: IStarDictDefinitionField[]): Promise<string> => {
     let result = "";
     for (const field of fields) {
-      result += (await this.parseDefinitionField(field)) + "\n";
+      result += (await this.parseDefinitionField(dictName, word, field)) + "\n";
     }
     return result;
   };
-  private parseDefinitionField = async (field: IStarDictDefinitionField): Promise<string> => {
+  private parseDefinitionField = async (dictName: string, word: string, field: IStarDictDefinitionField): Promise<string> => {
     if (
       [
         this.STAR_DICT_WORD_DATA_TYPE_PURE_TEXT,
@@ -73,7 +69,7 @@ export class StarDict extends Dictionary {
     ) {
       const lastByte = field.data.slice(field.data.length - 1, field.data.length);
       const buffer = lastByte.readUInt8(0) === 0 ? field.data.slice(0, field.data.length - 1) : field.data;
-      return this.parseFieldContents(buffer.toString("UTF-8"), field.type);
+      return this.parseFieldContents(dictName, word, buffer.toString("UTF-8"), field.type);
     } else if (field.type === this.STAR_DICT_WORD_DATA_TYPE_RESOURCE) {
       const resourceList = this.getResourceList(field);
       return await this.convertResourceListToHTML(resourceList);
@@ -109,7 +105,7 @@ export class StarDict extends Dictionary {
   private getSndResourceHTML = async (fileName: string): Promise<string> => {
     const base64 = await EncodingUtil.readBase64FromFile(fileName);
     const ext = path.extname(fileName);
-    return HTMLCreator.getSoundHTML(ext, base64);
+    return await HTMLCreator.getSoundHTML(ext, base64);
   };
   private getVdoResourceHTML = async (fileName: string): Promise<string> => {
     return HTMLCreator.getNotSupportedHTML("Video is not supported.");
@@ -118,15 +114,16 @@ export class StarDict extends Dictionary {
     return HTMLCreator.getNotSupportedHTML("Attachment is not supported.");
   };
 
-  private parseFieldContents = (contents: string, type: string): string => {
+  private parseFieldContents = (dictName: string, word: string, contents: string, type: string): string => {
+    const entryHTML = HTMLCreator.convertEntryToHTML(word);
     switch (type) {
       case this.STAR_DICT_WORD_DATA_TYPE_PURE_TEXT:
       case this.STAR_DICT_WORD_DATA_TYPE_PHONETIC:
       case this.STAR_DICT_WORD_DATA_TYPE_YINBIAO_KANA:
-        return contents;
+        return HTMLCreator.getSingleCompleteDefinitionHTML(dictName, entryHTML, contents);
       case this.STAR_DICT_WORD_DATA_TYPE_HTML:
         // TODO replace resources with their contents
-        return contents;
+        return HTMLCreator.getSingleCompleteDefinitionHTML(dictName, entryHTML, contents);
     }
     throw new Error(`Type ${type} is not supported. Contents: ${contents}`);
   };

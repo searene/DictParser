@@ -36,7 +36,7 @@ export class DSLDictionary extends Dictionary {
     this.META_KEY_SOURCE_CODE_PAGE
   ];
 
-  public async getDefinition(dictionary: IDictionary, pos: number, len: number): Promise<string> {
+  public async getDefinition(dictionary: IDictionary, word: string, pos: number, len: number): Promise<string> {
     const wordTreeHTML: WordTreeHTML = await this.getWordTreeHTML(
       dictionary.dictPath,
       dictionary.resourcePath,
@@ -128,7 +128,7 @@ export class DSLDictionary extends Dictionary {
   };
 
   /**
-   * Return current entry index, start from 0
+   * Return current entry index, starting from 0
    */
   private processEntry = (
     lineIndex: IBaseIndex,
@@ -152,7 +152,7 @@ export class DSLDictionary extends Dictionary {
     }
   };
   private isFirstEntry = (previousLine: string): boolean => {
-    return this.isEntry(previousLine);
+    return !this.isEntry(previousLine);
   }
   private addSize = (size: number, wordIndexList: IBaseIndex[]): void => {
     for (const wordIndex of wordIndexList) {
@@ -231,7 +231,7 @@ export class DSLDictionary extends Dictionary {
   private getDSLFiles = async (files: string[]): Promise<string[]> => {
     const dirsAndFiles = await classifyFiles(files);
     const result: string[] = [];
-    for (const f of dirsAndFiles.normalFiles) {
+    for (const f of dirsAndFiles.normalFilePaths) {
       if (f.endsWith(".dsl") || f.endsWith(".dsl.dz")) {
         result.push(f);
       }
@@ -247,8 +247,8 @@ export class DSLDictionary extends Dictionary {
   private addDictionaryByDSLFile = async (dslFile: string, files: string[]): Promise<string[]> => {
     const basename = this.getBaseName(dslFile);
     const dirsAndNormalFiles = await classifyFiles(files);
-    const annFilePath = this.getFile(basename, ".ann", dirsAndNormalFiles.normalFiles);
-    const bmpFilePath = this.getFile(basename, ".bmp", dirsAndNormalFiles.normalFiles);
+    const annFilePath = this.getFile(basename, ".ann", dirsAndNormalFiles.normalFilePaths);
+    const bmpFilePath = this.getFile(basename, ".bmp", dirsAndNormalFiles.normalFilePaths);
     const resourceFile = this.getResourceFile(dslFile, dirsAndNormalFiles);
     const dictScanResult = await this.scanDSL(dslFile);
     const wordCount = dictScanResult.wordIndex.length;
@@ -301,11 +301,11 @@ export class DSLDictionary extends Dictionary {
     return this.getResourceFolder(dir, dslFileName, dirsAndNormalFiles);
   };
   private getResourceFolder = (dir: string, dslFileName: string, dirsAndNormalFiles: IFileCategory): Option<string> => {
-    const resourceFilePrefixList = this.getResourceFilePrefixList(dslFileName);
-    for (const resourceFilePrefix of resourceFilePrefixList) {
-      const filename = resourceFilePrefix + ".files";
-      if (dirsAndNormalFiles.dirs.indexOf(filename) > -1) {
-        return option(path.resolve(dir, filename));
+    for (const dirPath of dirsAndNormalFiles.dirPaths) {
+      const dirName = path.basename(dirPath);
+      const firstPartOfDSLFileName = dslFileName.split(".")[0];
+      if (dirName.startsWith(firstPartOfDSLFileName) && dirName.endsWith(".files")) {
+        return option(dirPath);
       }
     }
     return none;
@@ -315,27 +315,27 @@ export class DSLDictionary extends Dictionary {
     dslFileName: string,
     dirsAndNormalFiles: IFileCategory
   ): Option<string> => {
-    const resourceFilePrefixList = this.getResourceFilePrefixList(dslFileName);
-    for (const resourceFilePrefix of resourceFilePrefixList) {
-      const filename = resourceFilePrefix + ".files.zip";
-      if (dirsAndNormalFiles.normalFiles.indexOf(path.resolve(dir, filename)) > -1) {
-        return option(path.resolve(dir, filename));
+    for (const normalFilePath of dirsAndNormalFiles.normalFilePaths) {
+      const normalFileName = path.basename(normalFilePath);
+      const firstPartOfDSLFileName = dslFileName.split(".")[0];
+      if (normalFileName.startsWith(firstPartOfDSLFileName) && normalFileName.endsWith(".zip")) {
+        return option(normalFilePath);
       }
     }
     return none;
   };
-  private getResourceFilePrefixList = (dslFileName: string): string[] => {
-    const result = [];
-    if (dslFileName.endsWith(".dsl.dz")) {
-      const basename = dslFileName.slice(0, dslFileName.length - ".dsl.dz".length);
-      result.push(basename);
-      result.push(basename + ".dsl");
-    } else if (dslFileName.endsWith(".dsl")) {
-      const basename = path.parse(dslFileName).name;
-      result.push(basename);
-    }
-    return result;
-  };
+  // private getResourceFilePrefixList = (dslFileName: string): string[] => {
+  //   const result = [];
+  //   if (dslFileName.endsWith(".dsl.dz")) {
+  //     const basename = dslFileName.slice(0, dslFileName.length - ".dsl.dz".length);
+  //     result.push(basename);
+  //     result.push(basename + ".dsl");
+  //   } else if (dslFileName.endsWith(".dsl")) {
+  //     const basename = path.parse(dslFileName).name;
+  //     result.push(basename);
+  //   }
+  //   return result;
+  // };
   private getBaseName = (dictFile: string): string => {
     if (dictFile.endsWith(".dsl")) {
       return dictFile.substring(0, dictFile.length - ".dsl".length);

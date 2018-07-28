@@ -14,7 +14,6 @@ export class DictZipParser {
     }
 
     public async parse(pos: number, len: number): Promise<Buffer> {
-        // console.log(`parsing file from offset ${offset}, size: ${size}`);
         if(this._header === undefined) {
             this._header = await this.getHeader();
         }

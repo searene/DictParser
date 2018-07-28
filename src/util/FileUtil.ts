@@ -113,13 +113,13 @@ export const decompressGzFile = async (gzFile: string): Promise<Buffer> => {
 };
 
 export const classifyFiles = async (files: string[]): Promise<IFileCategory> => {
-  const result = { dirs: [], normalFiles: [] } as IFileCategory;
+  const result = { dirPaths: [], normalFilePaths: [] } as IFileCategory;
   for (const f of files) {
     const isDir = (await fse.lstat(f)).isDirectory();
     if (isDir) {
-      result.dirs.push(f);
+      result.dirPaths.push(f);
     } else {
-      result.normalFiles.push(f);
+      result.normalFilePaths.push(f);
     }
   }
   return result;
@@ -127,6 +127,6 @@ export const classifyFiles = async (files: string[]): Promise<IFileCategory> => 
 
 export const getNormalFiles = async (absoluteFiles: string[]): Promise<string[]> => {
   const dirsAndNormalFiles = await classifyFiles(absoluteFiles);
-  return dirsAndNormalFiles.normalFiles;
+  return dirsAndNormalFiles.normalFilePaths;
 }
 

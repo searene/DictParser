@@ -57,7 +57,7 @@ export class DictionaryFinder extends EventEmitter {
   }
   private getDirs = async (files: string[]): Promise<string[]> => {
     const dirsAndFiles = await classifyFiles(files);
-    return dirsAndFiles.dirs;
+    return dirsAndFiles.dirPaths;
   }
 }
 

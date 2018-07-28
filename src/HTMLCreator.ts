@@ -33,6 +33,9 @@ export class HTMLCreator {
     const errorHTML = `<div>Failed to fetch the definition.</div>`;
     return HTMLCreator.getSingleCompleteDefinitionHTML(dictName, word, errorHTML);
   }
+  public static convertEntryToHTML(entry: string) {
+    return `<div class="dictp-headwords"><p>${entry}</p></div>`;
+  }
   private static soundImgAsBase64 = "";
   private static getPathToSoundImg = (): string => {
     return path.join(ResourceManager.commonResourceDirectory, "sound.png");

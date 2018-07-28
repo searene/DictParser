@@ -1,4 +1,4 @@
 export interface IFileCategory {
-  dirs: string[];
-  normalFiles: string[];
+  dirPaths: string[];
+  normalFilePaths: string[];
 }
