@@ -4,14 +4,14 @@ export abstract class ResourceManager {
   public static commonResourceDirectory: string;
   public audioExtensions = [".wav", ".mp3"];
   public imageExtensions = [".jpg", ".png"];
-  public ResourceType = {
+  public resourceType = {
     AUDIO: 'AUDIO',
     IMAGE: 'IMAGE',
     UNKNOWN: 'UNKNOWN'
   };
 }
 
-export interface ResourceContents {
+export interface IResourceContents {
   resourceName: string,
   resourceBuffer: Buffer
 }

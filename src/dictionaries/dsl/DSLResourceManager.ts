@@ -1,4 +1,4 @@
-import {ResourceContents, ResourceManager} from '../../ResourceManager';
+import {IResourceContents, ResourceManager} from '../../ResourceManager';
 import { WriteStream } from 'tty';
 import { Node, WordTree, getAllChildNodes } from '../../Tree';
 import * as fse from 'fs-extra';
@@ -14,11 +14,11 @@ export class DSLResourceManager extends ResourceManager {
       const fileName = node.children[0].contents;
       const ext = path.extname(fileName).toLowerCase();
       if (this.audioExtensions.indexOf(ext) > -1) {
-        return this.ResourceType.AUDIO;
+        return this.resourceType.AUDIO;
       } else if (this.imageExtensions.indexOf(ext) > -1) {
-        return this.ResourceType.IMAGE;
+        return this.resourceType.IMAGE;
       } else {
-        return this.ResourceType.UNKNOWN;
+        return this.resourceType.UNKNOWN;
       }
     } else {
       throw new Error("Not a resourcePath node");

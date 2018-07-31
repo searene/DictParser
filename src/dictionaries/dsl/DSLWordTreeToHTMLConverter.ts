@@ -64,7 +64,7 @@ export class DSLWordTreeToHTMLConverter {
             html += `<div class="dsl-opt"><span class="dsl-ex">${htmlOfChildren}</span></div>`;
           } else if (
             node.name === "s" &&
-            this._dslResourceManager.getResourceType(node) === this._dslResourceManager.ResourceType.AUDIO
+            this._dslResourceManager.getResourceType(node) === this._dslResourceManager.resourceType.AUDIO
           ) {
             const audioType = path.extname(this._dslResourceManager.getResourceName(node)).substr(1); // wav
             const resourceAsBase64 = await this.getResourceAsBase64(node);
@@ -73,7 +73,7 @@ export class DSLWordTreeToHTMLConverter {
             }
           } else if (
             node.name === "s" &&
-            this._dslResourceManager.getResourceType(node) === this._dslResourceManager.ResourceType.IMAGE
+            this._dslResourceManager.getResourceType(node) === this._dslResourceManager.resourceType.IMAGE
           ) {
             const resourceHolder = this._resourceHolder;
             const resourceHolderType = await this._dslResourceManager.getResourceHolderType(resourceHolder);
