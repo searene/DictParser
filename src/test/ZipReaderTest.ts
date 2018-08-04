@@ -1,10 +1,3 @@
-import { TEST_RESOURCE_PATH } from "../Constant";
-import { assert } from "chai";
-import { DictZipParser } from "../dictionaries/dsl/DictZipParser";
-import * as path from "path";
-import { DictParser } from "../index";
-import * as fse from "fs-extra";
-import * as os from "os";
 import { StreamZip, ZipEntry } from "../js/node-stream-zip";
 
 describe("#ZipReaderTest", () => {

@@ -9,6 +9,8 @@ import { Sqlite } from "./util/Sqlite";
 import { IgnorableTrie } from "./IgnorableTrie";
 import { HTMLCreator } from "./HTMLCreator";
 import { IIndex } from "./model/IIndex";
+import { OS } from "./model/OS";
+import { OSUtil } from "./util/OSUtil";
 
 export class DictParser extends EventEmitter {
   private _sqliteDbPath: string;
@@ -16,11 +18,13 @@ export class DictParser extends EventEmitter {
   private _dictionaryFinder = new DictionaryFinder();
   private _dictionaries = this._dictionaryFinder.dictionaries;
   private _vocabulary: IgnorableTrie;
+  private _os: OS;
 
-  constructor(
+  public constructor(
     sqliteDbPath: string = SQLITE_DB_PATH,
     wordFormsFolder: string = WORD_FORMS_PATH,
-    commonResourceDirectory: string = SRC_RESOURCE_PATH
+    commonResourceDirectory: string = SRC_RESOURCE_PATH,
+    os: OS = OS.PC
   ) {
     super();
 
@@ -29,8 +33,8 @@ export class DictParser extends EventEmitter {
 
     this._sqliteDbPath = sqliteDbPath;
     this._wordFormsFolder = wordFormsFolder;
+    OSUtil.os = os;
   }
-
   public init = async (): Promise<void> => {
     // this._dictMapList = await this.loadDictMapList();
     await Sqlite.init(this._sqliteDbPath);

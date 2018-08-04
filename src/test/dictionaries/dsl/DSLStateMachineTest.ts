@@ -5,7 +5,7 @@ import { StateMachine } from "../../../StateMachine";
 import { assert } from 'chai';
 import { getEncodingInFile } from '../../../EncodingDetector';
 import * as fse from 'fs-extra';
-import * as path from 'path';
+import * as path from '../../../os-specific/Path';
 import { before, describe, it } from "mocha";
 
 describe("Test DSLStateMachine", () => {
@@ -17,7 +17,7 @@ describe("Test DSLStateMachine", () => {
 		let typicalEntryContents: string;
 
 		before(async () => {
-			const dslFile: string = path.join(TEST_RESOURCE_PATH, 'dsl/sample.dsl');
+			const dslFile: string = path.resolve(TEST_RESOURCE_PATH, 'dsl/sample.dsl');
 			const encoding = (await getEncodingInFile(dslFile));
 			simpleEntryContents = await readFile(dslFile, encoding.encoding, 5, 6);
 			mediumEntryContents = await readFile(dslFile, encoding.encoding, 214, 216);

@@ -1,5 +1,5 @@
 import { Dictionary, WordPosition } from "../../Dictionary";
-import * as path from "path";
+import * as path from "../../os-specific/Path";
 import * as fse from "fs-extra";
 import { Sqlite } from "../../util/Sqlite";
 import { decompressGzFile, FileUtil, getNormalFiles } from "../../util/FileUtil";

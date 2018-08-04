@@ -1,5 +1,5 @@
 import * as EventEmitter from "events";
-import * as path from "path";
+import * as path from "./os-specific/Path";
 import { BufferReader } from "./BufferReader";
 import { IBaseIndex } from "./model/IBaseIndex";
 import { SimpleBufferReader } from "./SimpleBufferReader";

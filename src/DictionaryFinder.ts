@@ -2,7 +2,7 @@ import { DSLDictionary } from "./dictionaries/dsl/DSLDictionary";
 import { Dictionary, WordPosition } from "./Dictionary";
 import { classifyFiles } from "./util/FileUtil";
 import * as fse from "fs-extra";
-import * as path from "path";
+import * as path from "./os-specific/Path";
 import { EventEmitter } from "events";
 import { StarDict } from "./dictionaries/stardict/StarDict";
 import { DictionaryType } from "./model/DictionaryType";

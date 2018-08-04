@@ -1,8 +1,6 @@
 import * as sqlite from "sqlite";
 import * as fse from "fs-extra";
-import * as path from "path";
 import { Option } from "ts-option";
-import { IWordPos } from "../model/IWordPos";
 import { IBaseIndex } from "../model/IBaseIndex";
 
 export class Sqlite {

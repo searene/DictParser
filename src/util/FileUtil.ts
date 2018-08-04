@@ -1,6 +1,6 @@
 import * as EventEmitter from "events";
 import * as fse from "fs-extra";
-import * as path from "path";
+import * as path from "../os-specific/Path";
 import * as readline from "readline";
 import * as zlib from "zlib";
 import { IFileCategory } from "../model/IFileCategory";
@@ -13,7 +13,7 @@ async function readdirRecursivelyInternal(dir: string): Promise<string[]> {
     files.push(dir);
     const subFiles: string[] = await fse.readdir(dir);
     for (let subFile of subFiles) {
-      subFile = path.join(dir, subFile);
+      subFile = path.resolve(dir, subFile);
       (await readdirRecursivelyInternal(subFile)).forEach(file => {
         files.push(file);
       });
@@ -27,7 +27,7 @@ async function readdirRecursively(dir: string): Promise<string[]> {
   const files: string[] = [];
   const subFiles: string[] = await fse.readdir(dir);
   for (let subFile of subFiles) {
-    subFile = path.join(dir, subFile);
+    subFile = path.resolve(dir, subFile);
     (await readdirRecursivelyInternal(subFile)).forEach(file =>
       files.push(file)
     );

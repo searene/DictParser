@@ -4,7 +4,7 @@ import { BufferReader } from "../../BufferReader";
 import { DSLStateMachine } from "./DSLStateMachine";
 import { WordTree } from "../../Tree";
 import { Dictionary, WordTreeHTML } from "../../Dictionary";
-import * as path from "path";
+import * as path from "../../os-specific/Path";
 import { classifyFiles } from "../../util/FileUtil";
 import { none, option, Option } from "ts-option";
 import { IFileCategory } from "../../model/IFileCategory";
