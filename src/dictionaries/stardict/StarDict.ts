@@ -1,4 +1,4 @@
-import { Dictionary, WordPosition } from "../../Dictionary";
+import { Dictionary } from "../../Dictionary";
 import * as path from "../../os-specific/Path";
 import * as fse from "fs-extra";
 import { Sqlite } from "../../util/Sqlite";
@@ -49,14 +49,22 @@ export class StarDict extends Dictionary {
     }
     return dictionaryFiles;
   }
-  private parseDefinitionFields = async (dictName: string, word: string, fields: IStarDictDefinitionField[]): Promise<string> => {
+  private parseDefinitionFields = async (
+    dictName: string,
+    word: string,
+    fields: IStarDictDefinitionField[]
+  ): Promise<string> => {
     let result = "";
     for (const field of fields) {
       result += (await this.parseDefinitionField(dictName, word, field)) + "\n";
     }
     return result;
   };
-  private parseDefinitionField = async (dictName: string, word: string, field: IStarDictDefinitionField): Promise<string> => {
+  private parseDefinitionField = async (
+    dictName: string,
+    word: string,
+    field: IStarDictDefinitionField
+  ): Promise<string> => {
     if (
       [
         this.STAR_DICT_WORD_DATA_TYPE_PURE_TEXT,
@@ -310,7 +318,12 @@ export class StarDict extends Dictionary {
       return [];
     }
   };
-  private getFilePath = (fileBaseName: string, dir: string, fileSuffixes: string[], fileNames: string[]): Option<string> => {
+  private getFilePath = (
+    fileBaseName: string,
+    dir: string,
+    fileSuffixes: string[],
+    fileNames: string[]
+  ): Option<string> => {
     const possibleFileNames = fileSuffixes.map(suffix => fileBaseName + suffix);
     for (const f of fileNames) {
       for (const possibleFileName of possibleFileNames) {

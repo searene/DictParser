@@ -4,6 +4,8 @@ import { LineReader } from '../LineReader';
 import * as path from 'path';
 import { IBaseIndex } from "../model/IBaseIndex";
 import { describe, it } from "mocha";
+import { SimpleBufferReader } from "../SimpleBufferReader";
+import { DzBufferReader } from "../DzBufferReader";
 
 describe('LineReaderTest', () => {
 
@@ -12,7 +14,7 @@ describe('LineReaderTest', () => {
 
     it("#run with dsl", (done) => {
         const result: IBaseIndex[] = [];
-        const simpleLineReader = new LineReader(dslFile, 10);
+        const simpleLineReader = new LineReader(dslFile, new SimpleBufferReader(), 10);
         simpleLineReader.on('line', (data: IBaseIndex) => {
             result.push(data);
         });
@@ -32,7 +34,7 @@ describe('LineReaderTest', () => {
 
     it("#run with dz", (done) => {
         const result: IBaseIndex[] = [];
-        const dzLineReader = new LineReader(dzFile, 3);
+        const dzLineReader = new LineReader(dzFile, new DzBufferReader(), 3);
         dzLineReader.on('line', (data: IBaseIndex) => {
             result.push(data);
         });

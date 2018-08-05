@@ -1,6 +1,8 @@
+/// <reference path="../types/react-native-path.d.ts" />
 /* tslint:disable:no-var-requires */
 import { OSUtil } from "../util/OSUtil";
-import { OS } from "../model/OS";
+import { OS } from "..";
+
 import * as ReactNativePath from "react-native-path";
 
 // conditional imports: http://ideasintosoftware.com/typescript-conditional-imports/

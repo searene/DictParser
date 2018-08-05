@@ -10,7 +10,8 @@
       "ban-keywords",
       "check-format",
       "allow-leading-underscore"
-    ]
+    ],
+    "no-reference": false
   },
   "rulesDirectory": [],
   "lintOptions": {
