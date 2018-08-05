@@ -6,10 +6,9 @@ import { DSLDictionary } from "./DSLDictionary";
 import { Dictionary, WordTreeHTML } from "../../Dictionary";
 import { WordTree } from "../../Tree";
 import { NotResourceNodeError } from "../../Error";
-import { SRC_RESOURCE_PATH } from "../../Constant";
 import * as fse from "fs-extra";
 import { Node } from "../../Tree";
-import * as path from "../../os-specific/Path";
+import { OSSpecificImplementationGetter } from "../../os-specific/OSSpecificImplementationGetter";
 import { ZipReader } from "../../util/ZipReader";
 import { EncodingUtil } from "../../util/EncodingUtil";
 import { HTMLCreator } from "../../HTMLCreator";
@@ -66,7 +65,7 @@ export class DSLWordTreeToHTMLConverter {
             node.name === "s" &&
             this._dslResourceManager.getResourceType(node) === this._dslResourceManager.resourceType.AUDIO
           ) {
-            const audioType = path.extname(this._dslResourceManager.getResourceName(node)).substr(1); // wav
+            const audioType = OSSpecificImplementationGetter.path.extname(this._dslResourceManager.getResourceName(node)).substr(1); // wav
             const resourceAsBase64 = await this.getResourceAsBase64(node);
             if (resourceAsBase64.isDefined) {
               html += await HTMLCreator.getSoundHTML(audioType, resourceAsBase64.get);
@@ -80,7 +79,7 @@ export class DSLWordTreeToHTMLConverter {
             const resourceName = this._dslResourceManager.getResourceName(node);
             const completeResourcePath =
               resourceHolderType === "dir"
-                ? path.resolve(resourceHolder, resourceName)
+                ? OSSpecificImplementationGetter.path.resolve(resourceHolder, resourceName)
                 : `dictp://image:${resourceHolderType}:${resourceHolder}:${resourceName}`;
             html += `<img src=${completeResourcePath} alt="${this._dslResourceManager.getResourceName(node)}"/>`;
           } else if (node.name === "'") {
@@ -120,7 +119,7 @@ export class DSLWordTreeToHTMLConverter {
       const resourceHolderType = await this._dslResourceManager.getResourceHolderType(resourceHolder);
       const resourceName = this._dslResourceManager.getResourceName(resourceNode);
       if (resourceHolderType === "dir") {
-        const filePath = path.resolve(resourceHolder, resourceName);
+        const filePath = OSSpecificImplementationGetter.path.resolve(resourceHolder, resourceName);
         const base64 = await EncodingUtil.readBase64FromFile(filePath);
         return option(base64);
       } else if (resourceHolderType === "zip") {

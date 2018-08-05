@@ -1,11 +1,10 @@
-import { TEST_RESOURCE_PATH } from '../../../Constant';
 import { WordTree } from '../../../Tree';
 import { DSLStateMachine } from '../../../dictionaries/dsl/DSLStateMachine';
 import { StateMachine } from "../../../StateMachine";
 import { assert } from 'chai';
 import { getEncodingInFile } from '../../../EncodingDetector';
 import * as fse from 'fs-extra';
-import * as path from '../../../os-specific/Path';
+import { OSSpecificImplementationGetter } from "../../../os-specific/OSSpecificImplementationGetter";
 import { before, describe, it } from "mocha";
 
 describe("Test DSLStateMachine", () => {
@@ -17,7 +16,7 @@ describe("Test DSLStateMachine", () => {
 		let typicalEntryContents: string;
 
 		before(async () => {
-			const dslFile: string = path.resolve(TEST_RESOURCE_PATH, 'dsl/sample.dsl');
+			const dslFile: string = OSSpecificImplementationGetter.path.resolve("", 'dsl/sample.dsl');
 			const encoding = (await getEncodingInFile(dslFile));
 			simpleEntryContents = await readFile(dslFile, encoding.encoding, 5, 6);
 			mediumEntryContents = await readFile(dslFile, encoding.encoding, 214, 216);

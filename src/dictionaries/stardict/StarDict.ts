@@ -1,5 +1,5 @@
 import { Dictionary } from "../../Dictionary";
-import * as path from "../../os-specific/Path";
+import {OSSpecificImplementationGetter} from "../../os-specific/OSSpecificImplementationGetter";
 import * as fse from "fs-extra";
 import { Sqlite } from "../../util/Sqlite";
 import { decompressGzFile, FileUtil, getNormalFiles } from "../../util/FileUtil";
@@ -107,12 +107,12 @@ export class StarDict extends Dictionary {
   };
   private getImgResourceHTML = async (fileName: string): Promise<string> => {
     const base64 = await EncodingUtil.readBase64FromFile(fileName);
-    const ext = path.extname(fileName);
+    const ext = OSSpecificImplementationGetter.path.extname(fileName);
     return HTMLCreator.getImageHTML(ext, base64);
   };
   private getSndResourceHTML = async (fileName: string): Promise<string> => {
     const base64 = await EncodingUtil.readBase64FromFile(fileName);
-    const ext = path.extname(fileName);
+    const ext = OSSpecificImplementationGetter.path.extname(fileName);
     return await HTMLCreator.getSoundHTML(ext, base64);
   };
   private getVdoResourceHTML = async (fileName: string): Promise<string> => {
@@ -149,9 +149,9 @@ export class StarDict extends Dictionary {
     return result;
   };
   private addDictionaryByIfoFile = async (ifoFilePath: string): Promise<string[]> => {
-    const dir = path.dirname(ifoFilePath);
+    const dir = OSSpecificImplementationGetter.path.dirname(ifoFilePath);
     const files = await fse.readdir(dir);
-    const dictName = path.basename(ifoFilePath, path.extname(ifoFilePath));
+    const dictName = OSSpecificImplementationGetter.path.basename(ifoFilePath, OSSpecificImplementationGetter.path.extname(ifoFilePath));
     const indexFilePath = this.getIndexFilePath(dictName, dir, files);
     const dictFilePath = this.getDictFile(dictName, dir, files);
     const resourceFilePaths = this.getResourceFiles(dictName, dir, files); // could be [] if not found
@@ -203,7 +203,7 @@ export class StarDict extends Dictionary {
     }
   };
   private getRawDefinitionText = async (dictFile: string, pos: number, len: number): Promise<Buffer> => {
-    const bufferReader = path.extname(dictFile) === ".dz" ? new DzBufferReader() : new SimpleBufferReader();
+    const bufferReader = OSSpecificImplementationGetter.path.extname(dictFile) === ".dz" ? new DzBufferReader() : new SimpleBufferReader();
     await bufferReader.open(dictFile);
     const buffer = await bufferReader.read(pos, len);
     await bufferReader.close();
@@ -328,7 +328,7 @@ export class StarDict extends Dictionary {
     for (const f of fileNames) {
       for (const possibleFileName of possibleFileNames) {
         if (f === possibleFileName) {
-          return option(path.resolve(dir, f));
+          return option(OSSpecificImplementationGetter.path.resolve(dir, f));
         }
       }
     }
@@ -337,7 +337,7 @@ export class StarDict extends Dictionary {
   private getSynFilePath = (dictName: string, dir: string, files: string[]): Option<string> => {
     const synFileName = dictName + ".syn";
     if (files.indexOf(synFileName) > -1) {
-      return option(path.resolve(dir, synFileName));
+      return option(OSSpecificImplementationGetter.path.resolve(dir, synFileName));
     }
     return none;
   };
@@ -352,13 +352,13 @@ export class StarDict extends Dictionary {
   };
   private resDirExists = async (dir: string, files: string[]): Promise<boolean> => {
     if (files.indexOf("res") > -1) {
-      return (await fse.lstat(path.resolve(dir, "res"))).isDirectory();
+      return (await fse.lstat(OSSpecificImplementationGetter.path.resolve(dir, "res"))).isDirectory();
     } else {
       return false;
     }
   };
   private getWordCount = async (dir: string, ifoFile: string): Promise<Option<number>> => {
-    const absoluteIfoFilePath = path.resolve(dir, ifoFile);
+    const absoluteIfoFilePath = OSSpecificImplementationGetter.path.resolve(dir, ifoFile);
     const wordCountValue = await this.getValue(absoluteIfoFilePath, "wordcount");
     if (wordCountValue.isEmpty) {
       return none;
@@ -367,7 +367,7 @@ export class StarDict extends Dictionary {
     }
   };
   private getSameTypeSequence = async (dir: string, ifoFile: string): Promise<Option<string>> => {
-    const absoluteIfoFilePath = path.resolve(dir, ifoFile);
+    const absoluteIfoFilePath = OSSpecificImplementationGetter.path.resolve(dir, ifoFile);
     return await this.getValue(absoluteIfoFilePath, "sametypesequence");
   };
   private getValue = async (absoluteFilePath: string, key: string): Promise<Option<string>> => {

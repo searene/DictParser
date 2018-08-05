@@ -1,5 +1,5 @@
 import { ResourceManager } from "./ResourceManager";
-import * as path from "./os-specific/Path";
+import {OSSpecificImplementationGetter} from "./os-specific/OSSpecificImplementationGetter";
 import { EncodingUtil } from "./util/EncodingUtil";
 
 export class HTMLCreator {
@@ -37,7 +37,7 @@ export class HTMLCreator {
   }
   private static soundImgAsBase64 = "";
   private static getPathToSoundImg = (): string => {
-    return path.resolve(ResourceManager.commonResourceDirectory, "sound.png");
+    return OSSpecificImplementationGetter.path.resolve(ResourceManager.commonResourceDirectory, "sound.png");
   };
   private static getSoundImgAsBase64 = async (): Promise<string> => {
     if (HTMLCreator.soundImgAsBase64 === "") {

@@ -4,7 +4,7 @@ import { BufferReader } from "../../BufferReader";
 import { DSLStateMachine } from "./DSLStateMachine";
 import { WordTree } from "../../Tree";
 import { Dictionary, WordTreeHTML } from "../../Dictionary";
-import * as path from "../../os-specific/Path";
+import {OSSpecificImplementationGetter} from "../../os-specific/OSSpecificImplementationGetter";
 import { classifyFiles } from "../../util/FileUtil";
 import { none, option, Option } from "ts-option";
 import { IFileCategory } from "../../model/IFileCategory";
@@ -210,7 +210,7 @@ export class DSLDictionary extends Dictionary {
 
   private getBufferReader = (dictFile: string): BufferReader => {
     let bufferReader: BufferReader;
-    const ext = path.extname(dictFile);
+    const ext = OSSpecificImplementationGetter.path.extname(dictFile);
     if (ext === ".dsl") {
       bufferReader = new SimpleBufferReader();
     } else if (ext === ".dz") {
@@ -269,7 +269,7 @@ export class DSLDictionary extends Dictionary {
     return this.getUsedDictionaryFiles(dslFile, annFilePath, bmpFilePath, resourceFile);
   };
   private buildResourceIndex = async (resourceFile: Option<string>) => {
-    if (resourceFile.isDefined && path.extname(resourceFile.get) === ".zip") {
+    if (resourceFile.isDefined && OSSpecificImplementationGetter.path.extname(resourceFile.get) === ".zip") {
       const zipReader = new ZipReader(resourceFile.get);
       await zipReader.buildZipIndex();
     }
@@ -292,8 +292,8 @@ export class DSLDictionary extends Dictionary {
     }
   };
   private getResourceFile = (dslFile: string, dirsAndNormalFiles: IFileCategory): Option<string> => {
-    const dir = path.dirname(dslFile);
-    const dslFileName = path.basename(dslFile);
+    const dir = OSSpecificImplementationGetter.path.dirname(dslFile);
+    const dslFileName = OSSpecificImplementationGetter.path.basename(dslFile);
     const zipResourceFile = this.getZipResourceFile(dir, dslFileName, dirsAndNormalFiles);
     if (zipResourceFile.isDefined) {
       return zipResourceFile;
@@ -302,7 +302,7 @@ export class DSLDictionary extends Dictionary {
   };
   private getResourceFolder = (dir: string, dslFileName: string, dirsAndNormalFiles: IFileCategory): Option<string> => {
     for (const dirPath of dirsAndNormalFiles.dirPaths) {
-      const dirName = path.basename(dirPath);
+      const dirName = OSSpecificImplementationGetter.path.basename(dirPath);
       const firstPartOfDSLFileName = dslFileName.split(".")[0];
       if (dirName.startsWith(firstPartOfDSLFileName) && dirName.endsWith(".files")) {
         return option(dirPath);
@@ -316,7 +316,7 @@ export class DSLDictionary extends Dictionary {
     dirsAndNormalFiles: IFileCategory
   ): Option<string> => {
     for (const normalFilePath of dirsAndNormalFiles.normalFilePaths) {
-      const normalFileName = path.basename(normalFilePath);
+      const normalFileName = OSSpecificImplementationGetter.path.basename(normalFilePath);
       const firstPartOfDSLFileName = dslFileName.split(".")[0];
       if (normalFileName.startsWith(firstPartOfDSLFileName) && normalFileName.endsWith(".zip")) {
         return option(normalFilePath);

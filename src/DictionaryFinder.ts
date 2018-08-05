@@ -2,7 +2,7 @@ import { DSLDictionary } from "./dictionaries/dsl/DSLDictionary";
 import { Dictionary, WordPosition } from "./Dictionary";
 import { classifyFiles } from "./util/FileUtil";
 import * as fse from "fs-extra";
-import * as path from "./os-specific/Path";
+import { OSSpecificImplementationGetter } from "./os-specific/OSSpecificImplementationGetter";
 import { EventEmitter } from "events";
 import { StarDict } from "./dictionaries/stardict/StarDict";
 import { DictionaryType } from "./model/DictionaryType";
@@ -43,7 +43,7 @@ export class DictionaryFinder extends EventEmitter {
     return this._dictionaries;
   }
   private scanSingleDir = async (dir: string): Promise<void> => {
-    let absoluteFiles = (await fse.readdir(dir)).map(f => path.resolve(dir, f));
+    let absoluteFiles = (await fse.readdir(dir)).map(f => OSSpecificImplementationGetter.path.resolve(dir, f));
     if (absoluteFiles.length === 0) {
       return;
     }

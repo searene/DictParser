@@ -1,12 +1,11 @@
 import { UTF_8, UTF_16_LE, UTF_16_BE, UTF_32_BE, UTF_32_LE, getEncodingInBuffer } from '../EncodingDetector';
-import { TEST_RESOURCE_PATH } from '../Constant';
 import { assert } from "chai";
 import * as path from 'path';
 import * as fse from 'fs-extra';
 
 describe('get encoding test', () => {
 
-    const pathToEncodingsDirectory = path.join(TEST_RESOURCE_PATH, 'encodings');
+    const pathToEncodingsDirectory = path.join("", 'encodings');
     
     const utf32be_file = path.join(pathToEncodingsDirectory, 'utf32be.txt');
     const utf32le_file = path.join(pathToEncodingsDirectory, 'utf32le.txt');

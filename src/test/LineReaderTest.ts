@@ -1,5 +1,4 @@
 import { assert } from 'chai';
-import { TEST_RESOURCE_PATH } from '../Constant';
 import { LineReader } from '../LineReader';
 import * as path from 'path';
 import { IBaseIndex } from "../model/IBaseIndex";
@@ -9,8 +8,8 @@ import { DzBufferReader } from "../DzBufferReader";
 
 describe('LineReaderTest', () => {
 
-    const dslFile = path.join(TEST_RESOURCE_PATH, 'simpleDSL/simple.dsl');
-    const dzFile = path.join(TEST_RESOURCE_PATH, 'simpleDSL/simple.dsl.dz');
+    const dslFile = path.join("", 'simpleDSL/simple.dsl');
+    const dzFile = path.join("", 'simpleDSL/simple.dsl.dz');
 
     it("#run with dsl", (done) => {
         const result: IBaseIndex[] = [];

@@ -1,7 +1,6 @@
 import { EventEmitter } from "events";
 import { AccentConverter } from "./AccentConverter";
 import { DictionaryFinder } from "./DictionaryFinder";
-import { WORD_FORMS_PATH, SRC_RESOURCE_PATH, SQLITE_DB_PATH } from "./Constant";
 import { ResourceManager } from "./ResourceManager";
 import { registerResourceManagers } from "./DictionaryRegister";
 import { IWordDefinition } from "./model/IWordDefinition";
@@ -9,8 +8,12 @@ import { Sqlite } from "./util/Sqlite";
 import { IgnorableTrie } from "./IgnorableTrie";
 import { HTMLCreator } from "./HTMLCreator";
 import { IIndex } from "./model/IIndex";
-import { OS } from "./model/OS";
-import { OSUtil } from "./util/OSUtil";
+import { IDictParserOptions } from "./model/IDictParserOptions";
+import { OSSpecificImplementationGetter } from "./os-specific/OSSpecificImplementationGetter";
+import { FileSystemPC } from "./os-specific/fs/FileSystemPC";
+import { PathPC } from "./os-specific/path/PathPC";
+import { IFileSystem } from "./os-specific/fs/IFileSystem";
+import { IPath } from "./os-specific/path/IPath";
 
 export class DictParser extends EventEmitter {
   private _sqliteDbPath: string;
@@ -18,22 +21,15 @@ export class DictParser extends EventEmitter {
   private _dictionaryFinder = new DictionaryFinder();
   private _dictionaries = this._dictionaryFinder.dictionaries;
   private _vocabulary: IgnorableTrie;
-  private _os: OS;
 
-  public constructor(
-    sqliteDbPath: string = SQLITE_DB_PATH,
-    wordFormsFolder: string = WORD_FORMS_PATH,
-    commonResourceDirectory: string = SRC_RESOURCE_PATH,
-    os: OS = OS.PC
-  ) {
+  public constructor(options: IDictParserOptions) {
     super();
-
+    OSSpecificImplementationGetter.fs = options.fsImplementation === undefined ? new FileSystemPC() : options.fsImplementation;
+    OSSpecificImplementationGetter.path = options.pathImplementation === undefined ? new PathPC() : options.pathImplementation;
+    ResourceManager.commonResourceDirectory = options.commonResourceDirectory === undefined ? OSSpecificImplementationGetter.path.resolve(__dirname, "resources") : options.commonResourceDirectory;
+    this._wordFormsFolder = options.wordFormsFolder === undefined ? OSSpecificImplementationGetter.path.resolve(ResourceManager.commonResourceDirectory, "wordforms") : options.wordFormsFolder;
+    this._sqliteDbPath = options.sqliteDbPath;
     registerResourceManagers();
-    ResourceManager.commonResourceDirectory = commonResourceDirectory;
-
-    this._sqliteDbPath = sqliteDbPath;
-    this._wordFormsFolder = wordFormsFolder;
-    OSUtil.os = os;
   }
   public init = async (): Promise<void> => {
     // this._dictMapList = await this.loadDictMapList();

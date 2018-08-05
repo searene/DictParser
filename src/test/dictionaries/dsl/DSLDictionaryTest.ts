@@ -1,5 +1,4 @@
 import { assert } from 'chai';
-import { TEST_RESOURCE_PATH } from '../../../Constant';
 import { DSLDictionary } from '../../../dictionaries/dsl/DSLDictionary';
 import { Dictionary } from '../../../Dictionary';
 
