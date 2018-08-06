@@ -4,6 +4,7 @@ import { IFileCategory } from "../model/IFileCategory";
 import { LineReader } from "../LineReader";
 import { SimpleBufferReader } from "../SimpleBufferReader";
 import { IBaseIndex } from "../model/IBaseIndex";
+import { OSSpecificImplementationGetter } from "../os-specific/OSSpecificImplementationGetter";
 
 export class FileUtil {
   public static readFileAsLines = async (filename: string): Promise<string[]> => {
@@ -46,7 +47,7 @@ export const decompressGzFile = async (gzFile: string): Promise<Buffer> => {
 export const classifyFiles = async (files: string[]): Promise<IFileCategory> => {
   const result = { dirPaths: [], normalFilePaths: [] } as IFileCategory;
   for (const f of files) {
-    const isDir = (await fse.lstat(f)).isDirectory();
+    const isDir = await OSSpecificImplementationGetter.fs.isDir(f);
     if (isDir) {
       result.dirPaths.push(f);
     } else {

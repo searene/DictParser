@@ -8,4 +8,5 @@ export interface IDictParserOptions {
   commonResourceDirectory?: string;
   fsImplementation?: IFileSystem;
   pathImplementation?: IPath;
+  os?: OS;
 }

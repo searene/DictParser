@@ -2,16 +2,15 @@ import { DictZipParser } from "./dictionaries/dsl/DictZipParser";
 import * as fse from "fs-extra";
 import { EncodingStat, getEncodingInBuffer } from "./EncodingDetector";
 import { BufferReader } from "./BufferReader";
+import { OSSpecificImplementationGetter } from "./os-specific/OSSpecificImplementationGetter";
 
 export class DzBufferReader extends BufferReader {
   private _fd: number;
-  private _filePath: string;
   private _dictZipParser: DictZipParser;
 
   public async open(filePath: string): Promise<number> {
-    this._filePath = filePath;
-    this._fd = await fse.open(filePath, "r");
-    this._dictZipParser = new DictZipParser(this._fd);
+    const fdOrFilePath = await OSSpecificImplementationGetter.fs.open(filePath, "r");
+    this._dictZipParser = new DictZipParser(fdOrFilePath);
     return this._fd;
   }
 
@@ -22,7 +21,7 @@ export class DzBufferReader extends BufferReader {
   public async getEncodingStat(): Promise<EncodingStat> {
     const buffer: Buffer = await this._dictZipParser.parse(0, 4);
     if (buffer.length < 4) {
-      throw new Error(`The size of file ${this._filePath} cannot be less than 4 bytes.`);
+      throw new Error(`The size of file cannot be less than 4 bytes.`);
     }
     return await getEncodingInBuffer(buffer);
   }

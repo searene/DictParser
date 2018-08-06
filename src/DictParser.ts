@@ -14,6 +14,7 @@ import { FileSystemPC } from "./os-specific/fs/FileSystemPC";
 import { PathPC } from "./os-specific/path/PathPC";
 import { IFileSystem } from "./os-specific/fs/IFileSystem";
 import { IPath } from "./os-specific/path/IPath";
+import { OS } from "./model/OS";
 
 export class DictParser extends EventEmitter {
   private _sqliteDbPath: string;
@@ -26,6 +27,7 @@ export class DictParser extends EventEmitter {
     super();
     OSSpecificImplementationGetter.fs = options.fsImplementation === undefined ? new FileSystemPC() : options.fsImplementation;
     OSSpecificImplementationGetter.path = options.pathImplementation === undefined ? new PathPC() : options.pathImplementation;
+    OSSpecificImplementationGetter.os = options.os === undefined ? OS.PC : options.os;
     ResourceManager.commonResourceDirectory = options.commonResourceDirectory === undefined ? OSSpecificImplementationGetter.path.resolve(__dirname, "resources") : options.commonResourceDirectory;
     this._wordFormsFolder = options.wordFormsFolder === undefined ? OSSpecificImplementationGetter.path.resolve(ResourceManager.commonResourceDirectory, "wordforms") : options.wordFormsFolder;
     this._sqliteDbPath = options.sqliteDbPath;
