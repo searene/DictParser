@@ -12,7 +12,7 @@ export class FileSystemPC implements IFileSystem {
   public pathExists = async (filePath: string): Promise<boolean> => {
     return await pathExists(filePath);
   }
-  public open = async (path: string | Buffer, flags: string | number, mode?: number): Promise<number> => {
+  public open = async (path: string, flags: string | number, mode?: number): Promise<number> => {
     return await fse.open(path, flags, mode);
   }
   public close = async (fd: number): Promise<void> => {
