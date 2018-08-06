@@ -1,7 +1,7 @@
 import * as sqlite from "sqlite";
-import * as fse from "fs-extra";
 import { Option } from "ts-option";
 import { IBaseIndex } from "../model/IBaseIndex";
+import { OSSpecificImplementationGetter } from "../os-specific/OSSpecificImplementationGetter";
 
 export class Sqlite {
 
@@ -10,8 +10,8 @@ export class Sqlite {
   public static PARAM_TYPE_BOOLEAN = "boolean";
 
   public static init = async (dbPath: string) => {
-    if (!(await fse.pathExists(dbPath))) {
-      await fse.createFile(dbPath);
+    if (!(await OSSpecificImplementationGetter.fs.pathExists(dbPath))) {
+      await OSSpecificImplementationGetter.fs.createFile(dbPath);
     }
     Sqlite._db = await sqlite.open(dbPath);
     await Sqlite.createAllTables();

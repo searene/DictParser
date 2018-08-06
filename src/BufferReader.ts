@@ -1,6 +1,5 @@
 import { DictZipParser } from "./dictionaries/dsl/DictZipParser";
 import { getEncodingInBuffer, getEncodingInFile, EncodingStat } from "./EncodingDetector";
-import * as fse from "fs-extra";
 
 export abstract class BufferReader {
   // call this method first before calling any other methods

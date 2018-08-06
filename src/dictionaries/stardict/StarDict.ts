@@ -1,6 +1,5 @@
 import { Dictionary } from "../../Dictionary";
 import {OSSpecificImplementationGetter} from "../../os-specific/OSSpecificImplementationGetter";
-import * as fse from "fs-extra";
 import { Sqlite } from "../../util/Sqlite";
 import { decompressGzFile, FileUtil, getNormalFiles } from "../../util/FileUtil";
 import { none, option, Option } from "ts-option";
@@ -150,7 +149,7 @@ export class StarDict extends Dictionary {
   };
   private addDictionaryByIfoFile = async (ifoFilePath: string): Promise<string[]> => {
     const dir = OSSpecificImplementationGetter.path.dirname(ifoFilePath);
-    const files = await fse.readdir(dir);
+    const files = await OSSpecificImplementationGetter.fs.readdir(dir);
     const dictName = OSSpecificImplementationGetter.path.basename(ifoFilePath, OSSpecificImplementationGetter.path.extname(ifoFilePath));
     const indexFilePath = this.getIndexFilePath(dictName, dir, files);
     const dictFilePath = this.getDictFile(dictName, dir, files);
@@ -190,7 +189,7 @@ export class StarDict extends Dictionary {
     if (ridxFile.isEmpty) {
       return;
     }
-    const ridxFileBuffer = await fse.readFile(ridxFile.get);
+    const ridxFileBuffer = await OSSpecificImplementationGetter.fs.readFile(ridxFile.get);
     const resourceIndex = await this.getIndexFromIdxFileContents(ridxFileBuffer, idxOffsetBits);
     await Sqlite.addResourceIndex(dictionaryId, resourceIndex);
   };
@@ -352,7 +351,7 @@ export class StarDict extends Dictionary {
   };
   private resDirExists = async (dir: string, files: string[]): Promise<boolean> => {
     if (files.indexOf("res") > -1) {
-      return (await fse.lstat(OSSpecificImplementationGetter.path.resolve(dir, "res"))).isDirectory();
+      return await OSSpecificImplementationGetter.fs.isDir(OSSpecificImplementationGetter.path.resolve(dir, "res"));
     } else {
       return false;
     }
@@ -441,7 +440,7 @@ export class StarDict extends Dictionary {
     synFile: string,
     idxFileContents: Buffer
   ): Promise<void> => {
-    const synFileContents = await fse.readFile(synFile);
+    const synFileContents = await OSSpecificImplementationGetter.fs.readFile(synFile);
     let offset = 0;
     while (true) {
       const nextOffset = this.readOneSynEntry(synFileContents, idxFileContents, idxOffsetBits, wordIndex, offset);
@@ -547,7 +546,7 @@ export class StarDict extends Dictionary {
     if (f.endsWith(".gz") && decompressGz) {
       return await decompressGzFile(f);
     } else {
-      return await fse.readFile(f);
+      return await OSSpecificImplementationGetter.fs.readFile(f);
     }
   };
 }

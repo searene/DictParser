@@ -1,12 +1,7 @@
-import { buildAudioTag } from "./../../util/HTMLUtil";
-import { ResourceManager } from "./../../ResourceManager";
 import { DSLResourceManager } from "./DSLResourceManager";
 import { AccentConverter } from "../../AccentConverter";
-import { DSLDictionary } from "./DSLDictionary";
-import { Dictionary, WordTreeHTML } from "../../Dictionary";
+import { WordTreeHTML } from "../../Dictionary";
 import { WordTree } from "../../Tree";
-import { NotResourceNodeError } from "../../Error";
-import * as fse from "fs-extra";
 import { Node } from "../../Tree";
 import { OSSpecificImplementationGetter } from "../../os-specific/OSSpecificImplementationGetter";
 import { ZipReader } from "../../util/ZipReader";

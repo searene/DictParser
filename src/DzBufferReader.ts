@@ -1,5 +1,4 @@
 import { DictZipParser } from "./dictionaries/dsl/DictZipParser";
-import * as fse from "fs-extra";
 import { EncodingStat, getEncodingInBuffer } from "./EncodingDetector";
 import { BufferReader } from "./BufferReader";
 import { OSSpecificImplementationGetter } from "./os-specific/OSSpecificImplementationGetter";
@@ -28,7 +27,7 @@ export class DzBufferReader extends BufferReader {
 
   public async close(): Promise<void> {
     if (this._fd !== undefined) {
-      await fse.close(this._fd);
+      await OSSpecificImplementationGetter.fs.close(this._fd);
     }
   }
 }

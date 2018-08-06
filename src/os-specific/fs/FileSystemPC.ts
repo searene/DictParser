@@ -24,4 +24,13 @@ export class FileSystemPC implements IFileSystem {
     }
     return await fse.read(fdOrFilePath, Buffer.alloc(length), 0, length, position);
   }
+  public readFile = async (filePath: string): Promise<Buffer> => {
+    return await fse.readFile(filePath);
+  };
+  public readdir = async (dir: string): Promise<string[]> => {
+    return await fse.readdir(dir);
+  };
+  public exists = async (filePath: string): Promise<boolean> => {
+    return await fse.pathExists(filePath);
+  }
 }
