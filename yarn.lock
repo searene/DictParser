@@ -51,6 +51,10 @@
   version "10.5.4"
   resolved "http://registry.npm.taobao.org/@types/node/download/@types/node-10.5.4.tgz#6eccc158504357d1da91434d75e86acde94bb10b"
 
+"@types/pako@^1.0.0":
+  version "1.0.0"
+  resolved "http://registry.npm.taobao.org/@types/pako/download/@types/pako-1.0.0.tgz#eaae8364d1b7f752e263bc3fd68dfec98e6136c5"
+
 "@types/should@^13.0.0":
   version "13.0.0"
   resolved "http://registry.npm.taobao.org/@types/should/download/@types/should-13.0.0.tgz#96c00117f1896177848fdecfa336313c230c879e"
@@ -2019,6 +2023,10 @@ osenv@^0.1.4:
 p-map@^1.1.1:
   version "1.2.0"
   resolved "http://registry.npm.taobao.org/p-map/download/p-map-1.2.0.tgz#e4e94f311eabbc8633a1e79908165fca26241b6b"
+
+pako@^1.0.6:
+  version "1.0.6"
+  resolved "http://registry.npm.taobao.org/pako/download/pako-1.0.6.tgz#0101211baa70c4bca4a0f63f2206e97b7dfaf258"
 
 parse-filepath@^1.0.1:
   version "1.0.2"

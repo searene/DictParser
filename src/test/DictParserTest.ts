@@ -1,8 +1,6 @@
 import {PathPC} from "../os-specific/path/PathPC";
 import {OSSpecificImplementationGetter} from "../os-specific/OSSpecificImplementationGetter";
 OSSpecificImplementationGetter.path = new PathPC();
-import {assert} from 'chai';
-import {DictZipParser} from '../dictionaries/dsl/DictZipParser';
 import * as path from 'path';
 import {DictParser} from "../index";
 import * as fse from "fs-extra";

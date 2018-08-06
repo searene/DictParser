@@ -23,9 +23,11 @@
   },
   "homepage": "https://github.com/searene/DictParser#readme",
   "dependencies": {
+    "@types/pako": "^1.0.0",
     "buffer": "^5.2.0",
     "events": "^3.0.0",
     "fs-extra": "^7.0.0",
+    "pako": "^1.0.6",
     "react-native-path": "^0.0.5",
     "sqlite": "^2.9.2",
     "ts-option": "^1.1.5",

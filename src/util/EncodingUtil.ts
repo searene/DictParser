@@ -1,4 +1,3 @@
-import * as fse from "fs-extra";
 import { OSSpecificImplementationGetter } from "../os-specific/OSSpecificImplementationGetter";
 
 export class EncodingUtil {

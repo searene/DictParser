@@ -3,7 +3,7 @@ import { getEncodingInBuffer, getEncodingInFile, EncodingStat } from "./Encoding
 
 export abstract class BufferReader {
   // call this method first before calling any other methods
-  public abstract open(filePath: string): Promise<number>;
+  public abstract open(filePath: string): Promise<string | number>;
 
   public abstract read(start: number, len: number): Promise<Buffer>;
   public abstract getEncodingStat(): Promise<EncodingStat>;

@@ -1,6 +1,5 @@
 import { ResourceManager } from "../../ResourceManager";
 import { Node } from "../../Tree";
-import * as fse from "fs-extra";
 import { OSSpecificImplementationGetter } from "../../os-specific/OSSpecificImplementationGetter";
 
 export class DSLResourceManager extends ResourceManager {
@@ -33,8 +32,8 @@ export class DSLResourceManager extends ResourceManager {
     }
   }
   public getResourceHolderType = async (resourceHolderPath: string): Promise<string> => {
-    const stat = await fse.lstat(resourceHolderPath);
-    if (stat.isDirectory()) {
+    const isDir = await OSSpecificImplementationGetter.fs.isDir(resourceHolderPath);
+    if (isDir) {
       return this.RESOURCE_HOLDER_TYPE_DIR;
     } else {
       const ext = resourceHolderPath.split(".").pop();

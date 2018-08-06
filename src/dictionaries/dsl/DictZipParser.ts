@@ -1,5 +1,4 @@
 /* tslint:disable:no-bitwise */
-import * as fse from "fs-extra";
 import { inflateBuffer } from "./inflate";
 import { OSSpecificImplementationGetter } from "../../os-specific/OSSpecificImplementationGetter";
 import { OS } from "../..";

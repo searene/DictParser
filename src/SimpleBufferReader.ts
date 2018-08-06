@@ -1,20 +1,20 @@
 import { BufferReader } from "./BufferReader";
-import * as fse from "fs-extra";
 import { EncodingStat, getEncodingInFile } from "./EncodingDetector";
+import { OSSpecificImplementationGetter } from "./os-specific/OSSpecificImplementationGetter";
 
 export class SimpleBufferReader extends BufferReader {
   private _filePath: string;
-  private _fd: number;
+  private _fdOrFilePath: string | number;
 
-  public async open(filePath: string): Promise<number> {
+  public async open(filePath: string): Promise<number | string> {
     this._filePath = filePath;
-    this._fd = await fse.open(this._filePath, "r");
-    return this._fd;
+    this._fdOrFilePath = await OSSpecificImplementationGetter.fs.open(filePath, "r");
+    return this._fdOrFilePath;
   }
 
   public async read(start: number, len: number): Promise<Buffer> {
     let buffer = Buffer.alloc(len);
-    const readContents = await fse.read(this._fd, buffer, 0, len, start);
+    const readContents = await OSSpecificImplementationGetter.fs.read(this._fdOrFilePath, len, start);
     if (buffer.length > readContents.bytesRead) {
       buffer = buffer.slice(0, readContents.bytesRead);
     }
@@ -22,8 +22,8 @@ export class SimpleBufferReader extends BufferReader {
   }
 
   public async close(): Promise<void> {
-    if (this._fd !== undefined) {
-      await fse.close(this._fd);
+    if (typeof this._fdOrFilePath === "number") {
+      await OSSpecificImplementationGetter.fs.close(this._fdOrFilePath);
     }
   }
 

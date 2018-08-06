@@ -1,5 +1,4 @@
-import * as fse from 'fs-extra';
-import { ReadResult } from 'fs-extra';
+import { OSSpecificImplementationGetter } from "./os-specific/OSSpecificImplementationGetter";
 
 export const UTF_8: string = "utf8";
 export const UTF_16_BE: string = "utf16be";
@@ -45,13 +44,12 @@ export async function getEncodingInBuffer(fileContents: Buffer): Promise<Encodin
 }
 
 export async function getEncodingInFile(filePath: string): Promise<EncodingStat> {
-    const fd: number = await fse.open(filePath, 'r');
-    const buffer = Buffer.alloc(4);
-    const bytesRead = (await fse.read(fd, buffer, 0, 4, 0)).bytesRead;
-    if(bytesRead < 4) {
+    const fd = await OSSpecificImplementationGetter.fs.open(filePath, 'r');
+    const bytes = await OSSpecificImplementationGetter.fs.read(fd, 4, 0);
+    if(bytes.bytesRead < 4) {
         throw new Error(`at least 4 bytes are required to detect encoding in file ${filePath}`);
     }
-    return await getEncodingInBuffer(buffer);
+    return await getEncodingInBuffer(bytes.buffer);
 }
 
 export interface EncodingStat {

@@ -1,5 +1,4 @@
-import * as fse from "fs-extra";
-import * as zlib from "zlib";
+import * as pako from "pako";
 import { IFileCategory } from "../model/IFileCategory";
 import { LineReader } from "../LineReader";
 import { SimpleBufferReader } from "../SimpleBufferReader";
@@ -30,18 +29,9 @@ export class FileUtil {
 
 
 export const decompressGzFile = async (gzFile: string): Promise<Buffer> => {
-  return new Promise<Buffer>((resolve, reject) => {
-    let buffer = Buffer.alloc(0);
-    const gunzip = zlib.createGunzip();
-    fse.createReadStream(gzFile).pipe(gunzip);
-    gunzip.on("data", (data: Buffer) => {
-      buffer = Buffer.concat([buffer, data]);
-    }).on("end", () => {
-      resolve(buffer);
-    }).on("error", e => {
-      reject(e);
-    });
-  });
+  const buffer = await OSSpecificImplementationGetter.fs.readFile(gzFile);
+  const uInt8Array = pako.inflate(new Uint8Array(buffer));
+  return new Buffer(uInt8Array);
 };
 
 export const classifyFiles = async (files: string[]): Promise<IFileCategory> => {
