@@ -30,9 +30,7 @@ export class LineReader extends EventEmitter {
   }
 
   private async run(): Promise<void> {
-    console.log("before open")
     await this._bufferReader.open(this._filePath);
-    console.log("after open")
 
     const encodingStat = await this._bufferReader.getEncodingStat();
     const encoding: string = encodingStat.encoding;

@@ -5,6 +5,8 @@ import { describe, it } from "mocha";
 import { FileSystemPC } from "./os-specific/FileSystemPC";
 import { PathPC } from "./os-specific/PathPC";
 import { SqlitePC } from "./os-specific/SqlitePC";
+import { FileUtil } from "../util/FileUtil";
+import { OSSpecificImplementationGetter } from "../os-specific/OSSpecificImplementationGetter";
 
 // tslint:disable:no-console
 
@@ -30,8 +32,8 @@ describe('Test DictParser', () => {
     });
     await dictParser.scan([scanFolder2]);
     // let wordDefinitionList = await dictParser.getWordDefinition('trivial card');
-    const wordDefinitionList = await dictParser.getWordDefinitions('\'bout');
-    // console.log(wordDefinitionList);
+    const wordDefinitionList = await dictParser.getWordDefinitions("long");
+    console.log(wordDefinitionList);
   });
   it("#scan only", async () => {
     const dictParser = new DictParser({
@@ -74,5 +76,10 @@ describe('Test DictParser', () => {
     console.log(wordDefinitionList);
   });
   it("#fseTest", async () => {
+    OSSpecificImplementationGetter.os = OS.PC;
+    OSSpecificImplementationGetter.fs = new FileSystemPC();
+    OSSpecificImplementationGetter.path = new PathPC();
+    const lines = await FileUtil.readFileAsLines("/home/searene/Public/dictionaries/朗文当代英汉双解词典/朗文当代英汉双解词典.idx");
+    console.log(lines);
   });
 });

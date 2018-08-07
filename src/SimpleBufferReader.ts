@@ -12,7 +12,7 @@ export class SimpleBufferReader extends BufferReader {
 
   public async read(start: number, len: number): Promise<Buffer> {
     const readContents = await OSSpecificImplementationGetter.fs.read(this._fdOrFilePath, len, start);
-    return readContents.buffer;
+    return readContents.buffer.slice(0, readContents.bytesRead);
   }
 
   public async close(): Promise<void> {
