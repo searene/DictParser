@@ -1,8 +1,7 @@
-/// <reference path="../../types/react-native-path.d.ts" />
-import * as path from "react-native-path";
-import { IPath } from "./IPath";
+import * as path from "path";
+import { IPath } from "../..";
 
-export class PathReactNative implements IPath {
+export class PathPC implements IPath {
   public resolve(...filePaths: string[]): string {
     return path.resolve(...filePaths);
   }

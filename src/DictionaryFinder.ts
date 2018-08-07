@@ -50,7 +50,7 @@ export class DictionaryFinder extends EventEmitter {
       const dictionaryFiles = await dict.addDictionary(absoluteFiles);
       absoluteFiles = absoluteFiles.filter(f => dictionaryFiles.indexOf(f) === -1)
     }
-    // scan other directories
+    // scan sub-directories
     const dirs = await this.getDirs(absoluteFiles);
     await this.scan(dirs);
   }

@@ -6,5 +6,7 @@ export { OS } from "./model/OS";
 export { IDictParserOptions } from "./model/IDictParserOptions";
 export { IFileSystem } from "./os-specific/fs/IFileSystem";
 export { IPath } from "./os-specific/path/IPath";
-export { PathReactNative } from "./os-specific/path/PathReactNative";
 export { ReadResult } from "fs-extra";
+export { ISqlite } from "./os-specific/sqlite/ISqlite";
+export { IDatabase } from "./os-specific/sqlite/IDatabase";
+export { IResult } from "./os-specific/sqlite/IResult";

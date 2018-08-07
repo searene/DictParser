@@ -1,6 +1,6 @@
 import * as fse from "fs-extra";
-import { IFileSystem } from "./IFileSystem";
 import { pathExists, ReadResult } from "fs-extra";
+import { IFileSystem } from "../..";
 
 export class FileSystemPC implements IFileSystem {
   public isDir = async (filePath: string): Promise<boolean> => {
@@ -13,6 +13,7 @@ export class FileSystemPC implements IFileSystem {
     return await pathExists(filePath);
   }
   public open = async (path: string, flags: string | number, mode?: number): Promise<number> => {
+    console.log("FileSystemPC open");
     return await fse.open(path, flags, mode);
   }
   public close = async (fd: number): Promise<void> => {
@@ -22,7 +23,8 @@ export class FileSystemPC implements IFileSystem {
     if (typeof fdOrFilePath === "string") {
       throw new Error("fdOrFilePath must be a number on PC");
     }
-    return await fse.read(fdOrFilePath, Buffer.alloc(length), 0, length, position);
+    const bytes = await fse.read(fdOrFilePath, Buffer.alloc(length), 0, length, position);
+    return bytes;
   }
   public readFile = async (filePath: string): Promise<Buffer> => {
     return await fse.readFile(filePath);

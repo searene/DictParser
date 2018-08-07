@@ -1,7 +1,7 @@
-import * as sqlite from "sqlite";
 import { Option } from "ts-option";
 import { IBaseIndex } from "../model/IBaseIndex";
 import { OSSpecificImplementationGetter } from "../os-specific/OSSpecificImplementationGetter";
+import { IDatabase } from "..";
 
 export class Sqlite {
 
@@ -13,7 +13,7 @@ export class Sqlite {
     if (!(await OSSpecificImplementationGetter.fs.pathExists(dbPath))) {
       await OSSpecificImplementationGetter.fs.createFile(dbPath);
     }
-    Sqlite._db = await sqlite.open(dbPath);
+    Sqlite._db = await OSSpecificImplementationGetter.sqlite.open(dbPath);
     await Sqlite.createAllTables();
   };
   /**
@@ -40,7 +40,7 @@ export class Sqlite {
   };
   public static createAllTables = async () => {
     return Promise.all([
-      Sqlite._db.run(`
+      Sqlite._db.executeSql(`
           CREATE TABLE IF NOT EXISTS zip_entry (
             resource_path TEXT,
             flags INTEGER,
@@ -54,7 +54,7 @@ export class Sqlite {
             name TEXT,
             is_directory INTEGER
           )`),
-      Sqlite._db.run(`
+      Sqlite._db.executeSql(`
           CREATE TABLE IF NOT EXISTS dictionary (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
@@ -71,7 +71,7 @@ export class Sqlite {
 
       // INTEGER in Sqlite3 is not large enough,
       // so we use TEXT to store pos
-      Sqlite._db.run(`
+      Sqlite._db.executeSql(`
           CREATE TABLE IF NOT EXISTS word_index (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             dictionary_id INTEGER,
@@ -79,7 +79,7 @@ export class Sqlite {
             pos TEXT,
             len INTEGER
           )`),
-      Sqlite._db.run(`
+      Sqlite._db.executeSql(`
           CREATE TABLE IF NOT EXISTS word_form (
             transformed_word TEXT,
             original_word TEXT
@@ -88,7 +88,7 @@ export class Sqlite {
       // INTEGER in Sqlite3 is not large enough,
       // so we use TEXT to store pos.
       // This table is used by StarDict
-      Sqlite._db.run(`
+      Sqlite._db.executeSql(`
           CREATE TABLE IF NOT EXISTS resource_index (
             dictionary_id INTEGER,
             filename TEXT,
@@ -110,7 +110,7 @@ export class Sqlite {
   public static dropTableIfExists = async (
     tableName: string
   ): Promise<void> => {
-    await Sqlite._db.run(`DROP TABLE IF EXISTS ${tableName}`);
+    await Sqlite._db.executeSql(`DROP TABLE IF EXISTS ${tableName}`);
   };
 
   /**
@@ -128,7 +128,7 @@ export class Sqlite {
     sameTypeSequence: Option<string>,
     type: string
   ): Promise<number> => {
-    const statement = await Sqlite._db.run(
+    const statement = await Sqlite._db.executeSql(
       `
       INSERT INTO dictionary 
         (name, word_count, syn_path, index_path, resource_path, dict_path, ann_path, bmp_path, same_type_sequence, type)
@@ -146,7 +146,7 @@ export class Sqlite {
         type
       ]
     );
-    return statement.lastID;
+    return statement.lastId;
   };
   public static addWordIndex = async (dictionaryId: number, wordIndex: IBaseIndex[]): Promise<void> => {
     let insertStatement = `INSERT INTO word_index (dictionary_id, word, pos, len) VALUES`;
@@ -160,7 +160,7 @@ export class Sqlite {
         )`);
     }
     insertStatement = insertStatement + parameters.join(",\n");
-    await Sqlite._db.exec(insertStatement);
+    await Sqlite._db.executeSql(insertStatement);
   };
   public static addResourceIndex = async (dictionaryId: number, resourceIndex: IBaseIndex[]): Promise<void> => {
     let insertStatement = `INSERT INTO word_index (dictionary_id, filename, pos, len) VALUES`;
@@ -174,7 +174,7 @@ export class Sqlite {
         )`);
     }
     insertStatement = insertStatement + parameters.join(",\n");
-    await Sqlite._db.exec(insertStatement);
+    await Sqlite._db.executeSql(insertStatement);
   };
-  private static _db: sqlite.Database;
+  private static _db: IDatabase;
 }

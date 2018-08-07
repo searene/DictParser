@@ -10,10 +10,6 @@ import { HTMLCreator } from "./HTMLCreator";
 import { IIndex } from "./model/IIndex";
 import { IDictParserOptions } from "./model/IDictParserOptions";
 import { OSSpecificImplementationGetter } from "./os-specific/OSSpecificImplementationGetter";
-import { FileSystemPC } from "./os-specific/fs/FileSystemPC";
-import { IFileSystem } from "./os-specific/fs/IFileSystem";
-import { IPath } from "./os-specific/path/IPath";
-import { OS } from "./model/OS";
 
 export class DictParser extends EventEmitter {
   private _sqliteDbPath: string;
@@ -24,6 +20,10 @@ export class DictParser extends EventEmitter {
 
   public constructor(options: IDictParserOptions) {
     super();
+    OSSpecificImplementationGetter.path = options.pathImplementation;
+    OSSpecificImplementationGetter.fs = options.fsImplementation;
+    OSSpecificImplementationGetter.sqlite = options.sqliteImplementation;
+    OSSpecificImplementationGetter.os = options.os;
     ResourceManager.commonResourceDirectory = options.commonResourceDirectory === undefined ? OSSpecificImplementationGetter.path.resolve(__dirname, "resources") : options.commonResourceDirectory;
     this._wordFormsFolder = options.wordFormsFolder === undefined ? OSSpecificImplementationGetter.path.resolve(ResourceManager.commonResourceDirectory, "wordforms") : options.wordFormsFolder;
     this._sqliteDbPath = options.sqliteDbPath;
@@ -71,6 +71,7 @@ export class DictParser extends EventEmitter {
         const html = await dictionary.getDefinition(wordIndex.dictionary, wordIndex.word, wordIndex.pos, wordIndex.len);
         wordDefinitionList.push({ word, html, dict: wordIndex.dictionary });
       } catch (e) {
+        console.error(e);
         wordDefinitionList.push({
           word,
           html: HTMLCreator.getFailedToFetchDefinitionFromDictionaryHTML(word, wordIndex.dictionary.name),
@@ -94,7 +95,7 @@ export class DictParser extends EventEmitter {
   // };
   private loadVocabulary = async (): Promise<IgnorableTrie> => {
     const vocabulary = new IgnorableTrie();
-    const queryResultList = await Sqlite.db.all("SELECT DISTINCT word FROM word_index");
+    const queryResultList = await Sqlite.db.getAll("SELECT DISTINCT word FROM word_index");
     for (const queryResult of queryResultList) {
       vocabulary.add(queryResult.word);
     }
@@ -111,7 +112,7 @@ export class DictParser extends EventEmitter {
   //   }
   // };
   private queryWordIndexes = async (word: string): Promise<IIndex[]> => {
-    const queryResultList = await Sqlite.db.all(
+    const queryResultList = await Sqlite.db.getAll(
       `
       SELECT
         word_index.id                 AS id,

@@ -9,7 +9,7 @@ describe("#SqliteTest", () => {
     await fse.remove("/tmp/dictParser.db");
     await Sqlite.init("/tmp/dictParser.db");
     const dictId = await Sqlite.addDictionary("test dict", none, none, none, [], none, none, none, none, DictionaryType.DSL);
-    const result = await Sqlite.db.all(`SELECT * FROM dictionary WHERE id = ${dictId}`);
+    const result = await Sqlite.db.getAll(`SELECT * FROM dictionary WHERE id = ${dictId}`);
     console.log(result);
   });
 });

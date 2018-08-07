@@ -1,12 +1,10 @@
-import {PathPC} from "../os-specific/path/PathPC";
-import {OSSpecificImplementationGetter} from "../os-specific/OSSpecificImplementationGetter";
-OSSpecificImplementationGetter.path = new PathPC();
-import * as path from 'path';
-import {DictParser} from "../index";
+import * as path from "path";
+import { DictParser, OS } from "../index";
 import * as fse from "fs-extra";
-import * as os from 'os';
 import { describe, it } from "mocha";
-import { FileSystemPC } from "../os-specific/fs/FileSystemPC";
+import { FileSystemPC } from "./os-specific/FileSystemPC";
+import { PathPC } from "./os-specific/PathPC";
+import { SqlitePC } from "./os-specific/SqlitePC";
 
 // tslint:disable:no-console
 
@@ -22,7 +20,9 @@ describe('Test DictParser', () => {
     const dictParser = new DictParser({
       sqliteDbPath: dbPath,
       fsImplementation: new FileSystemPC(),
-      pathImplementation: new PathPC()
+      pathImplementation: new PathPC(),
+      sqliteImplementation: new SqlitePC(),
+      os: OS.PC
     });
     await dictParser.init();
     dictParser.on('name', (dictionaryName: string) => {
@@ -30,14 +30,16 @@ describe('Test DictParser', () => {
     });
     await dictParser.scan([scanFolder2]);
     // let wordDefinitionList = await dictParser.getWordDefinition('trivial card');
-    const wordDefinitionList = await dictParser.getWordDefinitions('long');
-    console.log(wordDefinitionList);
+    const wordDefinitionList = await dictParser.getWordDefinitions('\'bout');
+    // console.log(wordDefinitionList);
   });
   it("#scan only", async () => {
     const dictParser = new DictParser({
       sqliteDbPath: dbPath,
       fsImplementation: new FileSystemPC(),
-      pathImplementation: new PathPC()
+      pathImplementation: new PathPC(),
+      sqliteImplementation: new SqlitePC(),
+      os: OS.PC
     });
     dictParser.on('name', (dictionaryName: string) => {
       console.log(`scanning ${dictionaryName}...`);
@@ -49,7 +51,9 @@ describe('Test DictParser', () => {
     const dictParser = new DictParser({
       sqliteDbPath: dbPath,
       fsImplementation: new FileSystemPC(),
-      pathImplementation: new PathPC()
+      pathImplementation: new PathPC(),
+      sqliteImplementation: new SqlitePC(),
+      os: OS.PC
     });
     await dictParser.init();
     await dictParser.scan([scanFolder2]);
@@ -61,10 +65,14 @@ describe('Test DictParser', () => {
     const dictParser = new DictParser({
       sqliteDbPath: dbPath,
       fsImplementation: new FileSystemPC(),
-      pathImplementation: new PathPC()
+      pathImplementation: new PathPC(),
+      sqliteImplementation: new SqlitePC(),
+      os: OS.PC
     });
     await dictParser.init();
     const wordDefinitionList = await dictParser.getWordDefinitions('long');
     console.log(wordDefinitionList);
+  });
+  it("#fseTest", async () => {
   });
 });

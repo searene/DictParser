@@ -48,7 +48,7 @@ export class ZipReader {
     });
   }
   public saveEntriesToDb = async (entries: ZipEntry[]): Promise<void> => {
-    await Sqlite.db.exec(`DELETE FROM zip_entry WHERE resource_path = ${Sqlite.getSQLParam(this._zipFilePath, Sqlite.PARAM_TYPE_STRING)}`);
+    await Sqlite.db.executeSql(`DELETE FROM zip_entry WHERE resource_path = ${Sqlite.getSQLParam(this._zipFilePath, Sqlite.PARAM_TYPE_STRING)}`);
     let insertStatement = `
               INSERT INTO zip_entry (
                 resource_path, flags, method, compressed_size, size,
@@ -70,20 +70,20 @@ export class ZipReader {
                        ${Sqlite.getSQLParam(entry.isDirectory, Sqlite.PARAM_TYPE_BOOLEAN)})`);
     }
     insertStatement = insertStatement + parameters.join(",\n");
-    await Sqlite.db.exec(insertStatement);
+    await Sqlite.db.executeSql(insertStatement);
   };
   public buildZipIndex = async (): Promise<void> => {
     const zipEntries = await this.getZipEntries();
     await this.saveEntriesToDb(zipEntries);
   };
   public getEntry = async (fileName: string): Promise<ZipEntry | undefined> => {
-    const result = await Sqlite.db.get(
+    const result = await Sqlite.db.getOne(
       `SELECT * FROM zip_entry WHERE resource_path = ? AND name = ?`,
       [this._zipFilePath, fileName]
     );
 
     // no result
-    if (result === undefined) {
+    if (result === undefined || result === []) {
       return undefined;
     }
 
