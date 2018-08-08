@@ -412,11 +412,11 @@ var StreamZip = function (config) {
     if (entry.isDirectory)
       return callback('Entry is not file');
     if (!fileId) {
-      fs.open(fileName, 'r', (err, f) => {
-        if(err) return callback(err);
-        fileId = f;
-        return openEntry(entry, callback, sync);
-      });
+      OSSSpecificImplementationGetter.fs.open(fileName, "r")
+        .then(f => {
+          fileId = f;
+          openEntry(entry, callback, sync);
+        })
     } else {
       var buffer = new Buffer(consts.LOCHDR);
       new FsRead(fileId, buffer, 0, buffer.length, entry.offset, function (err) {
@@ -461,23 +461,25 @@ var StreamZip = function (config) {
             });
           }
         });
-        fs.open(outPath, 'w', function (err, fileId) {
-          if (err)
-            return callback(err || errThrown);
-          if (errThrown) {
-            fs.close(fileId, function () {
-              callback(errThrown);
+        OSSSpecificImplementationGetter.fs.open(outPath, "w")
+          .then(fileId => {
+            fsStm = fs.createWriteStream(outPath, {fileId: fileId});
+            fsStm.on('finish', function () {
+              that.emit('extract', entry, outPath);
+              if (!errThrown)
+                callback();
             });
-            return;
-          }
-          fsStm = fs.createWriteStream(outPath, {fileId: fileId});
-          fsStm.on('finish', function () {
-            that.emit('extract', entry, outPath);
-            if (!errThrown)
-              callback();
+            stm.pipe(fsStm);
+          })
+          .catch(err => {
+            if (err)
+              return callback(err || errThrown);
+            if (errThrown) {
+              fs.close(fileId, function () {
+                callback(errThrown);
+              });
+            }
           });
-          stm.pipe(fsStm);
-        });
       }
     });
   }
@@ -560,20 +562,23 @@ var StreamZip = function (config) {
         extractFiles(outPath, entryName, files, callback, 0);
       }
     } else {
-      fs.stat(outPath, function (err, stat) {
-        if (stat && stat.isDirectory())
-          extract(entry, OSSSpecificImplementationGetter.path.resolve(outPath, OSSSpecificImplementationGetter.path.basename(entry.name)), callback);
-        else
-          extract(entry, outPath, callback);
-      });
+      OSSSpecificImplementationGetter.fs.isDir(outPath)
+        .then(isDirectory => {
+          if (isDirectory) {
+            extract(entry, OSSSpecificImplementationGetter.path.resolve(outPath, OSSSpecificImplementationGetter.path.basename(entry.name)), callback);
+          } else {
+            extract(entry, outPath, callback);
+          }
+        });
     }
   };
 
   this.close = function () {
     if (fileId) {
-      fs.close(fileId, function () {
-        fileId = null;
-      });
+      OSSSpecificImplementationGetter.fs.close(fileId)
+        .then(() => {
+          fileId = null;
+        });
     }
   };
 };
@@ -793,14 +798,21 @@ FsRead.prototype.read = function (sync) {
   this.waiting = true;
   var err;
   if (sync) {
-    try {
-      var bytesRead = fs.readSync(this.fileId, this.buffer, this.offset + this.bytesRead,
-        this.length - this.bytesRead, this.position + this.bytesRead);
-    } catch (e) {
-      err = e;
-    }
-    this.readCallback(sync, err, err ? bytesRead : null);
+    throw new Error("sync is not supported");
+    // try {
+    //   var bytesRead = fs.readSync(this.fileId, this.buffer, this.offset + this.bytesRead,
+    //     this.length - this.bytesRead, this.position + this.bytesRead);
+    // } catch (e) {
+    //   err = e;
+    // }
+    // this.readCallback(sync, err, err ? bytesRead : null);
   } else {
+    // OSSSpecificImplementationGetter.fs.read(this.fileId, this.length - this.bytesRead, this.position + this.bytesRead)
+    //   .then(readResult => {
+    //     this.buffer = Buffer.concat([this.buffer.slice(0, this.offset), readResult.buffer]);
+    //     readResult.buffer = this.buffer;
+    //     this.readCallback.call(this, sync, readResult);
+    //   });
     fs.read(this.fileId, this.buffer, this.offset + this.bytesRead,
       this.length - this.bytesRead, this.position + this.bytesRead,
       this.readCallback.bind(this, sync));
