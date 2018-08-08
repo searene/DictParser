@@ -8,11 +8,11 @@
 
 var
   util = require('util'),
-  fs = require('fs'),
-  path = require('path'),
   events = require('events'),
   zlib = require('zlib'),
+  fs = require("fs"),
   stream = require('stream');
+  var OSSSpecificImplementationGetter = require("../os-specific/OSSpecificImplementationGetter").OSSpecificImplementationGetter;
 
 // endregion
 
@@ -149,7 +149,7 @@ var consts = {
 
 var StreamZip = function (config) {
   var
-    fd,
+    fileId,
     fileSize,
     chunkSize,
     ready = false,
@@ -170,8 +170,8 @@ var StreamZip = function (config) {
     return new Promise((resolve, reject) => {
       fs.open(fileName, 'r', function (err, f) {
         if (err) reject(err);
-        fd = f;
-        fs.fstat(fd, function (err, stat) {
+        fileId = f;
+        fs.fstat(fileId, function (err, stat) {
           if (err) reject(err);
           fileSize = stat.size;
           chunkSize = config.chunkSize || Math.round(fileSize / 1000);
@@ -216,7 +216,7 @@ var StreamZip = function (config) {
   function readCentralDirectory() {
     var totalReadLength = Math.min(consts.ENDHDR + consts.MAXFILECOMMENT, fileSize);
     op = {
-      win: new FileWindowBuffer(fd),
+      win: new FileWindowBuffer(fileId),
       totalReadLength: totalReadLength,
       minPos: fileSize - totalReadLength,
       lastPos: fileSize,
@@ -307,7 +307,7 @@ var StreamZip = function (config) {
 
   function readEntries() {
     op = {
-      win: new FileWindowBuffer(fd),
+      win: new FileWindowBuffer(fileId),
       pos: centralDirectory.offset,
       chunkSize: chunkSize,
       entriesLeft: centralDirectory.volumeEntries
@@ -392,7 +392,7 @@ var StreamZip = function (config) {
       if (err)
         return callback(err);
       var offset = dataOffset(entry);
-      var entryStream = new EntryDataReaderStream(fd, offset, entry.compressedSize);
+      var entryStream = new EntryDataReaderStream(fileId, offset, entry.compressedSize);
       if (entry.method === consts.STORED) {
       } else if (entry.method === consts.DEFLATED || entry.method === consts.ENHANCED_DEFLATED) {
         entryStream = entryStream.pipe(zlib.createInflateRaw());
@@ -414,15 +414,15 @@ var StreamZip = function (config) {
     }
     if (entry.isDirectory)
       return callback('Entry is not file');
-    if (!fd) {
+    if (!fileId) {
       fs.open(fileName, 'r', (err, f) => {
         if(err) return callback(err);
-        fd = f;
+        fileId = f;
         return openEntry(entry, callback, sync);
       });
     } else {
       var buffer = new Buffer(consts.LOCHDR);
-      new FsRead(fd, buffer, 0, buffer.length, entry.offset, function (err) {
+      new FsRead(fileId, buffer, 0, buffer.length, entry.offset, function (err) {
         if (err)
           return callback(err);
         var readEx;
@@ -464,16 +464,16 @@ var StreamZip = function (config) {
             });
           }
         });
-        fs.open(outPath, 'w', function (err, fdFile) {
+        fs.open(outPath, 'w', function (err, fileId) {
           if (err)
             return callback(err || errThrown);
           if (errThrown) {
-            fs.close(fd, function () {
+            fs.close(fileId, function () {
               callback(errThrown);
             });
             return;
           }
-          fsStm = fs.createWriteStream(outPath, {fd: fdFile});
+          fsStm = fs.createWriteStream(outPath, {fileId: fileId});
           fsStm.on('finish', function () {
             that.emit('extract', entry, outPath);
             if (!errThrown)
@@ -489,7 +489,7 @@ var StreamZip = function (config) {
     if (!dirs.length)
       return callback();
     var dir = dirs.shift();
-    dir = path.join(baseDir, path.join.apply(path, dir));
+    dir = OSSSpecificImplementationGetter.path.resolve(baseDir, OSSSpecificImplementationGetter.path.resolve.apply(path, dir));
     fs.mkdir(dir, function (err) {
       if (err && err.code !== 'EEXIST')
         return callback(err);
@@ -501,7 +501,7 @@ var StreamZip = function (config) {
     if (!files.length)
       return callback(null, extractedCount);
     var file = files.shift();
-    var targetPath = path.join(baseDir, file.name.replace(baseRelPath, ''));
+    var targetPath = OSSSpecificImplementationGetter.path.resolve(baseDir, file.name.replace(baseRelPath, ''));
     extract(file, targetPath, function (err) {
       if (err)
         return callback(err, extractedCount);
@@ -528,7 +528,7 @@ var StreamZip = function (config) {
           var childEntry = entries[e];
           if (!childEntry.isDirectory) {
             files.push(childEntry);
-            relPath = path.dirname(relPath);
+            relPath = OSSSpecificImplementationGetter.path.dirname(relPath);
           }
           if (relPath && !allDirs[relPath] && relPath !== '.') {
             allDirs[relPath] = true;
@@ -565,7 +565,7 @@ var StreamZip = function (config) {
     } else {
       fs.stat(outPath, function (err, stat) {
         if (stat && stat.isDirectory())
-          extract(entry, path.join(outPath, path.basename(entry.name)), callback);
+          extract(entry, OSSSpecificImplementationGetter.path.resolve(outPath, OSSSpecificImplementationGetter.path.basename(entry.name)), callback);
         else
           extract(entry, outPath, callback);
       });
@@ -573,9 +573,9 @@ var StreamZip = function (config) {
   };
 
   this.close = function () {
-    if (fd) {
-      fs.close(fd, function () {
-        fd = null;
+    if (fileId) {
+      fs.close(fileId, function () {
+        fileId = null;
       });
     }
   };
@@ -778,8 +778,8 @@ ZipEntry.prototype.parseZip64Extra = function (data, offset, length) {
 
 // region FsRead
 
-var FsRead = function (fd, buffer, offset, length, position, callback) {
-  this.fd = fd;
+var FsRead = function (fileId, buffer, offset, length, position, callback) {
+  this.fileId = fileId;
   this.buffer = buffer;
   this.offset = offset;
   this.length = length;
@@ -797,14 +797,14 @@ FsRead.prototype.read = function (sync) {
   var err;
   if (sync) {
     try {
-      var bytesRead = fs.readSync(this.fd, this.buffer, this.offset + this.bytesRead,
+      var bytesRead = fs.readSync(this.fileId, this.buffer, this.offset + this.bytesRead,
         this.length - this.bytesRead, this.position + this.bytesRead);
     } catch (e) {
       err = e;
     }
     this.readCallback(sync, err, err ? bytesRead : null);
   } else {
-    fs.read(this.fd, this.buffer, this.offset + this.bytesRead,
+    fs.read(this.fileId, this.buffer, this.offset + this.bytesRead,
       this.length - this.bytesRead, this.position + this.bytesRead,
       this.readCallback.bind(this, sync));
   }
@@ -825,7 +825,7 @@ FsRead.prototype.readCallback = function (sync, err, bytesRead) {
 
 // region FileWindowBuffer
 
-var FileWindowBuffer = function (fd) {
+var FileWindowBuffer = function (fileId) {
   this.position = 0;
   this.buffer = new Buffer(0);
 
@@ -841,7 +841,7 @@ var FileWindowBuffer = function (fd) {
     if (this.buffer.length < length)
       this.buffer = new Buffer(length);
     this.position = pos;
-    fsOp = new FsRead(fd, this.buffer, 0, length, this.position, callback).read();
+    fsOp = new FsRead(fileId, this.buffer, 0, length, this.position, callback).read();
   };
 
   this.expandLeft = function (length, callback) {
@@ -850,14 +850,14 @@ var FileWindowBuffer = function (fd) {
     this.position -= length;
     if (this.position < 0)
       this.position = 0;
-    fsOp = new FsRead(fd, this.buffer, 0, length, this.position, callback).read();
+    fsOp = new FsRead(fileId, this.buffer, 0, length, this.position, callback).read();
   };
 
   this.expandRight = function (length, callback) {
     this.checkOp();
     var offset = this.buffer.length;
     this.buffer = Buffer.concat([this.buffer, new Buffer(length)]);
-    fsOp = new FsRead(fd, this.buffer, offset, length, this.position + offset, callback).read();
+    fsOp = new FsRead(fileId, this.buffer, offset, length, this.position + offset, callback).read();
   };
 
   this.moveRight = function (length, callback, shift) {
@@ -868,7 +868,7 @@ var FileWindowBuffer = function (fd) {
       shift = 0;
     }
     this.position += shift;
-    fsOp = new FsRead(fd, this.buffer, this.buffer.length - shift, shift, this.position + this.buffer.length - shift, callback).read();
+    fsOp = new FsRead(fileId, this.buffer, this.buffer.length - shift, shift, this.position + this.buffer.length - shift, callback).read();
   };
 };
 
@@ -876,9 +876,9 @@ var FileWindowBuffer = function (fd) {
 
 // region EntryDataReaderStream
 
-var EntryDataReaderStream = function (fd, offset, length) {
+var EntryDataReaderStream = function (fileId, offset, length) {
   stream.Readable.prototype.constructor.call(this);
-  this.fd = fd;
+  this.fileId = fileId;
   this.offset = offset;
   this.length = length;
   this.pos = 0;
@@ -890,7 +890,7 @@ util.inherits(EntryDataReaderStream, stream.Readable);
 EntryDataReaderStream.prototype._read = function (n) {
   var buffer = new Buffer(Math.min(n, this.length - this.pos));
   if (buffer.length) {
-    fs.read(this.fd, buffer, 0, buffer.length, this.offset + this.pos, this.readCallback);
+    fs.read(this.fileId, buffer, 0, buffer.length, this.offset + this.pos, this.readCallback);
   } else {
     this.push(null);
   }

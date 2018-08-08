@@ -1,3 +1,4 @@
+import { OSSpecificImplementationGetter } from "../os-specific/OSSpecificImplementationGetter";
 import { StreamZip, ZipEntry } from "../js/node-stream-zip";
 import { Sqlite } from "./Sqlite";
 
