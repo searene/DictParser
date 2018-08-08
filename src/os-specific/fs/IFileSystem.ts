@@ -2,6 +2,7 @@ import { ReadResult } from "fs-extra";
 
 export interface IFileSystem {
   isDir: (filePath: string) => Promise<boolean>;
+  getSize: (filePath: string) => Promise<number>;
   pathExists: (filePath: string) => Promise<boolean>;
   createFile: (filePath: string) => Promise<void>;
   open: (path: string, flags: string | number, mode?: number) => Promise<number | string>;

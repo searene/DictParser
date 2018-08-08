@@ -22,8 +22,7 @@ export class FileSystemPC implements IFileSystem {
     if (typeof fdOrFilePath === "string") {
       throw new Error("fdOrFilePath must be a number on PC");
     }
-    const bytes = await fse.read(fdOrFilePath, Buffer.alloc(length), 0, length, position);
-    return bytes;
+    return await fse.read(fdOrFilePath, Buffer.alloc(length), 0, length, position);
   }
   public readFile = async (filePath: string): Promise<Buffer> => {
     return await fse.readFile(filePath);
@@ -33,5 +32,9 @@ export class FileSystemPC implements IFileSystem {
   };
   public exists = async (filePath: string): Promise<boolean> => {
     return await fse.pathExists(filePath);
-  }
+  };
+  public getSize = async (filePath: string): Promise<number> => {
+    const stat = await fse.lstat(filePath);
+    return stat.size;
+  };
 }

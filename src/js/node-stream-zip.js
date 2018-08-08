@@ -167,19 +167,16 @@ var StreamZip = function (config) {
   }
 
   function open() {
-    return new Promise((resolve, reject) => {
-      fs.open(fileName, 'r', function (err, f) {
-        if (err) reject(err);
+    return OSSSpecificImplementationGetter.fs.open(fileName, "r")
+      .then(f => {
         fileId = f;
-        fs.fstat(fileId, function (err, stat) {
-          if (err) reject(err);
-          fileSize = stat.size;
-          chunkSize = config.chunkSize || Math.round(fileSize / 1000);
-          chunkSize = Math.max(Math.min(chunkSize, Math.min(128 * 1024, fileSize)), Math.min(1024, fileSize));
-          resolve();
-        });
+        return OSSSpecificImplementationGetter.fs.getSize(fileName);
+      })
+      .then(size => {
+        fileSize = size;
+        chunkSize = config.chunkSize || Math.round(fileSize / 1000);
+        chunkSize = Math.max(Math.min(chunkSize, Math.min(128 * 1024, fileSize)), Math.min(1024, fileSize));
       });
-    });
   }
 
   function readUntilFoundCallback(err, bytesRead) {
