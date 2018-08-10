@@ -887,41 +887,6 @@ var FileWindowBuffer = function(fileId) {
 
 // region EntryDataReaderStream
 
-var EntryDataReaderStream = function(fileId, offset, length) {
-  stream.Readable.prototype.constructor.call(this);
-  this.fileId = fileId;
-  this.offset = offset;
-  this.length = length;
-  this.pos = 0;
-  this.readCallback = this.readCallback.bind(this);
-};
-
-util.inherits(EntryDataReaderStream, stream.Readable);
-
-EntryDataReaderStream.prototype._read = function(n) {
-  var buffer = new Buffer(Math.min(n, this.length - this.pos));
-  if (buffer.length) {
-    fs.read(this.fileId, buffer, 0, buffer.length, this.offset + this.pos, (err, bytesRead, buffer) => {
-      this.readCallback(err, bytesRead, buffer);
-    });
-  } else {
-    this.push(null);
-  }
-};
-
-EntryDataReaderStream.prototype.readCallback = function(err, bytesRead, buffer) {
-  this.pos += bytesRead;
-  if (err) {
-    this.emit("error", err);
-    this.push(null);
-  } else if (!bytesRead) {
-    this.push(null);
-  } else {
-    if (bytesRead !== buffer.length) buffer = buffer.slice(0, bytesRead);
-    this.push(buffer);
-  }
-};
-
 // endregion
 
 // region EntryVerifyStream
