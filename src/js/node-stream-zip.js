@@ -11,6 +11,7 @@ var
   events = require('events'),
   zlib = require('zlib'),
   fs = require("fs"),
+  pako = require("pako");
   stream = require('stream');
   var OSSSpecificImplementationGetter = require("../os-specific/OSSpecificImplementationGetter").OSSpecificImplementationGetter;
 
@@ -418,22 +419,20 @@ var StreamZip = function (config) {
           openEntry(entry, callback, sync);
         })
     } else {
-      var buffer = new Buffer(consts.LOCHDR);
-      new FsRead(fileId, buffer, 0, buffer.length, entry.offset, function (err) {
-        if (err)
-          return callback(err);
-        var readEx;
-        try {
-          entry.readDataHeader(buffer);
-          const encrypted = (this.flags & consts.FLG_ENTRY_ENC) == consts.FLG_ENTRY_ENC;
-          if (encrypted) {
-            readEx = 'Entry encrypted';
+      OSSSpecificImplementationGetter.fs.read(fileId, consts.LOCHDR, entry.offset)
+        .then(readContents => {
+          let readEx;
+          try {
+            entry.readDataHeader(readContents.buffer);
+            const encrypted = (this.flags & consts.FLG_ENTRY_ENC) === consts.FLG_ENTRY_ENC;
+            if (encrypted) {
+              readEx = 'Entry encrypted';
+            }
+          } catch (ex) {
+            readEx = ex
           }
-        } catch (ex) {
-          readEx = ex
-        }
-        callback(readEx, entry);
-      }).read(sync);
+          callback(readEx, entry);
+        }).catch(callback);
     }
   }
 
