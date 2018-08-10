@@ -6,14 +6,14 @@
 
 // region Deps
 
-var
-  util = require('util'),
-  events = require('events'),
-  zlib = require('zlib'),
+var util = require("util"),
+  events = require("events"),
+  zlib = require("zlib"),
   fs = require("fs"),
   pako = require("pako");
-  stream = require('stream');
-  var OSSSpecificImplementationGetter = require("../os-specific/OSSpecificImplementationGetter").OSSpecificImplementationGetter;
+stream = require("stream");
+var OSSSpecificImplementationGetter = require("../os-specific/OSSpecificImplementationGetter")
+  .OSSpecificImplementationGetter;
 
 // endregion
 
@@ -68,7 +68,7 @@ var consts = {
   ENDSIZ: 12, // central directory size in bytes
   ENDOFF: 16, // offset of first CEN header
   ENDCOM: 20, // zip file comment length
-  MAXFILECOMMENT: 0xFFFF,
+  MAXFILECOMMENT: 0xffff,
 
   /* The entries in the end of ZIP64 central directory locator */
   ENDL64HDR: 20, // ZIP64 end of central directory locator header size
@@ -96,7 +96,7 @@ var consts = {
   // 7 reserved
   DEFLATED: 8, // deflated
   ENHANCED_DEFLATED: 9, // enhanced deflated
-  PKWARE: 10,// PKWare DCL imploded
+  PKWARE: 10, // PKWare DCL imploded
   // 11 reserved
   BZIP2: 12, //  compressed using BZIP2
   // 13 reserved
@@ -106,11 +106,11 @@ var consts = {
   IBM_LZ77: 19, //IBM LZ77 z
 
   /* General purpose bit flag */
-  FLG_ENC: 0,  // encrypted file
-  FLG_COMP1: 1,  // compression option
-  FLG_COMP2: 2,  // compression option
-  FLG_DESC: 4,  // data descriptor
-  FLG_ENH: 8,  // enhanced deflation
+  FLG_ENC: 0, // encrypted file
+  FLG_COMP1: 1, // compression option
+  FLG_COMP2: 2, // compression option
+  FLG_DESC: 4, // data descriptor
+  FLG_ENH: 8, // enhanced deflation
   FLG_STR: 16, // strong encryption
   FLG_LNG: 1024, // language encoding
   FLG_MSK: 4096, // mask header values
@@ -148,27 +148,25 @@ var consts = {
 
 // region StreamZip
 
-var StreamZip = function (config) {
-  var
-    fileId,
+var StreamZip = function(config) {
+  var fileId,
     fileSize,
     chunkSize,
     ready = false,
     that = this,
     op,
     centralDirectory,
-
     entries = config.storeEntries === true ? {} : null,
     buildEntries = config.buildEntries,
     fileName = config.file;
 
   if (buildEntries) {
-    open()
-      .then(readCentralDirectory);
+    open().then(readCentralDirectory);
   }
 
   function open() {
-    return OSSSpecificImplementationGetter.fs.open(fileName, "r")
+    return OSSSpecificImplementationGetter.fs
+      .open(fileName, "r")
       .then(f => {
         fileId = f;
         return OSSSpecificImplementationGetter.fs.getSize(fileName);
@@ -181,16 +179,14 @@ var StreamZip = function (config) {
   }
 
   function readUntilFoundCallback(err, bytesRead) {
-    if (err || !bytesRead)
-      return that.emit('error', err || 'Archive read error');
-    var
-      buffer = op.win.buffer,
+    if (err || !bytesRead) return that.emit("error", err || "Archive read error");
+    var buffer = op.win.buffer,
       pos = op.lastPos,
       bufferPosition = pos - op.win.position,
       minPos = op.minPos;
     while (--pos >= minPos && --bufferPosition >= 0) {
-      if (buffer.length - bufferPosition >= 4 &&
-        buffer[bufferPosition] === op.firstByte) { // quick check first signature byte
+      if (buffer.length - bufferPosition >= 4 && buffer[bufferPosition] === op.firstByte) {
+        // quick check first signature byte
         if (buffer.readUInt32LE(bufferPosition) === op.sig) {
           op.lastBufferPosition = bufferPosition;
           op.lastBytesRead = bytesRead;
@@ -200,15 +196,13 @@ var StreamZip = function (config) {
       }
     }
     if (pos === minPos) {
-      return that.emit('error', 'Bad archive');
+      return that.emit("error", "Bad archive");
     }
     op.lastPos = pos + 1;
     op.chunkSize *= 2;
-    if (pos <= minPos)
-      return that.emit('error', 'Bad archive');
+    if (pos <= minPos) return that.emit("error", "Bad archive");
     var expandLength = Math.min(op.chunkSize, pos - minPos);
     op.win.expandLeft(expandLength, readUntilFoundCallback);
-
   }
 
   function readCentralDirectory() {
@@ -234,21 +228,25 @@ var StreamZip = function (config) {
       centralDirectory.read(buffer.slice(pos, pos + consts.ENDHDR));
       centralDirectory.headerOffset = op.win.position + pos;
       if (centralDirectory.commentLength)
-        that.comment = buffer.slice(pos + consts.ENDHDR,
-          pos + consts.ENDHDR + centralDirectory.commentLength).toString();
-      else
-        that.comment = null;
+        that.comment = buffer
+          .slice(pos + consts.ENDHDR, pos + consts.ENDHDR + centralDirectory.commentLength)
+          .toString();
+      else that.comment = null;
       that.entriesCount = centralDirectory.volumeEntries;
       that.centralDirectory = centralDirectory;
-      if (centralDirectory.volumeEntries === consts.EF_ZIP64_OR_16 && centralDirectory.totalEntries === consts.EF_ZIP64_OR_16
-        || centralDirectory.size === consts.EF_ZIP64_OR_32 || centralDirectory.offset === consts.EF_ZIP64_OR_32) {
+      if (
+        (centralDirectory.volumeEntries === consts.EF_ZIP64_OR_16 &&
+          centralDirectory.totalEntries === consts.EF_ZIP64_OR_16) ||
+        centralDirectory.size === consts.EF_ZIP64_OR_32 ||
+        centralDirectory.offset === consts.EF_ZIP64_OR_32
+      ) {
         readZip64CentralDirectoryLocator();
       } else {
         op = {};
         readEntries();
       }
     } catch (err) {
-      that.emit('error', err);
+      that.emit("error", err);
     }
   }
 
@@ -314,10 +312,8 @@ var StreamZip = function (config) {
   }
 
   function readEntriesCallback(err, bytesRead) {
-    if (err || !bytesRead)
-      return that.emit('error', err || 'Entries read error');
-    var
-      buffer = op.win.buffer,
+    if (err || !bytesRead) return that.emit("error", err || "Entries read error");
+    var buffer = op.win.buffer,
       bufferPos = op.pos - op.win.position,
       bufferLength = buffer.length,
       entry = op.entry;
@@ -342,45 +338,43 @@ var StreamZip = function (config) {
         if (!config.skipEntryNameValidation) {
           entry.validateName();
         }
-        if (entries)
-          entries[entry.name] = entry;
-        that.emit('entry', entry);
+        if (entries) entries[entry.name] = entry;
+        that.emit("entry", entry);
         op.entry = entry = null;
         op.entriesLeft--;
         op.pos += entryHeaderSize;
         bufferPos += entryHeaderSize;
       }
-      that.emit('ready');
+      that.emit("ready");
     } catch (err) {
-      that.emit('error', err);
+      that.emit("error", err);
     }
   }
 
   function checkEntriesExist() {
-    if (!entries)
-      throw new Error('storeEntries disabled');
+    if (!entries) throw new Error("storeEntries disabled");
   }
 
-  Object.defineProperty(this, 'ready', {
-    get: function () {
+  Object.defineProperty(this, "ready", {
+    get: function() {
       return ready;
     }
   });
 
-  this.entry = function (name) {
+  this.entry = function(name) {
     checkEntriesExist();
     return entries[name];
   };
 
   this.setEntries = function(entryList) {
     entries = entryList;
-    for(entry of entries) {
+    for (entry of entries) {
       entries[entry.name] = entry;
     }
-    return entries
+    return entries;
   };
 
-  this.entries = function () {
+  this.entries = function() {
     checkEntriesExist();
     return entries;
   };
@@ -393,14 +387,17 @@ var StreamZip = function (config) {
         resolve(entry);
       });
     });
-  }
-  this.inflate = async function (entry) {
-    this.setEntries([entry]);
+  };
+  this.inflate = async function(entry) {
     const openedEntry = await this.openEntryPromise(entry);
-    const compressed = (await OSSSpecificImplementationGetter.fs.read(fileId, openedEntry.compressedSize, dataOffset(openedEntry))).buffer;
+    const compressed = (await OSSSpecificImplementationGetter.fs.read(
+      fileId,
+      openedEntry.compressedSize,
+      dataOffset(openedEntry)
+    )).buffer;
     const inflated = pako.inflateRaw(new Uint8Array(compressed));
     return new Buffer(inflated);
-  }
+  };
   // this.stream = function (entry, callback) {
   //   return openEntry(entry, function (err, entry) {
   //     if (err)
@@ -420,35 +417,34 @@ var StreamZip = function (config) {
   // };
 
   function openEntry(entry, callback, sync) {
-    if (typeof entry === 'string') {
+    if (typeof entry === "string") {
       checkEntriesExist();
       entry = entries[entry];
-      if (!entry)
-        return callback('Entry not found');
+      if (!entry) return callback("Entry not found");
     }
-    if (entry.isDirectory)
-      return callback('Entry is not file');
+    if (entry.isDirectory) return callback("Entry is not file");
     if (!fileId) {
-      OSSSpecificImplementationGetter.fs.open(fileName, "r")
-        .then(f => {
-          fileId = f;
-          openEntry(entry, callback, sync);
-        })
+      OSSSpecificImplementationGetter.fs.open(fileName, "r").then(f => {
+        fileId = f;
+        openEntry(entry, callback, sync);
+      });
     } else {
-      OSSSpecificImplementationGetter.fs.read(fileId, consts.LOCHDR, entry.offset)
+      OSSSpecificImplementationGetter.fs
+        .read(fileId, consts.LOCHDR, entry.offset)
         .then(readContents => {
           let readEx;
           try {
             entry.readDataHeader(readContents.buffer);
             const encrypted = (this.flags & consts.FLG_ENTRY_ENC) === consts.FLG_ENTRY_ENC;
             if (encrypted) {
-              readEx = 'Entry encrypted';
+              readEx = "Entry encrypted";
             }
           } catch (ex) {
-            readEx = ex
+            readEx = ex;
           }
           callback(readEx, entry);
-        }).catch(callback);
+        })
+        .catch(callback);
     }
   }
 
@@ -462,35 +458,34 @@ var StreamZip = function (config) {
   }
 
   function extract(entry, outPath, callback) {
-    that.stream(entry, function (err, stm) {
+    that.stream(entry, function(err, stm) {
       if (err) {
         callback(err);
       } else {
         var fsStm, errThrown;
-        stm.on('error', function (err) {
+        stm.on("error", function(err) {
           errThrown = err;
           if (fsStm) {
             stm.unpipe(fsStm);
-            fsStm.close(function () {
+            fsStm.close(function() {
               callback(err);
             });
           }
         });
-        OSSSpecificImplementationGetter.fs.open(outPath, "w")
+        OSSSpecificImplementationGetter.fs
+          .open(outPath, "w")
           .then(fileId => {
-            fsStm = fs.createWriteStream(outPath, {fileId: fileId});
-            fsStm.on('finish', function () {
-              that.emit('extract', entry, outPath);
-              if (!errThrown)
-                callback();
+            fsStm = fs.createWriteStream(outPath, { fileId: fileId });
+            fsStm.on("finish", function() {
+              that.emit("extract", entry, outPath);
+              if (!errThrown) callback();
             });
             stm.pipe(fsStm);
           })
           .catch(err => {
-            if (err)
-              return callback(err || errThrown);
+            if (err) return callback(err || errThrown);
             if (errThrown) {
-              fs.close(fileId, function () {
+              fs.close(fileId, function() {
                 callback(errThrown);
               });
             }
@@ -500,61 +495,60 @@ var StreamZip = function (config) {
   }
 
   function createDirectories(baseDir, dirs, callback) {
-    if (!dirs.length)
-      return callback();
+    if (!dirs.length) return callback();
     var dir = dirs.shift();
-    dir = OSSSpecificImplementationGetter.path.resolve(baseDir, OSSSpecificImplementationGetter.path.resolve.apply(path, dir));
-    fs.mkdir(dir, function (err) {
-      if (err && err.code !== 'EEXIST')
-        return callback(err);
+    dir = OSSSpecificImplementationGetter.path.resolve(
+      baseDir,
+      OSSSpecificImplementationGetter.path.resolve.apply(path, dir)
+    );
+    fs.mkdir(dir, function(err) {
+      if (err && err.code !== "EEXIST") return callback(err);
       createDirectories(baseDir, dirs, callback);
     });
   }
 
   function extractFiles(baseDir, baseRelPath, files, callback, extractedCount) {
-    if (!files.length)
-      return callback(null, extractedCount);
+    if (!files.length) return callback(null, extractedCount);
     var file = files.shift();
-    var targetPath = OSSSpecificImplementationGetter.path.resolve(baseDir, file.name.replace(baseRelPath, ''));
-    extract(file, targetPath, function (err) {
-      if (err)
-        return callback(err, extractedCount);
+    var targetPath = OSSSpecificImplementationGetter.path.resolve(baseDir, file.name.replace(baseRelPath, ""));
+    extract(file, targetPath, function(err) {
+      if (err) return callback(err, extractedCount);
       extractFiles(baseDir, baseRelPath, files, callback, extractedCount + 1);
     });
   }
 
-  this.extract = function (entry, outPath, callback) {
-    var entryName = entry || '';
-    if (typeof entry === 'string') {
+  this.extract = function(entry, outPath, callback) {
+    var entryName = entry || "";
+    if (typeof entry === "string") {
       entry = this.entry(entry);
       if (entry) {
         entryName = entry.name;
       } else {
-        if (entryName.length && entryName[entryName.length - 1] !== '/')
-          entryName += '/';
+        if (entryName.length && entryName[entryName.length - 1] !== "/") entryName += "/";
       }
     }
     if (!entry || entry.isDirectory) {
-      var files = [], dirs = [], allDirs = {};
+      var files = [],
+        dirs = [],
+        allDirs = {};
       for (var e in entries) {
         if (Object.prototype.hasOwnProperty.call(entries, e) && e.lastIndexOf(entryName, 0) === 0) {
-          var relPath = e.replace(entryName, '');
+          var relPath = e.replace(entryName, "");
           var childEntry = entries[e];
           if (!childEntry.isDirectory) {
             files.push(childEntry);
             relPath = OSSSpecificImplementationGetter.path.dirname(relPath);
           }
-          if (relPath && !allDirs[relPath] && relPath !== '.') {
+          if (relPath && !allDirs[relPath] && relPath !== ".") {
             allDirs[relPath] = true;
-            var parts = relPath.split('/').filter(function (f) {
+            var parts = relPath.split("/").filter(function(f) {
               return f;
             });
-            if (parts.length)
-              dirs.push(parts);
+            if (parts.length) dirs.push(parts);
             while (parts.length > 1) {
               parts = parts.slice(0, parts.length - 1);
-              var partsPath = parts.join('/');
-              if (allDirs[partsPath] || partsPath === '.') {
+              var partsPath = parts.join("/");
+              if (allDirs[partsPath] || partsPath === ".") {
                 break;
               }
               allDirs[partsPath] = true;
@@ -563,42 +557,45 @@ var StreamZip = function (config) {
           }
         }
       }
-      dirs.sort(function (x, y) {
+      dirs.sort(function(x, y) {
         return x.length - y.length;
       });
       if (dirs.length) {
-        createDirectories(outPath, dirs, function (err) {
-          if (err)
-            callback(err);
-          else
-            extractFiles(outPath, entryName, files, callback, 0);
+        createDirectories(outPath, dirs, function(err) {
+          if (err) callback(err);
+          else extractFiles(outPath, entryName, files, callback, 0);
         });
       } else {
         extractFiles(outPath, entryName, files, callback, 0);
       }
     } else {
-      OSSSpecificImplementationGetter.fs.isDir(outPath)
-        .then(isDirectory => {
-          if (isDirectory) {
-            extract(entry, OSSSpecificImplementationGetter.path.resolve(outPath, OSSSpecificImplementationGetter.path.basename(entry.name)), callback);
-          } else {
-            extract(entry, outPath, callback);
-          }
-        });
+      OSSSpecificImplementationGetter.fs.isDir(outPath).then(isDirectory => {
+        if (isDirectory) {
+          extract(
+            entry,
+            OSSSpecificImplementationGetter.path.resolve(
+              outPath,
+              OSSSpecificImplementationGetter.path.basename(entry.name)
+            ),
+            callback
+          );
+        } else {
+          extract(entry, outPath, callback);
+        }
+      });
     }
   };
 
-  this.close = function () {
+  this.close = function() {
     if (fileId) {
-      OSSSpecificImplementationGetter.fs.close(fileId)
-        .then(() => {
-          fileId = null;
-        });
+      OSSSpecificImplementationGetter.fs.close(fileId).then(() => {
+        fileId = null;
+      });
     }
   };
 };
 
-StreamZip.setFs = function (customFs) {
+StreamZip.setFs = function(customFs) {
   fs = customFs;
 };
 
@@ -608,12 +605,11 @@ util.inherits(StreamZip, events.EventEmitter);
 
 // region CentralDirectoryHeader
 
-var CentralDirectoryHeader = function () {
-};
+var CentralDirectoryHeader = function() {};
 
-CentralDirectoryHeader.prototype.read = function (data) {
+CentralDirectoryHeader.prototype.read = function(data) {
   if (data.length != consts.ENDHDR || data.readUInt32LE(0) != consts.ENDSIG)
-    throw new Error('Invalid central directory');
+    throw new Error("Invalid central directory");
   // number of entries on this volume
   this.volumeEntries = data.readUInt16LE(consts.ENDSUB);
   // total number of entries
@@ -630,12 +626,11 @@ CentralDirectoryHeader.prototype.read = function (data) {
 
 // region CentralDirectoryLoc64Header
 
-var CentralDirectoryLoc64Header = function () {
-};
+var CentralDirectoryLoc64Header = function() {};
 
-CentralDirectoryLoc64Header.prototype.read = function (data) {
+CentralDirectoryLoc64Header.prototype.read = function(data) {
   if (data.length != consts.ENDL64HDR || data.readUInt32LE(0) != consts.ENDL64SIG)
-    throw new Error('Invalid zip64 central directory locator');
+    throw new Error("Invalid zip64 central directory locator");
   // ZIP64 EOCD header offset
   this.headerOffset = Util.readUInt64LE(data, consts.ENDSUB);
 };
@@ -644,12 +639,11 @@ CentralDirectoryLoc64Header.prototype.read = function (data) {
 
 // region CentralDirectoryZip64Header
 
-var CentralDirectoryZip64Header = function () {
-};
+var CentralDirectoryZip64Header = function() {};
 
-CentralDirectoryZip64Header.prototype.read = function (data) {
+CentralDirectoryZip64Header.prototype.read = function(data) {
   if (data.length != consts.END64HDR || data.readUInt32LE(0) != consts.END64SIG)
-    throw new Error('Invalid central directory');
+    throw new Error("Invalid central directory");
   // number of entries on this volume
   this.volumeEntries = Util.readUInt64LE(data, consts.END64SUB);
   // total number of entries
@@ -664,13 +658,12 @@ CentralDirectoryZip64Header.prototype.read = function (data) {
 
 // region ZipEntry
 
-var ZipEntry = function () {
-};
+var ZipEntry = function() {};
 
-ZipEntry.prototype.readHeader = function (data, offset) {
+ZipEntry.prototype.readHeader = function(data, offset) {
   // data should be 46 bytes and start with "PK 01 02"
   if (data.length < offset + consts.CENHDR || data.readUInt32LE(offset) != consts.CENSIG) {
-    throw new Error('Invalid entry header');
+    throw new Error("Invalid entry header");
   }
   // version made by
   this.verMade = data.readUInt16LE(offset + consts.CENVEM);
@@ -704,10 +697,10 @@ ZipEntry.prototype.readHeader = function (data, offset) {
   this.offset = data.readUInt32LE(offset + consts.CENOFF);
 };
 
-ZipEntry.prototype.readDataHeader = function (data) {
+ZipEntry.prototype.readDataHeader = function(data) {
   // 30 bytes and should start with "PK\003\004"
   if (data.readUInt32LE(0) != consts.LOCSIG) {
-    throw new Error('Invalid local header');
+    throw new Error("Invalid local header");
   }
   // version needed to extract
   this.version = data.readUInt16LE(consts.LOCVER);
@@ -735,10 +728,10 @@ ZipEntry.prototype.readDataHeader = function (data) {
   this.extraLen = data.readUInt16LE(consts.LOCEXT);
 };
 
-ZipEntry.prototype.read = function (data, offset) {
-  this.name = data.slice(offset, offset += this.fnameLen).toString();
+ZipEntry.prototype.read = function(data, offset) {
+  this.name = data.slice(offset, (offset += this.fnameLen)).toString();
   var lastChar = data[offset - 1];
-  this.isDirectory = (lastChar == 47) || (lastChar == 92);
+  this.isDirectory = lastChar == 47 || lastChar == 92;
 
   if (this.extraLen) {
     this.readExtra(data, offset);
@@ -747,7 +740,7 @@ ZipEntry.prototype.read = function (data, offset) {
   this.comment = this.comLen ? data.slice(offset, offset + this.comLen).toString() : null;
 };
 
-ZipEntry.prototype.validateName = function () {
+ZipEntry.prototype.validateName = function() {
   // I don't know why the contents should be validated, according to which rule.
   // Comment them for now.
   // if (/\\|^\w+:|^\/|(^|\/)\.\.(\/|$)/.test(this.contents)) {
@@ -755,8 +748,10 @@ ZipEntry.prototype.validateName = function () {
   // }
 };
 
-ZipEntry.prototype.readExtra = function (data, offset) {
-  var signature, size, maxPos = offset + this.extraLen;
+ZipEntry.prototype.readExtra = function(data, offset) {
+  var signature,
+    size,
+    maxPos = offset + this.extraLen;
   while (offset < maxPos) {
     signature = data.readUInt16LE(offset);
     offset += 2;
@@ -769,7 +764,7 @@ ZipEntry.prototype.readExtra = function (data, offset) {
   }
 };
 
-ZipEntry.prototype.parseZip64Extra = function (data, offset, length) {
+ZipEntry.prototype.parseZip64Extra = function(data, offset, length) {
   if (length >= 8 && this.size === consts.EF_ZIP64_OR_32) {
     this.size = Util.readUInt64LE(data, offset);
     offset += 8;
@@ -795,7 +790,7 @@ ZipEntry.prototype.parseZip64Extra = function (data, offset, length) {
 
 // region FsRead
 
-var FsRead = function (fileId, buffer, offset, length, position, callback) {
+var FsRead = function(fileId, buffer, offset, length, position, callback) {
   this.fileId = fileId;
   this.buffer = buffer;
   this.offset = offset;
@@ -806,9 +801,9 @@ var FsRead = function (fileId, buffer, offset, length, position, callback) {
   this.waiting = false;
 };
 
-FsRead.prototype.read = function (sync) {
+FsRead.prototype.read = function(sync) {
   if (StreamZip.debug) {
-    console.log('read', this.position, this.bytesRead, this.length, this.offset);
+    console.log("read", this.position, this.bytesRead, this.length, this.offset);
   }
   this.waiting = true;
   var err;
@@ -828,15 +823,19 @@ FsRead.prototype.read = function (sync) {
     //     readResult.buffer = this.buffer;
     //     this.readCallback.call(this, sync, readResult);
     //   });
-    fs.read(this.fileId, this.buffer, this.offset + this.bytesRead,
-      this.length - this.bytesRead, this.position + this.bytesRead,
-      this.readCallback.bind(this, sync));
+    fs.read(
+      this.fileId,
+      this.buffer,
+      this.offset + this.bytesRead,
+      this.length - this.bytesRead,
+      this.position + this.bytesRead,
+      this.readCallback.bind(this, sync)
+    );
   }
 };
 
-FsRead.prototype.readCallback = function (sync, err, bytesRead) {
-  if (typeof bytesRead === 'number')
-    this.bytesRead += bytesRead;
+FsRead.prototype.readCallback = function(sync, err, bytesRead) {
+  if (typeof bytesRead === "number") this.bytesRead += bytesRead;
   if (err || !bytesRead || this.bytesRead === this.length) {
     this.waiting = false;
     return this.callback(err, this.bytesRead);
@@ -849,50 +848,38 @@ FsRead.prototype.readCallback = function (sync, err, bytesRead) {
 
 // region FileWindowBuffer
 
-var FileWindowBuffer = function (fileId) {
+var FileWindowBuffer = function(fileId) {
   this.position = 0;
   this.buffer = new Buffer(0);
 
-  var fsOp = null;
-
-  this.checkOp = function () {
-    if (fsOp && fsOp.waiting)
-      throw new Error('Operation in progress');
-  };
-
-  this.read = function (pos, length, callback) {
-    this.checkOp();
-    if (this.buffer.length < length)
-      this.buffer = new Buffer(length);
+  this.read = function(pos, length, callback) {
+    if (this.buffer.length < length) this.buffer = new Buffer(length);
     this.position = pos;
     fsOp = new FsRead(fileId, this.buffer, 0, length, this.position, callback).read();
   };
 
-  this.expandLeft = function (length, callback) {
-    this.checkOp();
+  this.expandLeft = function(length, callback) {
     this.buffer = Buffer.concat([new Buffer(length), this.buffer]);
     this.position -= length;
-    if (this.position < 0)
-      this.position = 0;
+    if (this.position < 0) this.position = 0;
     fsOp = new FsRead(fileId, this.buffer, 0, length, this.position, callback).read();
   };
 
-  this.expandRight = function (length, callback) {
-    this.checkOp();
-    var offset = this.buffer.length;
-    this.buffer = Buffer.concat([this.buffer, new Buffer(length)]);
-    fsOp = new FsRead(fileId, this.buffer, offset, length, this.position + offset, callback).read();
-  };
-
-  this.moveRight = function (length, callback, shift) {
-    this.checkOp();
+  this.moveRight = function(length, callback, shift) {
     if (shift) {
       this.buffer.copy(this.buffer, 0, shift);
     } else {
       shift = 0;
     }
     this.position += shift;
-    fsOp = new FsRead(fileId, this.buffer, this.buffer.length - shift, shift, this.position + this.buffer.length - shift, callback).read();
+    fsOp = new FsRead(
+      fileId,
+      this.buffer,
+      this.buffer.length - shift,
+      shift,
+      this.position + this.buffer.length - shift,
+      callback
+    ).read();
   };
 };
 
@@ -900,7 +887,7 @@ var FileWindowBuffer = function (fileId) {
 
 // region EntryDataReaderStream
 
-var EntryDataReaderStream = function (fileId, offset, length) {
+var EntryDataReaderStream = function(fileId, offset, length) {
   stream.Readable.prototype.constructor.call(this);
   this.fileId = fileId;
   this.offset = offset;
@@ -911,7 +898,7 @@ var EntryDataReaderStream = function (fileId, offset, length) {
 
 util.inherits(EntryDataReaderStream, stream.Readable);
 
-EntryDataReaderStream.prototype._read = function (n) {
+EntryDataReaderStream.prototype._read = function(n) {
   var buffer = new Buffer(Math.min(n, this.length - this.pos));
   if (buffer.length) {
     fs.read(this.fileId, buffer, 0, buffer.length, this.offset + this.pos, (err, bytesRead, buffer) => {
@@ -922,16 +909,15 @@ EntryDataReaderStream.prototype._read = function (n) {
   }
 };
 
-EntryDataReaderStream.prototype.readCallback = function (err, bytesRead, buffer) {
+EntryDataReaderStream.prototype.readCallback = function(err, bytesRead, buffer) {
   this.pos += bytesRead;
   if (err) {
-    this.emit('error', err);
+    this.emit("error", err);
     this.push(null);
   } else if (!bytesRead) {
     this.push(null);
   } else {
-    if (bytesRead !== buffer.length)
-      buffer = buffer.slice(0, bytesRead);
+    if (bytesRead !== buffer.length) buffer = buffer.slice(0, bytesRead);
     this.push(buffer);
   }
 };
@@ -940,18 +926,18 @@ EntryDataReaderStream.prototype.readCallback = function (err, bytesRead, buffer)
 
 // region EntryVerifyStream
 
-var EntryVerifyStream = function (baseStm, crc, size) {
+var EntryVerifyStream = function(baseStm, crc, size) {
   stream.Transform.prototype.constructor.call(this);
   this.verify = new CrcVerify(crc, size);
   var that = this;
-  baseStm.on('error', function (e) {
-    that.emit('error', e);
+  baseStm.on("error", function(e) {
+    that.emit("error", e);
   });
 };
 
 util.inherits(EntryVerifyStream, stream.Transform);
 
-EntryVerifyStream.prototype._transform = function (data, encoding, callback) {
+EntryVerifyStream.prototype._transform = function(data, encoding, callback) {
   var err;
   try {
     this.verify.data(data);
@@ -965,7 +951,7 @@ EntryVerifyStream.prototype._transform = function (data, encoding, callback) {
 
 // region CrcVerify
 
-var CrcVerify = function (crc, size) {
+var CrcVerify = function(crc, size) {
   this.crc = crc;
   this.size = size;
   this.state = {
@@ -974,32 +960,31 @@ var CrcVerify = function (crc, size) {
   };
 };
 
-CrcVerify.prototype.data = function (data) {
+CrcVerify.prototype.data = function(data) {
   var crcTable = CrcVerify.getCrcTable();
-  var crc = this.state.crc, off = 0, len = data.length;
-  while (--len >= 0)
-    crc = crcTable[(crc ^ data[off++]) & 0xff] ^ (crc >>> 8);
+  var crc = this.state.crc,
+    off = 0,
+    len = data.length;
+  while (--len >= 0) crc = crcTable[(crc ^ data[off++]) & 0xff] ^ (crc >>> 8);
   this.state.crc = crc;
   this.state.size += data.length;
   if (this.state.size >= this.size) {
     var buf = new Buffer(4);
     buf.writeInt32LE(~this.state.crc & 0xffffffff, 0);
     crc = buf.readUInt32LE(0);
-    if (crc !== this.crc)
-      throw new Error('Invalid CRC');
-    if (this.state.size !== this.size)
-      throw new Error('Invalid size');
+    if (crc !== this.crc) throw new Error("Invalid CRC");
+    if (this.state.size !== this.size) throw new Error("Invalid size");
   }
 };
 
-CrcVerify.getCrcTable = function () {
+CrcVerify.getCrcTable = function() {
   var crcTable = CrcVerify.crcTable;
   if (!crcTable) {
     CrcVerify.crcTable = crcTable = [];
     var b = new Buffer(4);
     for (var n = 0; n < 256; n++) {
       var c = n;
-      for (var k = 8; --k >= 0;)
+      for (var k = 8; --k >= 0; )
         if ((c & 1) != 0) {
           c = 0xedb88320 ^ (c >>> 1);
         } else {
@@ -1020,8 +1005,8 @@ CrcVerify.getCrcTable = function () {
 // region Util
 
 var Util = {
-  readUInt64LE: function (buffer, offset) {
-    return (buffer.readUInt32LE(offset + 4) * 0x0000000100000000) + buffer.readUInt32LE(offset);
+  readUInt64LE: function(buffer, offset) {
+    return buffer.readUInt32LE(offset + 4) * 0x0000000100000000 + buffer.readUInt32LE(offset);
   }
 };
 
