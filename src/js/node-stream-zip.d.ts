@@ -1,8 +1,9 @@
-import { Stream } from "stream";
+// import { Stream } from "stream";
 declare class StreamZip {
   public on: on;
-  public stream: (entry: ZipEntry | string, cb: (err: Error, stm: Stream) => void) => void;
-  public setEntries: (entries: ZipEntry[]) => ZipEntry[];
+  // public stream: (entry: ZipEntry | string, cb: (err: Error, stm: Stream) => void) => void;
+  public inflate: (entry: ZipEntry) => Promise<Buffer>;
+  // public setEntries: (entries: ZipEntry[]) => ZipEntry[];
   constructor(options: StreamZipOptions);
 }
 interface StreamZipOptions {

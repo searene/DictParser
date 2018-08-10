@@ -19,18 +19,8 @@ export class ZipReader {
       return Buffer.alloc(0);
     }
 
-    await zip.setEntries([entry]);
-    return new Promise<Buffer>(resolve => {
-      const bufs: Buffer[] = [];
-      zip.stream(fileName, (err, stm) => {
-        stm.on("data", (data: Buffer) => {
-          bufs.push(data);
-        });
-        stm.on("end", () => {
-          resolve(Buffer.concat(bufs));
-        });
-      });
-    });
+    // await zip.setEntries([entry]);
+    return await zip.inflate(entry);
   }
 
   public async getZipEntries(): Promise<ZipEntry[]> {

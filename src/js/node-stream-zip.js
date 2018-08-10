@@ -384,24 +384,40 @@ var StreamZip = function (config) {
     checkEntriesExist();
     return entries;
   };
-
-  this.stream = function (entry, callback) {
-    return openEntry(entry, function (err, entry) {
-      if (err)
-        return callback(err);
-      var offset = dataOffset(entry);
-      var entryStream = new EntryDataReaderStream(fileId, offset, entry.compressedSize);
-      if (entry.method === consts.STORED) {
-      } else if (entry.method === consts.DEFLATED || entry.method === consts.ENHANCED_DEFLATED) {
-        entryStream = entryStream.pipe(zlib.createInflateRaw());
-      } else {
-        return callback('Unknown compression method: ' + entry.method);
-      }
-      if (canVerifyCrc(entry))
-        entryStream = entryStream.pipe(new EntryVerifyStream(entryStream, entry.crc, entry.size));
-      callback(null, entryStream);
-    }, false);
-  };
+  this.openEntryPromise = async function(entry) {
+    return new Promise((resolve, reject) => {
+      openEntry(entry, function(err, entry) {
+        if (err) {
+          reject(err);
+        }
+        resolve(entry);
+      });
+    });
+  }
+  this.inflate = async function (entry) {
+    this.setEntries([entry]);
+    const openedEntry = await this.openEntryPromise(entry);
+    const compressed = (await OSSSpecificImplementationGetter.fs.read(fileId, openedEntry.compressedSize, dataOffset(openedEntry))).buffer;
+    const inflated = pako.inflateRaw(new Uint8Array(compressed));
+    return new Buffer(inflated);
+  }
+  // this.stream = function (entry, callback) {
+  //   return openEntry(entry, function (err, entry) {
+  //     if (err)
+  //       return callback(err);
+  //     var offset = dataOffset(entry);
+  //     var entryStream = new EntryDataReaderStream(fileId, offset, entry.compressedSize);
+  //     if (entry.method === consts.STORED) {
+  //     } else if (entry.method === consts.DEFLATED || entry.method === consts.ENHANCED_DEFLATED) {
+  //       entryStream = entryStream.pipe(zlib.createInflateRaw());
+  //     } else {
+  //       return callback('Unknown compression method: ' + entry.method);
+  //     }
+  //     if (canVerifyCrc(entry))
+  //       entryStream = entryStream.pipe(new EntryVerifyStream(entryStream, entry.crc, entry.size));
+  //     callback(null, entryStream);
+  //   }, false);
+  // };
 
   function openEntry(entry, callback, sync) {
     if (typeof entry === 'string') {
@@ -898,7 +914,9 @@ util.inherits(EntryDataReaderStream, stream.Readable);
 EntryDataReaderStream.prototype._read = function (n) {
   var buffer = new Buffer(Math.min(n, this.length - this.pos));
   if (buffer.length) {
-    fs.read(this.fileId, buffer, 0, buffer.length, this.offset + this.pos, this.readCallback);
+    fs.read(this.fileId, buffer, 0, buffer.length, this.offset + this.pos, (err, bytesRead, buffer) => {
+      this.readCallback(err, bytesRead, buffer);
+    });
   } else {
     this.push(null);
   }
