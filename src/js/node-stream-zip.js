@@ -8,7 +8,7 @@
 
 var events = require("events"),
   pako = require("pako");
-stream = require("stream");
+// stream = require("stream");
 var OSSSpecificImplementationGetter = require("../os-specific/OSSpecificImplementationGetter")
 
   .OSSpecificImplementationGetter;
