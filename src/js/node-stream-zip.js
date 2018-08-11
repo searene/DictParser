@@ -6,13 +6,11 @@
 
 // region Deps
 
-var util = require("util"),
-  events = require("events"),
-  zlib = require("zlib"),
-  fs = require("fs"),
+var events = require("events"),
   pako = require("pako");
 stream = require("stream");
 var OSSSpecificImplementationGetter = require("../os-specific/OSSpecificImplementationGetter")
+
   .OSSpecificImplementationGetter;
 
 // endregion
@@ -149,6 +147,7 @@ var consts = {
 // region StreamZip
 
 var StreamZip = function(config) {
+  events.EventEmitter.call(this);
   var fileId,
     fileSize,
     chunkSize,
@@ -452,139 +451,139 @@ var StreamZip = function(config) {
     return entry.offset + consts.LOCHDR + entry.fnameLen + entry.extraLen;
   }
 
-  function canVerifyCrc(entry) {
-    // if bit 3 (0x08) of the general-purpose flags field is set, then the CRC-32 and file sizes are not known when the header is written
-    return (entry.flags & 0x8) != 0x8;
-  }
+  // function canVerifyCrc(entry) {
+  //   // if bit 3 (0x08) of the general-purpose flags field is set, then the CRC-32 and file sizes are not known when the header is written
+  //   return (entry.flags & 0x8) != 0x8;
+  // }
 
-  function extract(entry, outPath, callback) {
-    that.stream(entry, function(err, stm) {
-      if (err) {
-        callback(err);
-      } else {
-        var fsStm, errThrown;
-        stm.on("error", function(err) {
-          errThrown = err;
-          if (fsStm) {
-            stm.unpipe(fsStm);
-            fsStm.close(function() {
-              callback(err);
-            });
-          }
-        });
-        OSSSpecificImplementationGetter.fs
-          .open(outPath, "w")
-          .then(fileId => {
-            fsStm = fs.createWriteStream(outPath, { fileId: fileId });
-            fsStm.on("finish", function() {
-              that.emit("extract", entry, outPath);
-              if (!errThrown) callback();
-            });
-            stm.pipe(fsStm);
-          })
-          .catch(err => {
-            if (err) return callback(err || errThrown);
-            if (errThrown) {
-              fs.close(fileId, function() {
-                callback(errThrown);
-              });
-            }
-          });
-      }
-    });
-  }
+  // function extract(entry, outPath, callback) {
+  //   that.stream(entry, function(err, stm) {
+  //     if (err) {
+  //       callback(err);
+  //     } else {
+  //       var fsStm, errThrown;
+  //       stm.on("error", function(err) {
+  //         errThrown = err;
+  //         if (fsStm) {
+  //           stm.unpipe(fsStm);
+  //           fsStm.close(function() {
+  //             callback(err);
+  //           });
+  //         }
+  //       });
+  //       OSSSpecificImplementationGetter.fs
+  //         .open(outPath, "w")
+  //         .then(fileId => {
+  //           fsStm = fs.createWriteStream(outPath, { fileId: fileId });
+  //           fsStm.on("finish", function() {
+  //             that.emit("extract", entry, outPath);
+  //             if (!errThrown) callback();
+  //           });
+  //           stm.pipe(fsStm);
+  //         })
+  //         .catch(err => {
+  //           if (err) return callback(err || errThrown);
+  //           if (errThrown) {
+  //             fs.close(fileId, function() {
+  //               callback(errThrown);
+  //             });
+  //           }
+  //         });
+  //     }
+  //   });
+  // }
 
-  function createDirectories(baseDir, dirs, callback) {
-    if (!dirs.length) return callback();
-    var dir = dirs.shift();
-    dir = OSSSpecificImplementationGetter.path.resolve(
-      baseDir,
-      OSSSpecificImplementationGetter.path.resolve.apply(path, dir)
-    );
-    fs.mkdir(dir, function(err) {
-      if (err && err.code !== "EEXIST") return callback(err);
-      createDirectories(baseDir, dirs, callback);
-    });
-  }
+  // function createDirectories(baseDir, dirs, callback) {
+  //   if (!dirs.length) return callback();
+  //   var dir = dirs.shift();
+  //   dir = OSSSpecificImplementationGetter.path.resolve(
+  //     baseDir,
+  //     OSSSpecificImplementationGetter.path.resolve.apply(path, dir)
+  //   );
+  //   fs.mkdir(dir, function(err) {
+  //     if (err && err.code !== "EEXIST") return callback(err);
+  //     createDirectories(baseDir, dirs, callback);
+  //   });
+  // }
 
-  function extractFiles(baseDir, baseRelPath, files, callback, extractedCount) {
-    if (!files.length) return callback(null, extractedCount);
-    var file = files.shift();
-    var targetPath = OSSSpecificImplementationGetter.path.resolve(baseDir, file.name.replace(baseRelPath, ""));
-    extract(file, targetPath, function(err) {
-      if (err) return callback(err, extractedCount);
-      extractFiles(baseDir, baseRelPath, files, callback, extractedCount + 1);
-    });
-  }
+  // function extractFiles(baseDir, baseRelPath, files, callback, extractedCount) {
+  //   if (!files.length) return callback(null, extractedCount);
+  //   var file = files.shift();
+  //   var targetPath = OSSSpecificImplementationGetter.path.resolve(baseDir, file.name.replace(baseRelPath, ""));
+  //   extract(file, targetPath, function(err) {
+  //     if (err) return callback(err, extractedCount);
+  //     extractFiles(baseDir, baseRelPath, files, callback, extractedCount + 1);
+  //   });
+  // }
 
-  this.extract = function(entry, outPath, callback) {
-    var entryName = entry || "";
-    if (typeof entry === "string") {
-      entry = this.entry(entry);
-      if (entry) {
-        entryName = entry.name;
-      } else {
-        if (entryName.length && entryName[entryName.length - 1] !== "/") entryName += "/";
-      }
-    }
-    if (!entry || entry.isDirectory) {
-      var files = [],
-        dirs = [],
-        allDirs = {};
-      for (var e in entries) {
-        if (Object.prototype.hasOwnProperty.call(entries, e) && e.lastIndexOf(entryName, 0) === 0) {
-          var relPath = e.replace(entryName, "");
-          var childEntry = entries[e];
-          if (!childEntry.isDirectory) {
-            files.push(childEntry);
-            relPath = OSSSpecificImplementationGetter.path.dirname(relPath);
-          }
-          if (relPath && !allDirs[relPath] && relPath !== ".") {
-            allDirs[relPath] = true;
-            var parts = relPath.split("/").filter(function(f) {
-              return f;
-            });
-            if (parts.length) dirs.push(parts);
-            while (parts.length > 1) {
-              parts = parts.slice(0, parts.length - 1);
-              var partsPath = parts.join("/");
-              if (allDirs[partsPath] || partsPath === ".") {
-                break;
-              }
-              allDirs[partsPath] = true;
-              dirs.push(parts);
-            }
-          }
-        }
-      }
-      dirs.sort(function(x, y) {
-        return x.length - y.length;
-      });
-      if (dirs.length) {
-        createDirectories(outPath, dirs, function(err) {
-          if (err) callback(err);
-          else extractFiles(outPath, entryName, files, callback, 0);
-        });
-      } else {
-        extractFiles(outPath, entryName, files, callback, 0);
-      }
-    } else {
-      OSSSpecificImplementationGetter.fs.isDir(outPath).then(isDirectory => {
-        if (isDirectory) {
-          extract(
-            entry,
-            OSSSpecificImplementationGetter.path.resolve(
-              outPath,
-              OSSSpecificImplementationGetter.path.basename(entry.name)
-            ),
-            callback
-          );
-        } else {
-          extract(entry, outPath, callback);
-        }
-      });
-    }
-  };
+  // this.extract = function(entry, outPath, callback) {
+  //   var entryName = entry || "";
+  //   if (typeof entry === "string") {
+  //     entry = this.entry(entry);
+  //     if (entry) {
+  //       entryName = entry.name;
+  //     } else {
+  //       if (entryName.length && entryName[entryName.length - 1] !== "/") entryName += "/";
+  //     }
+  //   }
+  //   if (!entry || entry.isDirectory) {
+  //     var files = [],
+  //       dirs = [],
+  //       allDirs = {};
+  //     for (var e in entries) {
+  //       if (Object.prototype.hasOwnProperty.call(entries, e) && e.lastIndexOf(entryName, 0) === 0) {
+  //         var relPath = e.replace(entryName, "");
+  //         var childEntry = entries[e];
+  //         if (!childEntry.isDirectory) {
+  //           files.push(childEntry);
+  //           relPath = OSSSpecificImplementationGetter.path.dirname(relPath);
+  //         }
+  //         if (relPath && !allDirs[relPath] && relPath !== ".") {
+  //           allDirs[relPath] = true;
+  //           var parts = relPath.split("/").filter(function(f) {
+  //             return f;
+  //           });
+  //           if (parts.length) dirs.push(parts);
+  //           while (parts.length > 1) {
+  //             parts = parts.slice(0, parts.length - 1);
+  //             var partsPath = parts.join("/");
+  //             if (allDirs[partsPath] || partsPath === ".") {
+  //               break;
+  //             }
+  //             allDirs[partsPath] = true;
+  //             dirs.push(parts);
+  //           }
+  //         }
+  //       }
+  //     }
+  //     dirs.sort(function(x, y) {
+  //       return x.length - y.length;
+  //     });
+  //     if (dirs.length) {
+  //       createDirectories(outPath, dirs, function(err) {
+  //         if (err) callback(err);
+  //         else extractFiles(outPath, entryName, files, callback, 0);
+  //       });
+  //     } else {
+  //       extractFiles(outPath, entryName, files, callback, 0);
+  //     }
+  //   } else {
+  //     OSSSpecificImplementationGetter.fs.isDir(outPath).then(isDirectory => {
+  //       if (isDirectory) {
+  //         extract(
+  //           entry,
+  //           OSSSpecificImplementationGetter.path.resolve(
+  //             outPath,
+  //             OSSSpecificImplementationGetter.path.basename(entry.name)
+  //           ),
+  //           callback
+  //         );
+  //       } else {
+  //         extract(entry, outPath, callback);
+  //       }
+  //     });
+  //   }
+  // };
 
   this.close = function() {
     if (fileId) {
@@ -595,11 +594,12 @@ var StreamZip = function(config) {
   };
 };
 
+StreamZip.prototype = Object.create(events.EventEmitter.prototype);
+StreamZip.prototype.constructor = StreamZip;
+
 StreamZip.setFs = function(customFs) {
   fs = customFs;
 };
-
-util.inherits(StreamZip, events.EventEmitter);
 
 // endregion
 
@@ -823,14 +823,24 @@ FsRead.prototype.read = function(sync) {
     //     readResult.buffer = this.buffer;
     //     this.readCallback.call(this, sync, readResult);
     //   });
-    fs.read(
+    // fs.read(
+    //   this.fileId,
+    //   this.buffer,
+    //   this.offset + this.bytesRead,
+    //   this.length - this.bytesRead,
+    //   this.position + this.bytesRead,
+    //   this.readCallback.bind(this, sync));
+    OSSSpecificImplementationGetter.fs.readWithBufferOffset(
       this.fileId,
       this.buffer,
       this.offset + this.bytesRead,
       this.length - this.bytesRead,
       this.position + this.bytesRead,
-      this.readCallback.bind(this, sync)
-    );
+    ).then(readContents => {
+      this.readCallback.call(this, sync, null, readContents.bytesRead, readContents.buffer);
+    }).catch(err => {
+      this.readCallback.call(this, sync, err);
+    });
   }
 };
 
@@ -891,79 +901,79 @@ var FileWindowBuffer = function(fileId) {
 
 // region EntryVerifyStream
 
-var EntryVerifyStream = function(baseStm, crc, size) {
-  stream.Transform.prototype.constructor.call(this);
-  this.verify = new CrcVerify(crc, size);
-  var that = this;
-  baseStm.on("error", function(e) {
-    that.emit("error", e);
-  });
-};
-
-util.inherits(EntryVerifyStream, stream.Transform);
-
-EntryVerifyStream.prototype._transform = function(data, encoding, callback) {
-  var err;
-  try {
-    this.verify.data(data);
-  } catch (e) {
-    err = e;
-  }
-  callback(err, data);
-};
+// var EntryVerifyStream = function(baseStm, crc, size) {
+//   stream.Transform.prototype.constructor.call(this);
+//   this.verify = new CrcVerify(crc, size);
+//   var that = this;
+//   baseStm.on("error", function(e) {
+//     that.emit("error", e);
+//   });
+// };
+//
+// util.inherits(EntryVerifyStream, stream.Transform);
+//
+// EntryVerifyStream.prototype._transform = function(data, encoding, callback) {
+//   var err;
+//   try {
+//     this.verify.data(data);
+//   } catch (e) {
+//     err = e;
+//   }
+//   callback(err, data);
+// };
 
 // endregion
 
 // region CrcVerify
 
-var CrcVerify = function(crc, size) {
-  this.crc = crc;
-  this.size = size;
-  this.state = {
-    crc: ~0,
-    size: 0
-  };
-};
-
-CrcVerify.prototype.data = function(data) {
-  var crcTable = CrcVerify.getCrcTable();
-  var crc = this.state.crc,
-    off = 0,
-    len = data.length;
-  while (--len >= 0) crc = crcTable[(crc ^ data[off++]) & 0xff] ^ (crc >>> 8);
-  this.state.crc = crc;
-  this.state.size += data.length;
-  if (this.state.size >= this.size) {
-    var buf = new Buffer(4);
-    buf.writeInt32LE(~this.state.crc & 0xffffffff, 0);
-    crc = buf.readUInt32LE(0);
-    if (crc !== this.crc) throw new Error("Invalid CRC");
-    if (this.state.size !== this.size) throw new Error("Invalid size");
-  }
-};
-
-CrcVerify.getCrcTable = function() {
-  var crcTable = CrcVerify.crcTable;
-  if (!crcTable) {
-    CrcVerify.crcTable = crcTable = [];
-    var b = new Buffer(4);
-    for (var n = 0; n < 256; n++) {
-      var c = n;
-      for (var k = 8; --k >= 0; )
-        if ((c & 1) != 0) {
-          c = 0xedb88320 ^ (c >>> 1);
-        } else {
-          c = c >>> 1;
-        }
-      if (c < 0) {
-        b.writeInt32LE(c, 0);
-        c = b.readUInt32LE(0);
-      }
-      crcTable[n] = c;
-    }
-  }
-  return crcTable;
-};
+// var CrcVerify = function(crc, size) {
+//   this.crc = crc;
+//   this.size = size;
+//   this.state = {
+//     crc: ~0,
+//     size: 0
+//   };
+// };
+//
+// CrcVerify.prototype.data = function(data) {
+//   var crcTable = CrcVerify.getCrcTable();
+//   var crc = this.state.crc,
+//     off = 0,
+//     len = data.length;
+//   while (--len >= 0) crc = crcTable[(crc ^ data[off++]) & 0xff] ^ (crc >>> 8);
+//   this.state.crc = crc;
+//   this.state.size += data.length;
+//   if (this.state.size >= this.size) {
+//     var buf = new Buffer(4);
+//     buf.writeInt32LE(~this.state.crc & 0xffffffff, 0);
+//     crc = buf.readUInt32LE(0);
+//     if (crc !== this.crc) throw new Error("Invalid CRC");
+//     if (this.state.size !== this.size) throw new Error("Invalid size");
+//   }
+// };
+//
+// CrcVerify.getCrcTable = function() {
+//   var crcTable = CrcVerify.crcTable;
+//   if (!crcTable) {
+//     CrcVerify.crcTable = crcTable = [];
+//     var b = new Buffer(4);
+//     for (var n = 0; n < 256; n++) {
+//       var c = n;
+//       for (var k = 8; --k >= 0; )
+//         if ((c & 1) != 0) {
+//           c = 0xedb88320 ^ (c >>> 1);
+//         } else {
+//           c = c >>> 1;
+//         }
+//       if (c < 0) {
+//         b.writeInt32LE(c, 0);
+//         c = b.readUInt32LE(0);
+//       }
+//       crcTable[n] = c;
+//     }
+//   }
+//   return crcTable;
+// };
 
 // endregion
 
