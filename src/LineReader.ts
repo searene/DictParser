@@ -24,7 +24,7 @@ export class LineReader extends EventEmitter {
   }
 
   public process() {
-    process.nextTick(() => {
+    setImmediate(() => {
       this.run();
     });
   }
