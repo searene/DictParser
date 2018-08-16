@@ -22,7 +22,7 @@ export class DictionaryFinder extends EventEmitter {
     this._dictionaries.set(DictionaryType.STAR_DICT, new StarDict());
 
     // emit dictionary contents being scanned
-    for (const dict of this._dictionaries.values()) {
+    for (const dict of Array.from(this._dictionaries.values())) {
       dict.dictionaryScanProgressReporter.on(
         "name",
         (dictionaryName: string) => {

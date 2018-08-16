@@ -24,8 +24,8 @@ export class DictParser extends EventEmitter {
     OSSpecificImplementationGetter.fs = options.fsImplementation;
     OSSpecificImplementationGetter.sqlite = options.sqliteImplementation;
     OSSpecificImplementationGetter.os = options.os;
-    ResourceManager.commonResourceDirectory = options.commonResourceDirectory === undefined ? OSSpecificImplementationGetter.path.resolve(__dirname, "resources") : options.commonResourceDirectory;
-    this._wordFormsFolder = options.wordFormsFolder === undefined ? OSSpecificImplementationGetter.path.resolve(ResourceManager.commonResourceDirectory, "wordforms") : options.wordFormsFolder;
+    ResourceManager.commonResourceDirectory = options.commonResourceDirectory;
+    this._wordFormsFolder = options.wordFormsFolder;
     this._sqliteDbPath = options.sqliteDbPath;
     registerResourceManagers();
   }
