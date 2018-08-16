@@ -46,7 +46,7 @@ export class DictionaryFinder extends EventEmitter {
     if (absoluteFiles.length === 0) {
       return;
     }
-    for (const dict of this._dictionaries.values()) {
+    for (const dict of Array.from(this._dictionaries.values())) {
       const dictionaryFiles = await dict.addDictionary(absoluteFiles);
       absoluteFiles = absoluteFiles.filter(f => dictionaryFiles.indexOf(f) === -1)
     }
