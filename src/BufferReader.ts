@@ -7,7 +7,7 @@ export abstract class BufferReader {
   public abstract read(start: number, len: number): Promise<Buffer>;
   public abstract getEncodingStat(): Promise<IEncodingStat>;
 
-  // call this method after you have done with all the work
+  // call this method after you have finished everything
   public abstract close(): Promise<void>;
 }
 
