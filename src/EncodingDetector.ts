@@ -1,4 +1,5 @@
 import { OSSpecificImplementationGetter } from "./os-specific/OSSpecificImplementationGetter";
+import { IEncodingStat } from "./model/IEncodingStat";
 
 export const UTF_8: string = "utf8";
 export const UTF_16_BE: string = "utf16be";
@@ -24,7 +25,7 @@ export const UTF_32_LE: string = "utf32le";
  *          {@code encoding: string}
  *          {@code posAfterBom: offset of the real contents, excluding the bom at the beginning}
  */
-export async function getEncodingInBuffer(fileContents: Buffer): Promise<EncodingStat> {
+export async function getEncodingInBuffer(fileContents: Buffer): Promise<IEncodingStat> {
   if (fileContents.length < 4) {
     throw new Error("at least 4 bytes are needed");
   }
@@ -43,7 +44,7 @@ export async function getEncodingInBuffer(fileContents: Buffer): Promise<Encodin
   }
 }
 
-export async function getEncodingInFile(fdOrFilePath: string | number): Promise<EncodingStat> {
+export async function getEncodingInFile(fdOrFilePath: string | number): Promise<IEncodingStat> {
   const fd = typeof fdOrFilePath === "number" ? fdOrFilePath : await OSSpecificImplementationGetter.fs.open(fdOrFilePath, "r");
   const bytes = await OSSpecificImplementationGetter.fs.read(fd, 4, 0);
   if (bytes.bytesRead < 4) {
@@ -52,7 +53,3 @@ export async function getEncodingInFile(fdOrFilePath: string | number): Promise<
   return await getEncodingInBuffer(bytes.buffer);
 }
 
-export interface EncodingStat {
-  encoding: string;
-  posAfterBom: number;
-}

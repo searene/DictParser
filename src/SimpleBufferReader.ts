@@ -1,6 +1,7 @@
 import { BufferReader } from "./BufferReader";
-import { EncodingStat, getEncodingInFile } from "./EncodingDetector";
+import { getEncodingInFile } from "./EncodingDetector";
 import { OSSpecificImplementationGetter } from "./os-specific/OSSpecificImplementationGetter";
+import { IEncodingStat } from "./model/IEncodingStat";
 
 export class SimpleBufferReader extends BufferReader {
   private _fdOrFilePath: string | number;
@@ -21,7 +22,7 @@ export class SimpleBufferReader extends BufferReader {
     }
   }
 
-  public async getEncodingStat(): Promise<EncodingStat> {
+  public async getEncodingStat(): Promise<IEncodingStat> {
     return await getEncodingInFile(this._fdOrFilePath);
   }
 }

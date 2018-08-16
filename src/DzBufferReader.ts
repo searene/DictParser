@@ -1,7 +1,8 @@
 import { DictZipParser } from "./dictionaries/dsl/DictZipParser";
-import { EncodingStat, getEncodingInBuffer } from "./EncodingDetector";
+import { getEncodingInBuffer } from "./EncodingDetector";
 import { BufferReader } from "./BufferReader";
 import { OSSpecificImplementationGetter } from "./os-specific/OSSpecificImplementationGetter";
+import { IEncodingStat } from "./model/IEncodingStat";
 
 export class DzBufferReader extends BufferReader {
   private _fd: number;
@@ -17,7 +18,7 @@ export class DzBufferReader extends BufferReader {
     return await this._dictZipParser.parse(start, len);
   }
 
-  public async getEncodingStat(): Promise<EncodingStat> {
+  public async getEncodingStat(): Promise<IEncodingStat> {
     const buffer: Buffer = await this._dictZipParser.parse(0, 4);
     if (buffer.length < 4) {
       throw new Error(`The size of file cannot be less than 4 bytes.`);
