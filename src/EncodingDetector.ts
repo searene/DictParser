@@ -1,5 +1,6 @@
 import { OSSpecificImplementationGetter } from "./os-specific/OSSpecificImplementationGetter";
 import { IEncodingStat } from "./model/IEncodingStat";
+import { Buffer } from "buffer";
 
 export const UTF_8: string = "utf8";
 export const UTF_16_BE: string = "utf16be";

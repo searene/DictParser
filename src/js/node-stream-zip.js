@@ -7,11 +7,10 @@
 // region Deps
 
 var events = require("events"),
-  pako = require("pako");
+  pako = require("pako"),
+  Buffer = require("buffer").Buffer,
 // stream = require("stream");
-var OSSSpecificImplementationGetter = require("../os-specific/OSSpecificImplementationGetter")
-
-  .OSSpecificImplementationGetter;
+  OSSSpecificImplementationGetter = require("../os-specific/OSSpecificImplementationGetter").OSSpecificImplementationGetter;
 
 // endregion
 

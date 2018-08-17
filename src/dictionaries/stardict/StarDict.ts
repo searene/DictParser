@@ -13,6 +13,7 @@ import { IBaseIndex } from "../../model/IBaseIndex";
 import { EncodingUtil } from "../../util/EncodingUtil";
 import { HTMLCreator } from "../../HTMLCreator";
 import { SimpleBufferReader } from "../../SimpleBufferReader";
+import { Buffer } from "buffer";
 
 export class StarDict extends Dictionary {
   private idxSuffixes: string[] = [".idx", ".idx.gz"];

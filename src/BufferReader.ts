@@ -1,4 +1,5 @@
 import { IEncodingStat } from "./model/IEncodingStat";
+import { Buffer } from "buffer";
 
 export abstract class BufferReader {
   // call this method first before calling any other methods

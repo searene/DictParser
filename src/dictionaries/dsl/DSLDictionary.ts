@@ -18,6 +18,7 @@ import { DzBufferReader } from "../../DzBufferReader";
 import { ZipReader } from "../../util/ZipReader";
 import { IBaseIndex } from "../../model/IBaseIndex";
 import { ListUtil } from "../../util/ListUtil";
+import { Buffer } from "buffer";
 
 /**
  * Created by searene on 17-1-23.
@@ -71,6 +72,7 @@ export class DSLDictionary extends Dictionary {
   }
 
   public async scanDSL(dictFile: string): Promise<IDSLScanResult> {
+    const buffer = Buffer.from("abc", "utf8");
     return new Promise<IDSLScanResult>((resolve, reject) => {
       const result: IDSLScanResult = {
         dictName: "",
@@ -221,9 +223,9 @@ export class DSLDictionary extends Dictionary {
     return bufferReader;
   };
   private async getFileContents(dictFile: string, pos: number, len: number): Promise<string> {
-    const bufferReader: BufferReader = this.getBufferReader(dictFile);
+    const bufferReader = this.getBufferReader(dictFile);
     await bufferReader.open(dictFile);
-    const buffer: Buffer = await bufferReader.read(pos, len);
+    const buffer = await bufferReader.read(pos, len);
     const encoding = (await bufferReader.getEncodingStat()).encoding;
     await bufferReader.close();
     return buffer.toString(encoding);

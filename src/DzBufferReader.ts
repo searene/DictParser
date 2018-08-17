@@ -19,7 +19,7 @@ export class DzBufferReader extends BufferReader {
   }
 
   public async getEncodingStat(): Promise<IEncodingStat> {
-    const buffer: Buffer = await this._dictZipParser.parse(0, 4);
+    const buffer = await this._dictZipParser.parse(0, 4);
     if (buffer.length < 4) {
       throw new Error(`The size of file cannot be less than 4 bytes.`);
     }

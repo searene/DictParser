@@ -1,6 +1,7 @@
 import { OSSpecificImplementationGetter } from "../os-specific/OSSpecificImplementationGetter";
 import { StreamZip, ZipEntry } from "../js/node-stream-zip";
 import { Sqlite } from "./Sqlite";
+import { Buffer } from "buffer";
 
 export class ZipReader {
   private _zipFilePath: string;

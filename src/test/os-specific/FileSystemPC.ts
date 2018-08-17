@@ -1,6 +1,7 @@
 import * as fse from "fs-extra";
 import { pathExists, ReadResult } from "fs-extra";
 import { IFileSystem } from "../..";
+import { Buffer } from "buffer";
 
 export class FileSystemPC implements IFileSystem {
   public isDir = async (filePath: string): Promise<boolean> => {

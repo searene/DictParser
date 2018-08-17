@@ -1,4 +1,5 @@
 import { WordTree } from './Tree';
+import { Buffer } from "buffer";
 
 export abstract class ResourceManager {
   public static commonResourceDirectory: string;

@@ -24,6 +24,8 @@ describe('Test DictParser', () => {
       fsImplementation: new FileSystemPC(),
       pathImplementation: new PathPC(),
       sqliteImplementation: new SqlitePC(),
+      commonResourceDirectory: "src/resources",
+      wordFormsFolder: "",
       os: OS.PC
     });
     await dictParser.init();
@@ -41,6 +43,8 @@ describe('Test DictParser', () => {
       fsImplementation: new FileSystemPC(),
       pathImplementation: new PathPC(),
       sqliteImplementation: new SqlitePC(),
+      commonResourceDirectory: "",
+      wordFormsFolder: "",
       os: OS.PC
     });
     dictParser.on('name', (dictionaryName: string) => {
@@ -55,6 +59,8 @@ describe('Test DictParser', () => {
       fsImplementation: new FileSystemPC(),
       pathImplementation: new PathPC(),
       sqliteImplementation: new SqlitePC(),
+      commonResourceDirectory: "",
+      wordFormsFolder: "",
       os: OS.PC
     });
     await dictParser.init();
@@ -69,6 +75,8 @@ describe('Test DictParser', () => {
       fsImplementation: new FileSystemPC(),
       pathImplementation: new PathPC(),
       sqliteImplementation: new SqlitePC(),
+      commonResourceDirectory: "",
+      wordFormsFolder: "",
       os: OS.PC
     });
     await dictParser.init();

@@ -3,6 +3,7 @@ import { BufferReader } from "./BufferReader";
 import { IBaseIndex } from "./model/IBaseIndex";
 import { SimpleBufferReader } from "./SimpleBufferReader";
 import { DzBufferReader } from "./DzBufferReader";
+import { Buffer } from "buffer";
 
 export class LineReader extends EventEmitter {
   private _filePath: string;
@@ -38,10 +39,10 @@ export class LineReader extends EventEmitter {
     let dataProcessTotally: number = encodingStat.posAfterBom;
 
     // buffer read each time from file
-    let bufferRead: Buffer = await this._bufferReader.read(dataProcessTotally, this._len);
+    let bufferRead = await this._bufferReader.read(dataProcessTotally, this._len);
 
     // data to be processed
-    let data: Buffer = bufferRead;
+    let data = bufferRead;
 
     // the number of bytes that are processed each time
     let dataProcessedEachTime: number;

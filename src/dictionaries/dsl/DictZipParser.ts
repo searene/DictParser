@@ -1,7 +1,7 @@
 /* tslint:disable:no-bitwise */
-import { inflateBuffer } from "./inflate";
 import { OSSpecificImplementationGetter } from "../../os-specific/OSSpecificImplementationGetter";
-import { OS } from "../..";
+import { Buffer } from "buffer";
+import * as pako from "pako";
 
 export class DictZipParser {
   // read 64KB each time
@@ -45,7 +45,11 @@ export class DictZipParser {
     }
 
     const compressedData = (await OSSpecificImplementationGetter.fs.read(this._fdOrFilePath, endDecompressPos - startDecompressPos, startDecompressPos)).buffer;
-    const decompressedData = inflateBuffer(new Uint8Array(compressedData));
+    if (compressedData.length === 0) {
+      // no contents left
+      return Buffer.alloc(0);
+    }
+    const decompressedData = new Buffer(pako.inflateRaw(new Uint8Array(compressedData)));
     return decompressedData.slice(pos - ~~(pos / CHLEN) * CHLEN, pos + len - ~~(pos / CHLEN) * CHLEN);
   }
 
