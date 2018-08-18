@@ -4,7 +4,7 @@ import { Sqlite } from "./Sqlite";
 import { Buffer } from "buffer";
 
 export class ZipReader {
-  private _zipFilePath: string;
+  private readonly _zipFilePath: string;
   constructor(zipFilePath: string) {
     this._zipFilePath = zipFilePath;
   }

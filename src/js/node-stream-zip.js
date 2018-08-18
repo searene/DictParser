@@ -57,13 +57,15 @@ var consts = {
   CENOFF: 42, // LOC header offset
 
   /* The entries in the end of central directory */
-  ENDHDR: 22, // END header size
+  ENDHDR: 22, // size of "end of central directory record(EOCD)"
+
+  // End of central directory signature = 0x06054b50, little-endian
   ENDSIG: 0x06054b50, // "PK\005\006"
   ENDSIGFIRST: 0x50,
   ENDSUB: 8, // number of entries on this disk
   ENDTOT: 10, // total number of entries
   ENDSIZ: 12, // central directory size in bytes
-  ENDOFF: 16, // offset of first CEN header
+  ENDOFF: 16, // offset of start of central directory, relative to start of archive
   ENDCOM: 20, // zip file comment length
   MAXFILECOMMENT: 0xffff,
 
@@ -335,9 +337,9 @@ var StreamZip = function(config) {
           return;
         }
         entry.read(buffer, bufferPos);
-        if (!config.skipEntryNameValidation) {
-          entry.validateName();
-        }
+        // if (!config.skipEntryNameValidation) {
+        //   entry.validateName();
+        // }
         if (entries) entries[entry.name] = entry;
         that.emit("entry", entry);
         op.entry = entry = null;
@@ -787,79 +789,6 @@ ZipEntry.prototype.parseZip64Extra = function(data, offset, length) {
   }
 };
 
-// endregion
-
-// region FsRead
-
-var FsRead = function(fileId, buffer, offset, length, position, callback) {
-  this.fileId = fileId;
-  this.buffer = buffer;
-  this.offset = offset;
-  this.length = length;
-  this.position = position;
-  this.callback = callback;
-  this.bytesRead = 0;
-};
-
-let i = 0
-
-FsRead.prototype.read = function(sync) {
-  if (StreamZip.debug) {
-    console.log("read", this.position, this.bytesRead, this.length, this.offset);
-  }
-  if (sync) {
-    throw new Error("sync is not supported");
-    // try {
-    //   var bytesRead = fs.readSync(this.fileId, this.buffer, this.offset + this.bytesRead,
-    //     this.length - this.bytesRead, this.position + this.bytesRead);
-    // } catch (e) {
-    //   err = e;
-    // }
-    // this.readCallback(sync, err, err ? bytesRead : null);
-  } else {
-    // OSSpecificImplementationGetter.fs.read(this.fileId, this.length - this.bytesRead, this.position + this.bytesRead)
-    //   .then(readResult => {
-    //     this.buffer = Buffer.concat([this.buffer.slice(0, this.offset), readResult.buffer]);
-    //     readResult.buffer = this.buffer;
-    //     this.readCallback.call(this, sync, readResult);
-    //   });
-    // fs.read(
-    //   this.fileId,
-    //   this.buffer,
-    //   this.offset + this.bytesRead,
-    //   this.length - this.bytesRead,
-    //   this.position + this.bytesRead,
-    //   this.readCallback.bind(this, sync));
-    OSSpecificImplementationGetter.fs.readWithBufferOffset(
-      this.fileId,
-      this.buffer,
-      this.offset + this.bytesRead,
-      this.length - this.bytesRead,
-      this.position + this.bytesRead,
-    ).then(readContents => {
-      console.log(`readContents.bytesRead: ${readContents.bytesRead}`);
-      console.log(`readContents.buffer.length: ${readContents.buffer.length}`);
-      if (i++ === 10) {
-        process.exit(0);
-      }
-      this.readCallback.call(this, sync, null, readContents.bytesRead, readContents.buffer);
-    }).catch(err => {
-      this.readCallback.call(this, sync, err);
-    });
-  }
-};
-
-FsRead.prototype.readCallback = function(sync, err, bytesRead) {
-  if (typeof bytesRead === "number") this.bytesRead += bytesRead;
-  if (err || !bytesRead || this.bytesRead === this.length) {
-    return this.callback(err, this.bytesRead);
-  } else {
-    this.read(sync);
-  }
-};
-
-// endregion
-
 // region FileWindowBuffer
 
 var FileWindowBuffer = function(fileId) {
@@ -869,18 +798,26 @@ var FileWindowBuffer = function(fileId) {
   this.read = function(pos, length, callback) {
     if (this.buffer.length < length) this.buffer = new Buffer(length);
     this.position = pos;
-    console.log(`length: ${length}, this.position: ${this.position}`);
-    if (i++ === 10) {
-      process.exit(0);
-    }
-    fsOp = new FsRead(fileId, this.buffer, 0, length, this.position, callback).read();
+    // console.log(`length: ${length}, this.position: ${this.position}`);
+    // if (i++ === 10) {
+    //   process.exit(0);
+    // }
+    OSSpecificImplementationGetter.fs.read(fileId, length, this.position)
+      .then(readContents => {
+        this.buffer = readContents.buffer;
+        callback(null, readContents.bytesRead);
+      });
   };
 
   this.expandLeft = function(length, callback) {
     this.buffer = Buffer.concat([new Buffer(length), this.buffer]);
     this.position -= length;
     if (this.position < 0) this.position = 0;
-    fsOp = new FsRead(fileId, this.buffer, 0, length, this.position, callback).read();
+    OSSpecificImplementationGetter.fs.read(fileId, length, this.position)
+      .then(readContents => {
+        this.buffer = readContents.buffer;
+        callback(null, readContents.bytesRead);
+      });
   };
 
   this.moveRight = function(length, callback, shift) {
@@ -890,14 +827,10 @@ var FileWindowBuffer = function(fileId) {
       shift = 0;
     }
     this.position += shift;
-    fsOp = new FsRead(
-      fileId,
-      this.buffer,
-      this.buffer.length - shift,
-      shift,
-      this.position + this.buffer.length - shift,
-      callback
-    ).read();
+    OSSpecificImplementationGetter.fs.readWithBufferOffset(fileId, this.buffer, this.buffer.length - shift, shift, this.position + this.buffer.length -shift)
+      .then(readContents => {
+        callback(null, readContents.bytesRead)
+      });
   };
 };
 
