@@ -39,6 +39,21 @@ export class ZipReader {
   }
   public saveEntriesToDb = async (entries: ZipEntry[]): Promise<void> => {
     await Sqlite.db.executeSql(`DELETE FROM zip_entry WHERE resource_path = ${Sqlite.getSQLParam(this._zipFilePath, Sqlite.PARAM_TYPE_STRING)}`);
+
+    let startPos = 0;
+    // insert 5000 items once at a time to avoid exceptions
+    const chunkSize = 5000;
+    let currentEntries;
+    while (true) {
+      currentEntries = entries.splice(startPos, chunkSize);
+      if (currentEntries.length === 0) {
+        return;
+      }
+      await this.saveAllEntriesToDbAtOnce(currentEntries);
+      startPos = startPos + chunkSize;
+    }
+  };
+  private saveAllEntriesToDbAtOnce = async (entries: ZipEntry[]): Promise<void> => {
     let insertStatement = `
               INSERT INTO zip_entry (resource_path, offset, name, is_directory) VALUES `;
     const parameters = [];
