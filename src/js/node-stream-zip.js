@@ -3,10 +3,7 @@
  * Portions copyright https://github.com/cthackers/adm-zip | https://raw.githubusercontent.com/cthackers/adm-zip/master/MIT-LICENSE.txt
  * Modified by Searene to be used with Lantastic
  */
-
-// region Deps
-
-var events = require("events"),
+const events = require("events"),
   pako = require("pako"),
   Buffer = require("buffer").Buffer,
 // stream = require("stream");
@@ -611,7 +608,7 @@ StreamZip.setFs = function(customFs) {
 var CentralDirectoryHeader = function() {};
 
 CentralDirectoryHeader.prototype.read = function(data) {
-  if (data.length != consts.ENDHDR || data.readUInt32LE(0) != consts.ENDSIG)
+  if (data.length !== consts.ENDHDR || data.readUInt32LE(0) !== consts.ENDSIG)
     throw new Error("Invalid central directory");
   // number of entries on this volume
   this.volumeEntries = data.readUInt16LE(consts.ENDSUB);
@@ -645,7 +642,7 @@ CentralDirectoryLoc64Header.prototype.read = function(data) {
 var CentralDirectoryZip64Header = function() {};
 
 CentralDirectoryZip64Header.prototype.read = function(data) {
-  if (data.length != consts.END64HDR || data.readUInt32LE(0) != consts.END64SIG)
+  if (data.length !== consts.END64HDR || data.readUInt32LE(0) !== consts.END64SIG)
     throw new Error("Invalid central directory");
   // number of entries on this volume
   this.volumeEntries = Util.readUInt64LE(data, consts.END64SUB);
@@ -665,7 +662,7 @@ var ZipEntry = function() {};
 
 ZipEntry.prototype.readHeader = function(data, offset) {
   // data should be 46 bytes and start with "PK 01 02"
-  if (data.length < offset + consts.CENHDR || data.readUInt32LE(offset) != consts.CENSIG) {
+  if (data.length < offset + consts.CENHDR || data.readUInt32LE(offset) !== consts.CENSIG) {
     throw new Error("Invalid entry header");
   }
   // version made by
@@ -702,7 +699,7 @@ ZipEntry.prototype.readHeader = function(data, offset) {
 
 ZipEntry.prototype.readDataHeader = function(data) {
   // 30 bytes and should start with "PK\003\004"
-  if (data.readUInt32LE(0) != consts.LOCSIG) {
+  if (data.readUInt32LE(0) !== consts.LOCSIG) {
     throw new Error("Invalid local header");
   }
   // version needed to extract
@@ -741,14 +738,6 @@ ZipEntry.prototype.read = function(data, offset) {
     offset += this.extraLen;
   }
   this.comment = this.comLen ? data.slice(offset, offset + this.comLen).toString() : null;
-};
-
-ZipEntry.prototype.validateName = function() {
-  // I don't know why the contents should be validated, according to which rule.
-  // Comment them for now.
-  // if (/\\|^\w+:|^\/|(^|\/)\.\.(\/|$)/.test(this.contents)) {
-  //   throw new Error('Malicious entry: ' + this.contents);
-  // }
 };
 
 ZipEntry.prototype.readExtra = function(data, offset) {

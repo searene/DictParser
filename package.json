@@ -8,7 +8,7 @@
     "lib/"
   ],
   "scripts": {
-    "test": "gulp && mocha -u tdd --timeout 999999 --colors lib/test -g '#guessWord'",
+    "test": "gulp && mocha -u tdd --timeout 999999 --colors lib/test -g '#scanAndGetWordDefinition'",
     "build": "gulp"
   },
   "repository": {
