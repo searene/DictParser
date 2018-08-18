@@ -11,5 +11,6 @@ export interface IFileSystem {
   readWithBufferOffset: (fileId: number | string, buffer: Buffer, offset: number, length: number, position: number) => Promise<ReadResult>;
   readFile: (filePath: string) => Promise<Buffer>;
   readdir: (dir: string) => Promise<string[]>;
+  writeFile: (filePath: string, contents: string) => Promise<void>;
   exists: (filePath: string) => Promise<boolean>;
 }
