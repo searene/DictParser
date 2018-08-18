@@ -12,8 +12,8 @@ import { OSSpecificImplementationGetter } from "../os-specific/OSSpecificImpleme
 
 describe('Test DictParser', () => {
 
-  const scanFolder2 = path.join('/home/searene/Public/dictionaries');
-  // const scanFolder2 = path.join('/home/searene/Documents/dictionaries');
+  // const scanFolder2 = path.join('/home/searene/Public/dictionaries');
+  const scanFolder2 = path.join('/home/searene/Documents/FreshDict');
   // const dbPath = path.join(TEST_RESOURCE_PATH, 'dictParser.db');
   const dbPath = "/tmp/dict-parser.db";
 

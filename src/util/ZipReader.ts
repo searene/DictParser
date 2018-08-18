@@ -19,8 +19,6 @@ export class ZipReader {
     if (entry === undefined) {
       return Buffer.alloc(0);
     }
-
-    // await zip.setEntries([entry]);
     return await zip.inflate(entry);
   }
 

@@ -10,7 +10,7 @@ var events = require("events"),
   pako = require("pako"),
   Buffer = require("buffer").Buffer,
 // stream = require("stream");
-  OSSSpecificImplementationGetter = require("../os-specific/OSSpecificImplementationGetter").OSSpecificImplementationGetter;
+  OSSpecificImplementationGetter = require("../os-specific/OSSpecificImplementationGetter").OSSpecificImplementationGetter;
 
 // endregion
 
@@ -163,11 +163,11 @@ var StreamZip = function(config) {
   }
 
   function open() {
-    return OSSSpecificImplementationGetter.fs
+    return OSSpecificImplementationGetter.fs
       .open(fileName, "r")
       .then(f => {
         fileId = f;
-        return OSSSpecificImplementationGetter.fs.getSize(fileName);
+        return OSSpecificImplementationGetter.fs.getSize(fileName);
       })
       .then(size => {
         fileSize = size;
@@ -196,7 +196,6 @@ var StreamZip = function(config) {
       }
     }
     if (pos === minPos) {
-      console.log("error here");
       return that.emit("error", "Bad archive");
     }
     op.lastPos = pos + 1;
@@ -391,7 +390,7 @@ var StreamZip = function(config) {
   };
   this.inflate = async function(entry) {
     const openedEntry = await this.openEntryPromise(entry);
-    const compressed = (await OSSSpecificImplementationGetter.fs.read(
+    const compressed = (await OSSpecificImplementationGetter.fs.read(
       fileId,
       openedEntry.compressedSize,
       dataOffset(openedEntry)
@@ -425,12 +424,12 @@ var StreamZip = function(config) {
     }
     if (entry.isDirectory) return callback("Entry is not file");
     if (!fileId) {
-      OSSSpecificImplementationGetter.fs.open(fileName, "r").then(f => {
+      OSSpecificImplementationGetter.fs.open(fileName, "r").then(f => {
         fileId = f;
         openEntry(entry, callback, sync);
       });
     } else {
-      OSSSpecificImplementationGetter.fs
+      OSSpecificImplementationGetter.fs
         .read(fileId, consts.LOCHDR, entry.offset)
         .then(readContents => {
           let readEx;
@@ -473,7 +472,7 @@ var StreamZip = function(config) {
   //           });
   //         }
   //       });
-  //       OSSSpecificImplementationGetter.fs
+  //       OSSpecificImplementationGetter.fs
   //         .open(outPath, "w")
   //         .then(fileId => {
   //           fsStm = fs.createWriteStream(outPath, { fileId: fileId });
@@ -498,9 +497,9 @@ var StreamZip = function(config) {
   // function createDirectories(baseDir, dirs, callback) {
   //   if (!dirs.length) return callback();
   //   var dir = dirs.shift();
-  //   dir = OSSSpecificImplementationGetter.path.resolve(
+  //   dir = OSSpecificImplementationGetter.path.resolve(
   //     baseDir,
-  //     OSSSpecificImplementationGetter.path.resolve.apply(path, dir)
+  //     OSSpecificImplementationGetter.path.resolve.apply(path, dir)
   //   );
   //   fs.mkdir(dir, function(err) {
   //     if (err && err.code !== "EEXIST") return callback(err);
@@ -511,7 +510,7 @@ var StreamZip = function(config) {
   // function extractFiles(baseDir, baseRelPath, files, callback, extractedCount) {
   //   if (!files.length) return callback(null, extractedCount);
   //   var file = files.shift();
-  //   var targetPath = OSSSpecificImplementationGetter.path.resolve(baseDir, file.name.replace(baseRelPath, ""));
+  //   var targetPath = OSSpecificImplementationGetter.path.resolve(baseDir, file.name.replace(baseRelPath, ""));
   //   extract(file, targetPath, function(err) {
   //     if (err) return callback(err, extractedCount);
   //     extractFiles(baseDir, baseRelPath, files, callback, extractedCount + 1);
@@ -538,7 +537,7 @@ var StreamZip = function(config) {
   //         var childEntry = entries[e];
   //         if (!childEntry.isDirectory) {
   //           files.push(childEntry);
-  //           relPath = OSSSpecificImplementationGetter.path.dirname(relPath);
+  //           relPath = OSSpecificImplementationGetter.path.dirname(relPath);
   //         }
   //         if (relPath && !allDirs[relPath] && relPath !== ".") {
   //           allDirs[relPath] = true;
@@ -570,13 +569,13 @@ var StreamZip = function(config) {
   //       extractFiles(outPath, entryName, files, callback, 0);
   //     }
   //   } else {
-  //     OSSSpecificImplementationGetter.fs.isDir(outPath).then(isDirectory => {
+  //     OSSpecificImplementationGetter.fs.isDir(outPath).then(isDirectory => {
   //       if (isDirectory) {
   //         extract(
   //           entry,
-  //           OSSSpecificImplementationGetter.path.resolve(
+  //           OSSpecificImplementationGetter.path.resolve(
   //             outPath,
-  //             OSSSpecificImplementationGetter.path.basename(entry.name)
+  //             OSSpecificImplementationGetter.path.basename(entry.name)
   //           ),
   //           callback
   //         );
@@ -589,7 +588,7 @@ var StreamZip = function(config) {
 
   this.close = function() {
     if (fileId) {
-      OSSSpecificImplementationGetter.fs.close(fileId).then(() => {
+      OSSpecificImplementationGetter.fs.close(fileId).then(() => {
         fileId = null;
       });
     }
@@ -800,15 +799,14 @@ var FsRead = function(fileId, buffer, offset, length, position, callback) {
   this.position = position;
   this.callback = callback;
   this.bytesRead = 0;
-  this.waiting = false;
 };
+
+let i = 0
 
 FsRead.prototype.read = function(sync) {
   if (StreamZip.debug) {
     console.log("read", this.position, this.bytesRead, this.length, this.offset);
   }
-  this.waiting = true;
-  var err;
   if (sync) {
     throw new Error("sync is not supported");
     // try {
@@ -819,7 +817,7 @@ FsRead.prototype.read = function(sync) {
     // }
     // this.readCallback(sync, err, err ? bytesRead : null);
   } else {
-    // OSSSpecificImplementationGetter.fs.read(this.fileId, this.length - this.bytesRead, this.position + this.bytesRead)
+    // OSSpecificImplementationGetter.fs.read(this.fileId, this.length - this.bytesRead, this.position + this.bytesRead)
     //   .then(readResult => {
     //     this.buffer = Buffer.concat([this.buffer.slice(0, this.offset), readResult.buffer]);
     //     readResult.buffer = this.buffer;
@@ -832,13 +830,18 @@ FsRead.prototype.read = function(sync) {
     //   this.length - this.bytesRead,
     //   this.position + this.bytesRead,
     //   this.readCallback.bind(this, sync));
-    OSSSpecificImplementationGetter.fs.readWithBufferOffset(
+    OSSpecificImplementationGetter.fs.readWithBufferOffset(
       this.fileId,
       this.buffer,
       this.offset + this.bytesRead,
       this.length - this.bytesRead,
       this.position + this.bytesRead,
     ).then(readContents => {
+      console.log(`readContents.bytesRead: ${readContents.bytesRead}`);
+      console.log(`readContents.buffer.length: ${readContents.buffer.length}`);
+      if (i++ === 10) {
+        process.exit(0);
+      }
       this.readCallback.call(this, sync, null, readContents.bytesRead, readContents.buffer);
     }).catch(err => {
       this.readCallback.call(this, sync, err);
@@ -849,7 +852,6 @@ FsRead.prototype.read = function(sync) {
 FsRead.prototype.readCallback = function(sync, err, bytesRead) {
   if (typeof bytesRead === "number") this.bytesRead += bytesRead;
   if (err || !bytesRead || this.bytesRead === this.length) {
-    this.waiting = false;
     return this.callback(err, this.bytesRead);
   } else {
     this.read(sync);
@@ -867,6 +869,10 @@ var FileWindowBuffer = function(fileId) {
   this.read = function(pos, length, callback) {
     if (this.buffer.length < length) this.buffer = new Buffer(length);
     this.position = pos;
+    console.log(`length: ${length}, this.position: ${this.position}`);
+    if (i++ === 10) {
+      process.exit(0);
+    }
     fsOp = new FsRead(fileId, this.buffer, 0, length, this.position, callback).read();
   };
 
