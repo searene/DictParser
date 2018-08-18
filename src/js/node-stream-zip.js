@@ -1,7 +1,7 @@
 /**
  * @license node-stream-zip | (c) 2015 Antelle | https://github.com/antelle/node-stream-zip/blob/master/MIT-LICENSE.txt
  * Portions copyright https://github.com/cthackers/adm-zip | https://raw.githubusercontent.com/cthackers/adm-zip/master/MIT-LICENSE.txt
- * Modified by Searene to be used with Lantastic
+ * Modified by Searene for dict-parser
  */
 const events = require("events"),
   pako = require("pako"),
@@ -334,11 +334,12 @@ var StreamZip = function(config) {
           return;
         }
         entry.read(buffer, bufferPos);
-        // if (!config.skipEntryNameValidation) {
-        //   entry.validateName();
-        // }
         if (entries) entries[entry.name] = entry;
-        that.emit("entry", entry);
+        that.emit("entry", {
+          offset: entry.offset,
+          name: entry.name,
+          isDirectory: entry.isDirectory
+        });
         op.entry = entry = null;
         op.entriesLeft--;
         op.pos += entryHeaderSize;
@@ -397,23 +398,6 @@ var StreamZip = function(config) {
     const inflated = pako.inflateRaw(new Uint8Array(compressed));
     return new Buffer(inflated);
   };
-  // this.stream = function (entry, callback) {
-  //   return openEntry(entry, function (err, entry) {
-  //     if (err)
-  //       return callback(err);
-  //     var offset = dataOffset(entry);
-  //     var entryStream = new EntryDataReaderStream(fileId, offset, entry.compressedSize);
-  //     if (entry.method === consts.STORED) {
-  //     } else if (entry.method === consts.DEFLATED || entry.method === consts.ENHANCED_DEFLATED) {
-  //       entryStream = entryStream.pipe(zlib.createInflateRaw());
-  //     } else {
-  //       return callback('Unknown compression method: ' + entry.method);
-  //     }
-  //     if (canVerifyCrc(entry))
-  //       entryStream = entryStream.pipe(new EntryVerifyStream(entryStream, entry.crc, entry.size));
-  //     callback(null, entryStream);
-  //   }, false);
-  // };
 
   function openEntry(entry, callback, sync) {
     if (typeof entry === "string") {
@@ -450,140 +434,6 @@ var StreamZip = function(config) {
   function dataOffset(entry) {
     return entry.offset + consts.LOCHDR + entry.fnameLen + entry.extraLen;
   }
-
-  // function canVerifyCrc(entry) {
-  //   // if bit 3 (0x08) of the general-purpose flags field is set, then the CRC-32 and file sizes are not known when the header is written
-  //   return (entry.flags & 0x8) != 0x8;
-  // }
-
-  // function extract(entry, outPath, callback) {
-  //   that.stream(entry, function(err, stm) {
-  //     if (err) {
-  //       callback(err);
-  //     } else {
-  //       var fsStm, errThrown;
-  //       stm.on("error", function(err) {
-  //         errThrown = err;
-  //         if (fsStm) {
-  //           stm.unpipe(fsStm);
-  //           fsStm.close(function() {
-  //             callback(err);
-  //           });
-  //         }
-  //       });
-  //       OSSpecificImplementationGetter.fs
-  //         .open(outPath, "w")
-  //         .then(fileId => {
-  //           fsStm = fs.createWriteStream(outPath, { fileId: fileId });
-  //           fsStm.on("finish", function() {
-  //             that.emit("extract", entry, outPath);
-  //             if (!errThrown) callback();
-  //           });
-  //           stm.pipe(fsStm);
-  //         })
-  //         .catch(err => {
-  //           if (err) return callback(err || errThrown);
-  //           if (errThrown) {
-  //             fs.close(fileId, function() {
-  //               callback(errThrown);
-  //             });
-  //           }
-  //         });
-  //     }
-  //   });
-  // }
-
-  // function createDirectories(baseDir, dirs, callback) {
-  //   if (!dirs.length) return callback();
-  //   var dir = dirs.shift();
-  //   dir = OSSpecificImplementationGetter.path.resolve(
-  //     baseDir,
-  //     OSSpecificImplementationGetter.path.resolve.apply(path, dir)
-  //   );
-  //   fs.mkdir(dir, function(err) {
-  //     if (err && err.code !== "EEXIST") return callback(err);
-  //     createDirectories(baseDir, dirs, callback);
-  //   });
-  // }
-
-  // function extractFiles(baseDir, baseRelPath, files, callback, extractedCount) {
-  //   if (!files.length) return callback(null, extractedCount);
-  //   var file = files.shift();
-  //   var targetPath = OSSpecificImplementationGetter.path.resolve(baseDir, file.name.replace(baseRelPath, ""));
-  //   extract(file, targetPath, function(err) {
-  //     if (err) return callback(err, extractedCount);
-  //     extractFiles(baseDir, baseRelPath, files, callback, extractedCount + 1);
-  //   });
-  // }
-
-  // this.extract = function(entry, outPath, callback) {
-  //   var entryName = entry || "";
-  //   if (typeof entry === "string") {
-  //     entry = this.entry(entry);
-  //     if (entry) {
-  //       entryName = entry.name;
-  //     } else {
-  //       if (entryName.length && entryName[entryName.length - 1] !== "/") entryName += "/";
-  //     }
-  //   }
-  //   if (!entry || entry.isDirectory) {
-  //     var files = [],
-  //       dirs = [],
-  //       allDirs = {};
-  //     for (var e in entries) {
-  //       if (Object.prototype.hasOwnProperty.call(entries, e) && e.lastIndexOf(entryName, 0) === 0) {
-  //         var relPath = e.replace(entryName, "");
-  //         var childEntry = entries[e];
-  //         if (!childEntry.isDirectory) {
-  //           files.push(childEntry);
-  //           relPath = OSSpecificImplementationGetter.path.dirname(relPath);
-  //         }
-  //         if (relPath && !allDirs[relPath] && relPath !== ".") {
-  //           allDirs[relPath] = true;
-  //           var parts = relPath.split("/").filter(function(f) {
-  //             return f;
-  //           });
-  //           if (parts.length) dirs.push(parts);
-  //           while (parts.length > 1) {
-  //             parts = parts.slice(0, parts.length - 1);
-  //             var partsPath = parts.join("/");
-  //             if (allDirs[partsPath] || partsPath === ".") {
-  //               break;
-  //             }
-  //             allDirs[partsPath] = true;
-  //             dirs.push(parts);
-  //           }
-  //         }
-  //       }
-  //     }
-  //     dirs.sort(function(x, y) {
-  //       return x.length - y.length;
-  //     });
-  //     if (dirs.length) {
-  //       createDirectories(outPath, dirs, function(err) {
-  //         if (err) callback(err);
-  //         else extractFiles(outPath, entryName, files, callback, 0);
-  //       });
-  //     } else {
-  //       extractFiles(outPath, entryName, files, callback, 0);
-  //     }
-  //   } else {
-  //     OSSpecificImplementationGetter.fs.isDir(outPath).then(isDirectory => {
-  //       if (isDirectory) {
-  //         extract(
-  //           entry,
-  //           OSSpecificImplementationGetter.path.resolve(
-  //             outPath,
-  //             OSSpecificImplementationGetter.path.basename(entry.name)
-  //           ),
-  //           callback
-  //         );
-  //       } else {
-  //         extract(entry, outPath, callback);
-  //       }
-  //     });
-  //   }
-  // };
 
   this.close = function() {
     if (fileId) {
@@ -787,10 +637,6 @@ var FileWindowBuffer = function(fileId) {
   this.read = function(pos, length, callback) {
     if (this.buffer.length < length) this.buffer = new Buffer(length);
     this.position = pos;
-    // console.log(`length: ${length}, this.position: ${this.position}`);
-    // if (i++ === 10) {
-    //   process.exit(0);
-    // }
     OSSpecificImplementationGetter.fs.read(fileId, length, this.position)
       .then(readContents => {
         this.buffer = readContents.buffer;
@@ -823,91 +669,6 @@ var FileWindowBuffer = function(fileId) {
   };
 };
 
-// endregion
-
-// region EntryDataReaderStream
-
-// endregion
-
-// region EntryVerifyStream
-
-// var EntryVerifyStream = function(baseStm, crc, size) {
-//   stream.Transform.prototype.constructor.call(this);
-//   this.verify = new CrcVerify(crc, size);
-//   var that = this;
-//   baseStm.on("error", function(e) {
-//     that.emit("error", e);
-//   });
-// };
-//
-// util.inherits(EntryVerifyStream, stream.Transform);
-//
-// EntryVerifyStream.prototype._transform = function(data, encoding, callback) {
-//   var err;
-//   try {
-//     this.verify.data(data);
-//   } catch (e) {
-//     err = e;
-//   }
-//   callback(err, data);
-// };
-
-// endregion
-
-// region CrcVerify
-
-// var CrcVerify = function(crc, size) {
-//   this.crc = crc;
-//   this.size = size;
-//   this.state = {
-//     crc: ~0,
-//     size: 0
-//   };
-// };
-//
-// CrcVerify.prototype.data = function(data) {
-//   var crcTable = CrcVerify.getCrcTable();
-//   var crc = this.state.crc,
-//     off = 0,
-//     len = data.length;
-//   while (--len >= 0) crc = crcTable[(crc ^ data[off++]) & 0xff] ^ (crc >>> 8);
-//   this.state.crc = crc;
-//   this.state.size += data.length;
-//   if (this.state.size >= this.size) {
-//     var buf = new Buffer(4);
-//     buf.writeInt32LE(~this.state.crc & 0xffffffff, 0);
-//     crc = buf.readUInt32LE(0);
-//     if (crc !== this.crc) throw new Error("Invalid CRC");
-//     if (this.state.size !== this.size) throw new Error("Invalid size");
-//   }
-// };
-//
-// CrcVerify.getCrcTable = function() {
-//   var crcTable = CrcVerify.crcTable;
-//   if (!crcTable) {
-//     CrcVerify.crcTable = crcTable = [];
-//     var b = new Buffer(4);
-//     for (var n = 0; n < 256; n++) {
-//       var c = n;
-//       for (var k = 8; --k >= 0; )
-//         if ((c & 1) != 0) {
-//           c = 0xedb88320 ^ (c >>> 1);
-//         } else {
-//           c = c >>> 1;
-//         }
-//       if (c < 0) {
-//         b.writeInt32LE(c, 0);
-//         c = b.readUInt32LE(0);
-//       }
-//       crcTable[n] = c;
-//     }
-//   }
-//   return crcTable;
-// };
-
-// endregion
-
-// region Util
 
 var Util = {
   readUInt64LE: function(buffer, offset) {
@@ -915,13 +676,8 @@ var Util = {
   }
 };
 
-// endregion
-
-// region exports
-
 module.exports = {
   StreamZip: StreamZip,
   ZipEntry: ZipEntry
 };
 
-// endregion

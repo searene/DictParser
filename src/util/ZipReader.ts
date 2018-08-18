@@ -49,9 +49,7 @@ export class ZipReader {
                        ${Sqlite.getSQLParam(entry.isDirectory, Sqlite.PARAM_TYPE_BOOLEAN)})`);
     }
     insertStatement = insertStatement + parameters.join(",\n");
-    console.log("going to executeSql");
     await Sqlite.db.executeSql(insertStatement);
-    console.log("sql is executed successfully");
   };
   public buildZipIndex = async (): Promise<void> => {
     const zipEntries = await this.getZipEntries();
