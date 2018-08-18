@@ -177,7 +177,9 @@ var StreamZip = function(config) {
   }
 
   function readUntilFoundCallback(err, bytesRead) {
-    if (err || !bytesRead) return that.emit("error", err || "Archive read error");
+    if (err || !bytesRead) {
+      return that.emit("error", err || "Archive read error");
+    }
     var buffer = op.win.buffer,
       pos = op.lastPos,
       bufferPosition = pos - op.win.position,
@@ -194,6 +196,7 @@ var StreamZip = function(config) {
       }
     }
     if (pos === minPos) {
+      console.log("error here");
       return that.emit("error", "Bad archive");
     }
     op.lastPos = pos + 1;

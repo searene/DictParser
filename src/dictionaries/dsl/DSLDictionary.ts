@@ -117,6 +117,17 @@ export class DSLDictionary extends Dictionary {
     return !this.startWithSpaceOrTab(line) && !this.startsWithMetaKey(line);
   };
   private startWithSpaceOrTab = (s: string): boolean => {
+    // if (s.indexOf("c blue") > -1 && !s.startsWith(" ") && !s.startsWith("\t")) {
+    //   OSSpecificImplementationGetter.fs.writeFile("/storage/emulated/0/FreshDict/line", s)
+    //     .then(() => {
+    //       while (true) {
+    //         console.log("waiting...");
+    //       }
+    //     });
+    // }
+    if (!s.startsWith("\t") && s.charCodeAt(0) === 9) {
+      debugger;
+    }
     return s.startsWith(" ") || s.startsWith("\t");
   };
   private startsWithMetaKey = (s: string): boolean => {
