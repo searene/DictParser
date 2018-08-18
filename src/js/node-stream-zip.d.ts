@@ -10,40 +10,12 @@ interface StreamZipOptions {
   buildEntries: boolean;
 }
 declare class ZipEntry {
-  // version made by
-  public verMade: number;
-  // version needed to extract
-  public version: number;
-  // encrypt, decrypt flags
-  public flags: number;
-  // compression method
-  public method: number;
-  // modification time (2 bytes time, 2 bytes date)
-  public time: number;
-  // uncompressed file crc-32 value
-  public crc: number;
-  // compressed size
-  public compressedSize: number;
-  // uncompressed size
-  public size: number;
-  // filename length
-  public fnameLen: number;
-  // extra field length
-  public extraLen: number;
-  // file comment length
-  public comLen: number;
-  // volume number start
-  public diskStart: number;
-  // internal file attributes
-  public inattr: number;
-  // external file attributes
-  public attr: number;
   // LOC header offset
   public offset: number;
-  public headerOffset: number;
+  // name of the file inside zip
   public name: string;
+  // is it a file or directory
   public isDirectory: boolean;
-  public comment: string;
 }
 interface on {
   (event: "entry", cb: (entry: ZipEntry) => void): void;

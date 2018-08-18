@@ -43,13 +43,6 @@ export class Sqlite {
       Sqlite._db.executeSql(`
           CREATE TABLE IF NOT EXISTS zip_entry (
             resource_path TEXT,
-            flags INTEGER,
-            method INTEGER,
-            compressed_size INTEGER,
-            size INTEGER,
-            fname_len INTEGER,
-            extra_len INTEGER,
-            com_len INTEGER,
             offset INTEGER,
             name TEXT,
             is_directory INTEGER
