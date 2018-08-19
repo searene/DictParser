@@ -34,7 +34,11 @@ export class DictionaryFinder extends EventEmitter {
 
   public scan = async (dirs: string[]): Promise<void> => {
     for (const dir of dirs) {
-      await this.scanSingleDir(dir);
+      try {
+        await this.scanSingleDir(dir);
+      } catch (e) {
+        console.error(e);
+      }
     }
   };
 

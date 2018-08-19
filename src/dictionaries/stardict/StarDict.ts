@@ -413,7 +413,7 @@ export class StarDict extends Dictionary {
   ): Promise<void> => {
     const fileContents = await this.getFileContents(idxFile, true);
     const wordIndex = await this.getWordIndexByIdxFileContents(fileContents, idxOffsetBits, synFile);
-    await Sqlite.addWordIndex(dictionaryId, wordIndex);
+    await Sqlite.addWordIndexes(dictionaryId, wordIndex);
   };
   private buildIndexByTdx = async (
     tdxFile: string,

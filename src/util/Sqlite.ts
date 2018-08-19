@@ -141,10 +141,10 @@ export class Sqlite {
     );
     return statement.lastId;
   };
-  public static addWordIndex = async (dictionaryId: number, wordIndex: IBaseIndex[]): Promise<void> => {
+  public static addWordIndexes = async (dictionaryId: number, wordIndexes: IBaseIndex[]): Promise<void> => {
     let insertStatement = `INSERT INTO word_index (dictionary_id, word, pos, len) VALUES`;
     const parameters = [];
-    for (const wordPosition of wordIndex) {
+    for (const wordPosition of wordIndexes) {
       parameters.push(`(
                        ${Sqlite.getSQLParam(dictionaryId, Sqlite.PARAM_TYPE_NUMBER)},
                        ${Sqlite.getSQLParam(wordPosition.contents, Sqlite.PARAM_TYPE_STRING)},

@@ -269,7 +269,7 @@ export class DSLDictionary extends Dictionary {
       none,
       DictionaryType.DSL
     );
-    await Sqlite.addWordIndex(dictionaryId, dictScanResult.wordIndex);
+    await Sqlite.addWordIndexes(dictionaryId, dictScanResult.wordIndex);
     await this.buildResourceIndex(resourceFile);
     return this.getUsedDictionaryFiles(dslFile, annFilePath, bmpFilePath, resourceFile);
   };
