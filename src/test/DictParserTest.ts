@@ -5,6 +5,7 @@ import { describe, it } from "mocha";
 import { FileSystemPC } from "./os-specific/FileSystemPC";
 import { PathPC } from "./os-specific/PathPC";
 import { SqlitePC } from "./os-specific/SqlitePC";
+import { Buffer } from "buffer";
 import { FileUtil } from "../util/FileUtil";
 import { OSSpecificImplementationGetter } from "../os-specific/OSSpecificImplementationGetter";
 
@@ -83,11 +84,14 @@ describe('Test DictParser', () => {
     const wordDefinitionList = await dictParser.getWordDefinitions('long');
     console.log(wordDefinitionList);
   });
-  it("#fseTest", async () => {
-    OSSpecificImplementationGetter.os = OS.PC;
-    OSSpecificImplementationGetter.fs = new FileSystemPC();
-    OSSpecificImplementationGetter.path = new PathPC();
-    const lines = await FileUtil.readFileAsLines("/home/searene/Public/dictionaries/朗文当代英汉双解词典/朗文当代英汉双解词典.idx");
-    console.log(lines);
+  it("#bufferTest", async () => {
+    const buffer = Buffer.from("2020540A202020E280A2E280A20A", "hex");
+    const s = buffer.toString("utf8");
+    const lines = s.split("\n");
+    for (const line of lines) {
+      console.log("check");
+      console.log(line);
+      console.log(line.startsWith(" "));
+    }
   });
 });

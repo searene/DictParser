@@ -12,4 +12,9 @@ export class ListUtil {
     }
     return result;
   }
+  public static isEmpty<T>(elements: T[]): boolean {
+    return elements === undefined || elements === null || elements.length === 0;
+  }
 }
+
+

@@ -18,7 +18,7 @@ import { DzBufferReader } from "../../DzBufferReader";
 import { ZipReader } from "../../util/ZipReader";
 import { IBaseIndex } from "../../model/IBaseIndex";
 import { ListUtil } from "../../util/ListUtil";
-import { Buffer } from "buffer";
+import { StringUtils } from "../../util/StringUtils";
 
 /**
  * Created by searene on 17-1-23.
@@ -72,7 +72,6 @@ export class DSLDictionary extends Dictionary {
   }
 
   public async scanDSL(dictFile: string): Promise<IDSLScanResult> {
-    const buffer = Buffer.from("abc", "utf8");
     return new Promise<IDSLScanResult>((resolve, reject) => {
       const result: IDSLScanResult = {
         dictName: "",
@@ -117,18 +116,8 @@ export class DSLDictionary extends Dictionary {
     return !this.startWithSpaceOrTab(line) && !this.startsWithMetaKey(line);
   };
   private startWithSpaceOrTab = (s: string): boolean => {
-    // if (s.indexOf("c blue") > -1 && !s.startsWith(" ") && !s.startsWith("\t")) {
-    //   OSSpecificImplementationGetter.fs.writeFile("/storage/emulated/0/FreshDict/line", s)
-    //     .then(() => {
-    //       while (true) {
-    //         console.log("waiting...");
-    //       }
-    //     });
-    // }
-    if (!s.startsWith("\t") && s.charCodeAt(0) === 9) {
-      debugger;
-    }
-    return s.startsWith(" ") || s.startsWith("\t");
+    // 9 -> tab, 32 -> space
+    return s.charCodeAt(0) === 9 || s.charCodeAt(0) === 32;
   };
   private startsWithMetaKey = (s: string): boolean => {
     const metaKeyWithHashList = this.META_KEY_LIST.map(k => "#" + k);
@@ -255,7 +244,7 @@ export class DSLDictionary extends Dictionary {
    *
    * @param {string} dslFile absolute path
    * @param {string[]} files absolute path
-   * @returns {Promise<string[]>} absolute path
+   * @returns {Promise<string[]>} relevant files about this dictionary, absolute path
    */
   private addDictionaryByDSLFile = async (dslFile: string, files: string[]): Promise<string[]> => {
     const basename = this.getBaseName(dslFile);
@@ -264,6 +253,9 @@ export class DSLDictionary extends Dictionary {
     const bmpFilePath = this.getFile(basename, ".bmp", dirsAndNormalFiles.normalFilePaths);
     const resourceFile = this.getResourceFile(dslFile, dirsAndNormalFiles);
     const dictScanResult = await this.scanDSL(dslFile);
+    if (this.isDictScanResultInvalid(dictScanResult)) {
+      return [];
+    }
     const wordCount = dictScanResult.wordIndex.length;
     const dictionaryId = await Sqlite.addDictionary(
       dictScanResult.dictName,
@@ -286,6 +278,9 @@ export class DSLDictionary extends Dictionary {
       const zipReader = new ZipReader(resourceFile.get);
       await zipReader.buildZipIndex();
     }
+  };
+  private isDictScanResultInvalid = (dictScanResult: IDSLScanResult) => {
+    return StringUtils.isEmpty(dictScanResult.dictName) || ListUtil.isEmpty(dictScanResult.wordIndex);
   };
   private getUsedDictionaryFiles = (
     dslFile: string,
