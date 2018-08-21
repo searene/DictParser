@@ -32,7 +32,7 @@ export class DictParser extends EventEmitter {
   public init = async (): Promise<void> => {
     // this._dictMapList = await this.loadDictMapList();
     await Sqlite.init(this._sqliteDbPath);
-    this._vocabulary = await this.loadVocabulary();
+    await this.loadVocabulary();
   };
 
   public async scan(scanFolder: string | string[]): Promise<void> {
@@ -41,7 +41,6 @@ export class DictParser extends EventEmitter {
       this.emit("name", dictionaryName);
     });
     await this._dictionaryFinder.scan(Array.isArray(scanFolder) ? scanFolder : [scanFolder]);
-    await this.init();
   }
 
   /**
@@ -82,6 +81,15 @@ export class DictParser extends EventEmitter {
     return wordDefinitionList;
   }
 
+  public loadVocabulary = async (): Promise<void> => {
+    const vocabulary = new IgnorableTrie();
+    const queryResultList = await Sqlite.db.getAll("SELECT DISTINCT word FROM word_index");
+    for (const queryResult of queryResultList) {
+      vocabulary.add(queryResult.word);
+    }
+    this._vocabulary = vocabulary;
+  };
+
   private normalize(word: string): string {
     let normalizedWord: string = "";
     for (const c of word) {
@@ -90,17 +98,6 @@ export class DictParser extends EventEmitter {
     return normalizedWord.trim();
   }
 
-  // private loadDictMapList = async () => {
-  //   return await this.readDictMapListFromFile();
-  // };
-  private loadVocabulary = async (): Promise<IgnorableTrie> => {
-    const vocabulary = new IgnorableTrie();
-    const queryResultList = await Sqlite.db.getAll("SELECT DISTINCT word FROM word_index");
-    for (const queryResult of queryResultList) {
-      vocabulary.add(queryResult.word);
-    }
-    return vocabulary;
-  };
   // private loadAllWordsFromIndexMap = (
   //   indexMap: IndexMap,
   //   vocabulary: Trie

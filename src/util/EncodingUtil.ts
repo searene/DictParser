@@ -1,4 +1,5 @@
 import { OSSpecificImplementationGetter } from "../os-specific/OSSpecificImplementationGetter";
+import { Buffer } from "buffer";
 
 export class EncodingUtil {
   public static readBase64FromFile = async (filePath: string): Promise<string> => {

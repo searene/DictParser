@@ -10,3 +10,4 @@ export { ReadResult } from "fs-extra";
 export { ISqlite } from "./os-specific/sqlite/ISqlite";
 export { IDatabase } from "./os-specific/sqlite/IDatabase";
 export { IResult } from "./os-specific/sqlite/IResult";
+export { Sqlite } from "./util/Sqlite";
